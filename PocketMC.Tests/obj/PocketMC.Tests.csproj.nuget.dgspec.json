@@ -1,0 +1,359 @@
+{
+  "format": 1,
+  "restore": {
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Tests/PocketMC.Tests.csproj": {}
+  },
+  "projects": {
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/PocketMC.App.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/PocketMC.App.csproj",
+        "projectName": "PocketMC.App",
+        "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/PocketMC.App.csproj",
+        "packagesPath": "/home/sahaj33/.nuget/packages/",
+        "outputPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/sahaj33/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj"
+              },
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj"
+              },
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[10.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/nix/store/6wrr26qf1ikap2w4k9f3syzqa2h33l3i-dotnet-sdk-8.0.422/share/dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj",
+        "projectName": "PocketMC.Core",
+        "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj",
+        "packagesPath": "/home/sahaj33/.nuget/packages/",
+        "outputPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/sahaj33/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/nix/store/6wrr26qf1ikap2w4k9f3syzqa2h33l3i-dotnet-sdk-8.0.422/share/dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj",
+        "projectName": "PocketMC.Infrastructure",
+        "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj",
+        "packagesPath": "/home/sahaj33/.nuget/packages/",
+        "outputPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/sahaj33/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[10.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/nix/store/6wrr26qf1ikap2w4k9f3syzqa2h33l3i-dotnet-sdk-8.0.422/share/dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj",
+        "projectName": "PocketMC.Platform",
+        "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj",
+        "packagesPath": "/home/sahaj33/.nuget/packages/",
+        "outputPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/sahaj33/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/nix/store/6wrr26qf1ikap2w4k9f3syzqa2h33l3i-dotnet-sdk-8.0.422/share/dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Tests/PocketMC.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Tests/PocketMC.Tests.csproj",
+        "projectName": "PocketMC.Tests",
+        "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Tests/PocketMC.Tests.csproj",
+        "packagesPath": "/home/sahaj33/.nuget/packages/",
+        "outputPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/sahaj33/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/PocketMC.App.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.App/PocketMC.App.csproj"
+              },
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Core/PocketMC.Core.csproj"
+              },
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Infrastructure/PocketMC.Infrastructure.csproj"
+              },
+              "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj": {
+                "projectPath": "/run/media/sahaj33/New Volume/Projects/PocketMC/pocket-mc-linux-mac/PocketMC.Platform/PocketMC.Platform.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.8.0, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/nix/store/6wrr26qf1ikap2w4k9f3syzqa2h33l3i-dotnet-sdk-8.0.422/share/dotnet/sdk/8.0.422/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
