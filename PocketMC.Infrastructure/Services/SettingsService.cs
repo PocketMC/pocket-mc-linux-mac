@@ -14,9 +14,13 @@ namespace PocketMC.Infrastructure.Services
 
         public Settings Settings => _settings;
 
-        public SettingsService()
+        public SettingsService(string? configDirectory = null)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (!string.IsNullOrEmpty(configDirectory))
+            {
+                _configDirectory = configDirectory;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 _configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "PocketMC");
             }

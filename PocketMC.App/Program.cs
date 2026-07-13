@@ -40,6 +40,10 @@ namespace PocketMC.App
                     services.AddSingleton<IJavaService, JavaService>();
                     services.AddSingleton<IPHPService, PHPService>();
                     services.AddSingleton<IPreLaunchVerifier, PreLaunchVerifier>();
+                    services.AddSingleton<IInstanceService, InstanceService>();
+                    services.AddSingleton<IConsoleLogService, ConsoleLogService>();
+                    services.AddSingleton<IProcessRunner, ProcessRunner>();
+                    services.AddSingleton<IPlayerService, PlayerService>();
                 });
     }
 }
