@@ -41,5 +41,36 @@ namespace PocketMC.Tests
             var store = SecretStoreFactory.Create(settingsService);
             Assert.NotNull(store);
         }
+
+        private class FailingSecretStore : ISecretStore
+        {
+            public Task<string?> GetAsync(string key) => throw new NotImplementedException();
+            public Task SetAsync(string key, string value) => throw new NotImplementedException();
+            public Task DeleteAsync(string key) => throw new NotImplementedException();
+        }
+
+        [Fact]
+        public async Task TestSafeSecretStoreFallback()
+        {
+            var settingsService = new SettingsService();
+            var fallback = new AesFallbackSecretStore(settingsService);
+            var primary = new FailingSecretStore();
+            var safeStore = new SafeSecretStore(primary, fallback);
+
+            string key = "safe_test_key_" + Guid.NewGuid();
+            string val = "safe_secret_value_123";
+
+            // Verify that calling SetAsync does not throw, but routes to fallback
+            await safeStore.SetAsync(key, val);
+
+            // Verify that GetAsync reads from fallback correctly
+            var retrieved = await safeStore.GetAsync(key);
+            Assert.Equal(val, retrieved);
+
+            // Clean up
+            await safeStore.DeleteAsync(key);
+            var deleted = await safeStore.GetAsync(key);
+            Assert.Null(deleted);
+        }
     }
 }

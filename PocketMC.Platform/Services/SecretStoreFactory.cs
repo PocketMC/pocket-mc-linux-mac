@@ -8,23 +8,27 @@ namespace PocketMC.Platform.Services
     {
         public static ISecretStore Create(ISettingsService settingsService)
         {
+            var fallback = new AesFallbackSecretStore(settingsService);
+
             try
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    return new MacKeychainSecretStore();
+                    var native = new MacKeychainSecretStore();
+                    return new SafeSecretStore(native, fallback);
                 }
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    return new LinuxSecretServiceSecretStore();
+                    var native = new LinuxSecretServiceSecretStore();
+                    return new SafeSecretStore(native, fallback);
                 }
             }
             catch
             {
-                // Silent fallback (D-01)
+                // Silent fallback on instantiation issues (D-01)
             }
 
-            return new AesFallbackSecretStore(settingsService);
+            return fallback;
         }
     }
 }
