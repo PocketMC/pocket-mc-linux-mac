@@ -37,6 +37,9 @@ namespace PocketMC.App
                     services.AddSingleton<ISettingsService, SettingsService>();
                     services.AddSingleton<ISecretStore>(sp => 
                         SecretStoreFactory.Create(sp.GetRequiredService<ISettingsService>()));
+                    services.AddSingleton<IJavaService, JavaService>();
+                    services.AddSingleton<IPHPService, PHPService>();
+                    services.AddSingleton<IPreLaunchVerifier, PreLaunchVerifier>();
                 });
     }
 }
