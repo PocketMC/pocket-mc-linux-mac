@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_VERSION: "8.0.x"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse Root Configuration
+        id: config
+        shell: bash
+        run: |
+          version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore PocketMC.sln
+
+      - name: Build (Debug)
+        run: dotnet build PocketMC.sln -c Debug --no-restore -p:Version=${{ steps.config.outputs.version }}
+
+      - name: Test
+        run: dotnet test PocketMC.sln -c Debug --no-build --no-restore
