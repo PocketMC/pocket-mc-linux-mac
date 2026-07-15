@@ -1,0 +1,148 @@
+name: Release Pipeline
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release-build:
+    if: github.event.workflow_run.conclusion == 'success'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            archive_ext: tar.gz
+          - os: macos-latest
+            rid: osx-x64
+            archive_ext: zip
+          - os: macos-latest
+            rid: osx-arm64
+            archive_ext: zip
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_VERSION: "8.0.x"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Parse Root Configuration
+        id: config
+        shell: bash
+        run: |
+          version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          channel=$(grep '^channel:' pocketmc.yml | cut -d':' -f2 | xargs)
+          echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
+          echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
+
+      - name: Ensure Release Channel
+        id: check_channel
+        shell: bash
+        run: |
+          if [ "${{ steps.config.outputs.channel }}" != "release" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Channel is not release. Exiting gracefully..."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        if: steps.check_channel.outputs.skip == 'false'
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        if: steps.check_channel.outputs.skip == 'false'
+        run: dotnet restore PocketMC.App/PocketMC.App.csproj -r ${{ matrix.rid }}
+
+      - name: Publish Standalone Binary
+        if: steps.check_channel.outputs.skip == 'false'
+        run: |
+          dotnet publish PocketMC.App/PocketMC.App.csproj \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishReadyToRun=true \
+            --no-restore \
+            -p:Version=${{ steps.config.outputs.version }} \
+            -o publish
+
+      - name: Package Release Archive (tar.gz)
+        if: steps.check_channel.outputs.skip == 'false' && matrix.archive_ext == 'tar.gz'
+        run: |
+          tar -czf PocketMC-${{ matrix.rid }}.tar.gz -C publish .
+
+      - name: Package Release Archive (zip)
+        if: steps.check_channel.outputs.skip == 'false' && matrix.archive_ext == 'zip'
+        run: |
+          cd publish
+          zip -r ../PocketMC-${{ matrix.rid }}.zip .
+
+      - name: Upload Build Artifacts
+        if: steps.check_channel.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocketMC-${{ matrix.rid }}-${{ steps.config.outputs.version }}
+          path: PocketMC-${{ matrix.rid }}.${{ matrix.archive_ext }}
+
+  create-release:
+    needs: release-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Parse Version
+        id: config
+        shell: bash
+        run: |
+          version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          channel=$(grep '^channel:' pocketmc.yml | cut -d':' -f2 | xargs)
+          echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
+          echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
+
+      - name: Ensure Release Channel
+        id: check_channel
+        shell: bash
+        run: |
+          if [ "${{ steps.config.outputs.channel }}" != "release" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all release artifacts
+        if: steps.check_channel.outputs.skip == 'false'
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        if: steps.check_channel.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.config.outputs.version }}
+          name: PocketMC v${{ steps.config.outputs.version }}
+          body: "Official cross-platform production release of PocketMC for Linux and macOS."
+          files: |
+            artifacts/PocketMC-linux-x64.tar.gz
+            artifacts/PocketMC-osx-x64.zip
+            artifacts/PocketMC-osx-arm64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
