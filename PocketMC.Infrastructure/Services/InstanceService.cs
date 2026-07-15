@@ -222,7 +222,7 @@ namespace PocketMC.Infrastructure.Services
 
         public Task<ServerInstance> CloneInstanceAsync(string slug, string newName)
         {
-            ServerInstance original;
+            ServerInstance? original;
             lock (_cache)
             {
                 original = _cache.FirstOrDefault(i => i.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
@@ -270,7 +270,7 @@ namespace PocketMC.Infrastructure.Services
 
         public Task ExportInstanceAsync(string slug, string targetZipPath)
         {
-            ServerInstance instance;
+            ServerInstance? instance;
             lock (_cache)
             {
                 instance = _cache.FirstOrDefault(i => i.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));

@@ -16,6 +16,7 @@ namespace PocketMC.Infrastructure.Services
         private readonly object _fileLock = new();
 
         public event Action<string, string>? LogReceived;
+        public event Action<string>? LogsCleared;
 
         private static readonly Regex AnsiRegex = new(@"\x1B\[[0-9;]*[a-zA-Z]", RegexOptions.Compiled);
 
@@ -59,6 +60,33 @@ namespace PocketMC.Infrastructure.Services
             }
 
             return logs.Where(line => line.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        public void ClearLogs(string slug)
+        {
+            if (_buffers.TryGetValue(slug, out var queue))
+            {
+                while (queue.TryDequeue(out _)) { }
+            }
+
+            lock (_fileLock)
+            {
+                try
+                {
+                    var instancesRoot = _settingsService.GetInstancesDirectory();
+                    var activeLogPath = Path.Combine(instancesRoot, slug, "logs", "pocketmc-latest.log");
+                    if (File.Exists(activeLogPath))
+                    {
+                        File.Delete(activeLogPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error clearing latest log file on disk: {ex.Message}");
+                }
+            }
+
+            LogsCleared?.Invoke(slug);
         }
 
         private void WriteToDisk(string slug, string line)

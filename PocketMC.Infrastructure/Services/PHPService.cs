@@ -93,7 +93,7 @@ namespace PocketMC.Infrastructure.Services
             }
         }
 
-        public async Task ProvisionPHPRuntimeAsync(string version)
+        public async Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null)
         {
             string os;
             string arch;
@@ -120,9 +120,24 @@ namespace PocketMC.Infrastructure.Services
             {
                 response.EnsureSuccessStatusCode();
 
-                using (var fs = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                using (var fs = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                 {
-                    await response.Content.CopyToAsync(fs);
+                    var buffer = new byte[8192];
+                    var totalReadBytes = 0L;
+                    var bytesRead = 0;
+
+                    while ((bytesRead = await downloadStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fs.WriteAsync(buffer, 0, bytesRead);
+                        totalReadBytes += bytesRead;
+
+                        if (totalBytes > 0 && progress != null)
+                        {
+                            progress.Report((double)totalReadBytes / totalBytes);
+                        }
+                    }
                 }
             }
 

@@ -106,7 +106,7 @@ namespace PocketMC.Infrastructure.Services
             }
         }
 
-        public async Task ProvisionJavaRuntimeAsync(string version)
+        public async Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null)
         {
             string os = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "mac" : "linux";
             string arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "aarch64" : "x64";
@@ -132,7 +132,11 @@ namespace PocketMC.Infrastructure.Services
                         if (hashResponse.IsSuccessStatusCode)
                         {
                             var content = await hashResponse.Content.ReadAsStringAsync();
-                            expectedHash = content.Split(' ')[0].Trim();
+                            var candidate = content.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
+                            if (IsValidSha256(candidate))
+                            {
+                                expectedHash = candidate;
+                            }
                         }
                     }
                     catch
@@ -141,9 +145,24 @@ namespace PocketMC.Infrastructure.Services
                     }
                 }
 
-                using (var fs = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                using (var fs = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                 {
-                    await response.Content.CopyToAsync(fs);
+                    var buffer = new byte[8192];
+                    var totalReadBytes = 0L;
+                    var bytesRead = 0;
+
+                    while ((bytesRead = await downloadStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fs.WriteAsync(buffer, 0, bytesRead);
+                        totalReadBytes += bytesRead;
+
+                        if (totalBytes > 0 && progress != null)
+                        {
+                            progress.Report((double)totalReadBytes / totalBytes);
+                        }
+                    }
                 }
 
                 // Verify hash
@@ -178,6 +197,19 @@ namespace PocketMC.Infrastructure.Services
             }
             _settingsService.Settings.DownloadedRuntimes["java"][version] = runtimesDir;
             _settingsService.Save();
+        }
+
+        private bool IsValidSha256(string hash)
+        {
+            if (string.IsNullOrEmpty(hash) || hash.Length != 64) return false;
+            foreach (char c in hash)
+            {
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
