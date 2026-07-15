@@ -1,0 +1,39 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:PocketMC.App"
+             x:Class="PocketMC.App.App"
+             RequestedThemeVariant="Default">
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F4F7"/>
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="CardBorderBrush" Color="#E4E4E7"/>
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#18181B"/>
+                    <SolidColorBrush x:Key="ConsoleBackgroundBrush" Color="#1E1E24"/>
+                    <SolidColorBrush x:Key="ConsoleHeaderBackgroundBrush" Color="#F4F4F7"/>
+                    <SolidColorBrush x:Key="ConsoleTextBrush" Color="#18181B"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#121214"/>
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1E1E24"/>
+                    <SolidColorBrush x:Key="CardBorderBrush" Color="#2D2D30"/>
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F4F7"/>
+                    <SolidColorBrush x:Key="ConsoleBackgroundBrush" Color="#0C0C0D"/>
+                    <SolidColorBrush x:Key="ConsoleHeaderBackgroundBrush" Color="#1E1E24"/>
+                    <SolidColorBrush x:Key="ConsoleTextBrush" Color="#F4F4F7"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

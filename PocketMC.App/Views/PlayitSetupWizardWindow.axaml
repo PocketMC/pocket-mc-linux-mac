@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PocketMC.App.ViewModels"
+        x:Class="PocketMC.App.Views.PlayitSetupWizardWindow"
+        x:DataType="vm:PlayitSetupWizardViewModel"
+        Title="Link Playit.gg Account"
+        Width="460" Height="360"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource BackgroundBrush}">
+
+    <Panel Margin="24">
+        
+        <!-- Error Step 0 -->
+        <Grid IsVisible="{Binding IsStep0}" RowDefinitions="*,Auto">
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
+                <TextBlock Text="❌ Setup Failed" FontSize="20" FontWeight="Bold" Foreground="#ef4444" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Cancel" Command="{Binding CancelCommand}"/>
+                <Button Content="Retry" Command="{Binding RetryCommand}" Classes="accent"/>
+            </StackPanel>
+        </Grid>
+ 
+        <!-- Step 1: Open Setup Page -->
+        <Grid IsVisible="{Binding IsStep1}" RowDefinitions="*,Auto">
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
+                <TextBlock Text="Get your Setup Code" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Click the button below to open playit.gg in your browser, log in, and retrieve a 9-character setup code." 
+                           TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+                
+                <Button Content="Open Playit Setup Page" Command="{Binding OpenSetupPageCommand}" Classes="accent" HorizontalAlignment="Center" Padding="16,10" Margin="0,12,0,0"/>
+            </StackPanel>
+            <Button Grid.Row="1" Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Right"/>
+        </Grid>
+ 
+        <!-- Step 2: Paste Code & Connect -->
+        <Grid IsVisible="{Binding IsStep2}" RowDefinitions="*,Auto">
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
+                <TextBlock Text="Paste Code &amp; Connect" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Enter the setup code displayed on the playit.gg setup page:" 
+                           TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+                
+                <TextBox Text="{Binding SetupCode}" Watermark="e.g. XXXX-YYYY" FontSize="18" TextAlignment="Center" MaxLength="100" Margin="0,8"/>
+
+                <Button Content="Connect Agent" Command="{Binding ConnectCommand}" Classes="accent" HorizontalAlignment="Center" Padding="16,10" IsVisible="{Binding !IsConnecting}"/>
+                
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" IsVisible="{Binding IsConnecting}">
+                    <ProgressBar IsIndeterminate="True" Width="40" Height="4"/>
+                    <TextBlock Text="Provisioning Playit agent..." VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
+                </StackPanel>
+            </StackPanel>
+            
+            <Button Grid.Row="1" Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Right" IsEnabled="{Binding !IsConnecting}"/>
+        </Grid>
+ 
+        <!-- Success Step 3 -->
+        <Grid IsVisible="{Binding IsStep3}" RowDefinitions="*,Auto">
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
+                <TextBlock Text="✅ Account Linked" FontSize="24" FontWeight="Bold" Foreground="#10b981" HorizontalAlignment="Center"/>
+                <TextBlock Text="Your agent has been successfully provisioned!" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+                
+                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="16" Margin="0,8">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Agent ID" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding AgentId}" FontFamily="Cascadia Code, Consolas, monospace"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <Button Grid.Row="1" Content="Finish" Command="{Binding FinishCommand}" Classes="accent" HorizontalAlignment="Right"/>
+        </Grid>
+        
+    </Panel>
+</Window>

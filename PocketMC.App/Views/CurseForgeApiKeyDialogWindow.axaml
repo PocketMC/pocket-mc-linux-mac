@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PocketMC.App.Views.CurseForgeApiKeyDialogWindow"
+        Title="CurseForge API Key Required"
+        Width="450" Height="220"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#1e1e24"
+        RequestedThemeVariant="Dark">
+
+  <Border Padding="20">
+    <StackPanel Spacing="15">
+      <TextBlock Text="CurseForge API Key Required" 
+                 FontSize="18" 
+                 FontWeight="Bold" 
+                 Foreground="White"/>
+      
+      <TextBlock Text="To search and download mods from CurseForge, you need an API key. You can get a free partner key from console.curseforge.com." 
+                 TextWrapping="Wrap" 
+                 FontSize="12" 
+                 Foreground="#a0a0a5"/>
+
+      <TextBox Name="TxtApiKey" 
+               Watermark="Enter CurseForge API Key"
+               UseFloatingWatermark="True"
+               Background="#2c2c35"
+               Foreground="White"
+               BorderBrush="#3c3c45"/>
+
+      <TextBlock Name="TxtError" 
+                 Text="Please enter a valid API key" 
+                 Foreground="#ff5555" 
+                 FontSize="11" 
+                 IsVisible="False"/>
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button Content="Cancel" 
+                Click="BtnCancel_Click" 
+                Background="#2c2c35" 
+                Foreground="White" 
+                BorderBrush="#3c3c45"/>
+        <Button Content="Save" 
+                Click="BtnSave_Click" 
+                Background="#3f51b5" 
+                Foreground="White"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

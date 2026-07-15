@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.NewInstancePage"
+             x:DataType="vm:NewInstanceViewModel"
+             x:CompileBindings="True"
+             Margin="16">
+
+    <Border Background="{DynamicResource CardBackgroundBrush}"
+            BorderBrush="{DynamicResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            BoxShadow="0 8 24 0 #20000000"
+            Padding="24">
+        <Grid RowDefinitions="Auto, 16, *, Auto">
+            <!-- Header -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, 12, *">
+                <Button Grid.Column="0" Command="{Binding CancelCommand}"
+                        Background="Transparent" BorderThickness="0" Padding="8">
+                    <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2"/>
+                </Button>
+                <TextBlock Grid.Column="2" Text="Create New Server Instance" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Form Body -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+                    <!-- Instance Name -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Instance Name" FontWeight="Medium" FontSize="14"/>
+                        <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="e.g. My Survival Server" MaxLength="32"/>
+                        <!-- Error Display -->
+                        <ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors)}" Foreground="#DC3545" FontSize="12" Margin="4,2,0,0"/>
+                    </StackPanel>
+
+                    <!-- Engine Type -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Server Engine" FontWeight="Medium" FontSize="14"/>
+                        <ComboBox ItemsSource="{Binding EngineTypes}" SelectedItem="{Binding SelectedEngine, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <!-- Engine Version -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Engine Version" FontWeight="Medium" FontSize="14"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion, Mode=TwoWay}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsLoadingVersions}"/>
+                            <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsLoadingVersions}" Width="24" Height="24" Margin="12,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- EULA Acceptance -->
+                    <CheckBox IsChecked="{Binding AcceptEula, Mode=TwoWay}" Margin="0,8,0,0">
+                        <TextBlock Text="I agree to the Minecraft End User License Agreement (EULA)" TextWrapping="Wrap"/>
+                    </CheckBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Bottom Actions and Progress -->
+            <StackPanel Grid.Row="3" Spacing="12" Margin="0,16,0,0">
+                <!-- Progress indicator -->
+                <StackPanel Spacing="4" IsVisible="{Binding IsCreating}">
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" Height="4" HorizontalAlignment="Stretch"/>
+                    <TextBlock Text="{Binding ProgressText}" FontSize="12" Opacity="0.8"/>
+                </StackPanel>
+
+                <!-- Action buttons -->
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <Button Command="{Binding CancelCommand}" Content="Cancel" Padding="16,8" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+                    <Button Command="{Binding CreateInstanceCommand}" Content="Create Server" Padding="16,8" Background="#1E90FF" Foreground="White"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

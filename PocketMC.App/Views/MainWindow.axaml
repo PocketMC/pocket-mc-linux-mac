@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PocketMC.App.ViewModels"
+        xmlns:views="using:PocketMC.App.Views"
+        x:Class="PocketMC.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:CompileBindings="True"
+        Title="PocketMC"
+        TransparencyLevelHint="Mica, AcrylicBlur"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        MinWidth="500" MinHeight="650" Width="1000" Height="700">
+ 
+    <Grid RowDefinitions="32, *">
+        <!-- Title bar backing panel, marked as draggable drag region -->
+        <Border Grid.Row="0"
+                PointerPressed="TitleBar_OnPointerPressed"
+                Background="Transparent"
+                Height="32">
+            <Grid Margin="{Binding TitleBarContentMargin, RelativeSource={RelativeSource AncestorType=views:MainWindow}}"
+                  ColumnDefinitions="Auto, *, Auto"
+                  VerticalAlignment="Center">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" Margin="12,0">
+                    <Image Source="avares://PocketMC.App/Assets/icon.png" Width="16" Height="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="PocketMC" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="|" Foreground="{DynamicResource CardBorderBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Dashboard" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Window Client Content -->
+        <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" />
+    </Grid>
+</Window>

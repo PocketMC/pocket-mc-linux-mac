@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:infra="using:PocketMC.Infrastructure.Services"
+        x:Class="PocketMC.App.Views.DependencyConfirmWindow"
+        Title="Confirm Add-on Installation"
+        Width="500" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#1e1e24"
+        RequestedThemeVariant="Dark">
+
+  <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,15">
+      <TextBlock Text="Confirm Installations" 
+                 FontSize="18" 
+                 FontWeight="Bold" 
+                 Foreground="White"/>
+      <TextBlock Text="Review the selected add-on and its dependencies to proceed with download." 
+                 FontSize="12" 
+                 Foreground="#a0a0a5"
+                 TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <!-- Dependencies List -->
+    <Border Grid.Row="1" Background="#141419" BorderBrush="#2c2c35" BorderThickness="1" CornerRadius="8" Padding="8">
+      <ListBox Name="LstDependencies" Background="Transparent" BorderThickness="0">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="infra:ResolvedDependency">
+            <Grid ColumnDefinitions="Auto, *, Auto" Margin="4">
+              <!-- Selection Checkbox -->
+              <CheckBox Grid.Column="0" 
+                        IsChecked="{Binding IsSelected}" 
+                        IsEnabled="{Binding IsCheckboxEnabled}"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"/>
+
+              <!-- Name & File info -->
+              <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="{Binding ProjectTitle}" FontWeight="SemiBold" Foreground="White" FontSize="13"/>
+                <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="#808085"/>
+              </StackPanel>
+
+              <!-- Required/Optional/Installed Badge -->
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Background="#2c2c35" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsAlreadyInstalled}">
+                  <TextBlock Text="Installed" FontSize="10" Foreground="#2ecc71" FontWeight="Bold"/>
+                </Border>
+                <Border Background="#2c2c35" CornerRadius="4" Padding="6,2" IsVisible="{Binding !IsAlreadyInstalled}">
+                  <TextBlock Text="{Binding Type}" FontSize="10" Foreground="#1e90ff" FontWeight="Bold"/>
+                </Border>
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <!-- Actions -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
+      <Button Content="Cancel" 
+              Click="BtnCancel_Click" 
+              Background="#2c2c35" 
+              Foreground="White" 
+              BorderBrush="#3c3c45"
+              Padding="16,8"
+              CornerRadius="6"/>
+      <Button Content="Proceed with Installation" 
+              Click="BtnProceed_Click" 
+              Background="#3f51b5" 
+              Foreground="White"
+              Padding="16,8"
+              CornerRadius="6"/>
+    </StackPanel>
+  </Grid>
+</Window>
