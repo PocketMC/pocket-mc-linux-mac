@@ -6,4 +6,4 @@
 *.suo
 *.userosscache
 *.sln.docstates
-\.planning/
+.planning/
