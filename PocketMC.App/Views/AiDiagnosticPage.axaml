@@ -1,0 +1,125 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.AiDiagnosticPage"
+             x:DataType="vm:AiDiagnosticViewModel"
+             Background="#141419">
+
+  <Grid RowDefinitions="Auto, *">
+    
+    <!-- HEADER BAR -->
+    <Border Grid.Row="0" Background="#1e1e24" Padding="16,12" BorderBrush="#2c2c35" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto, *, Auto">
+        <Button Grid.Column="0" Command="{Binding GoBackCommand}" 
+                Background="Transparent" BorderThickness="0" Padding="8">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <lucide:LucideIcon Kind="ArrowLeft" Size="16" Foreground="#808085"/>
+            <TextBlock Text="Back to Console" Foreground="#808085" FontSize="12" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <TextBlock Grid.Column="1" Text="AI Crash &amp; Log Diagnostics" FontSize="18" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="2" Text="{Binding SelectedInstance.Name, StringFormat='Instance: {0}'}" Foreground="#606065" FontSize="12" VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+    <!-- BODY -->
+    <Grid Grid.Row="1" ColumnDefinitions="260, *" Margin="16">
+
+      <!-- LEFT PANEL: AI Settings -->
+      <Border Grid.Column="0" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16" Margin="0,0,12,0" VerticalAlignment="Top">
+        <StackPanel Spacing="14">
+          <TextBlock Text="AI Settings" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
+          
+          <!-- Provider Dropdown -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Select AI Provider" FontSize="10" Foreground="#a0a0a5"/>
+            <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}" 
+                      HorizontalAlignment="Stretch" Background="#2c2c35" Foreground="White" Height="36"/>
+          </StackPanel>
+
+          <!-- Model -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Model Selection" FontSize="10" Foreground="#a0a0a5"/>
+            <AutoCompleteBox ItemsSource="{Binding Models}" Text="{Binding CustomModelName, Mode=TwoWay}"
+                             FilterMode="Contains" HorizontalAlignment="Stretch" Background="#2c2c35" Foreground="White" Height="36"/>
+          </StackPanel>
+
+          <!-- API Key -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="API Key (Optional Override)" FontSize="10" Foreground="#a0a0a5"/>
+            <TextBox Text="{Binding CustomApiKey}" PasswordChar="●"
+                     Watermark="Enter API key..." Background="#2c2c35" Foreground="White" Height="36"/>
+          </StackPanel>
+          
+          <!-- Privacy notice -->
+          <Border Background="#0d1a0d" BorderBrush="#1a3a1a" BorderThickness="1" CornerRadius="8" Padding="10">
+            <StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <lucide:LucideIcon Kind="ShieldCheck" Size="14" Foreground="#27ae60"/>
+                <TextBlock Text="Privacy Guard Active" FontSize="11" FontWeight="SemiBold" Foreground="#2ecc71"/>
+              </StackPanel>
+              <TextBlock Text="Before log transmission, all IPv4/IPv6 addresses and local system folders are automatically redacted. Player usernames remain intact." 
+                         FontSize="10" Foreground="#808085" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Analyze Button -->
+          <Button Command="{Binding AnalyzeCommand}" HorizontalAlignment="Stretch" 
+                  Background="#1e90ff" Foreground="White" FontWeight="SemiBold"
+                  Padding="0,12" HorizontalContentAlignment="Center" CornerRadius="8">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+              <lucide:LucideIcon Kind="Sparkles" Size="16" Foreground="White"/>
+              <TextBlock Text="Analyze Server Log" Foreground="White" FontWeight="SemiBold"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Border>
+
+      <!-- RIGHT PANEL: Report View -->
+      <Border Grid.Column="1" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16" VerticalAlignment="Stretch">
+        <Grid RowDefinitions="Auto, *">
+          <TextBlock Grid.Row="0" Text="Troubleshooting Diagnosis" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,12"/>
+          
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Panel>
+              <!-- State 1: Blank state -->
+              <StackPanel Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                          IsVisible="{Binding ShowInitialState}">
+                <lucide:LucideIcon Kind="Sparkles" Size="48" Foreground="#404045" HorizontalAlignment="Center"/>
+                <TextBlock Text="Select a provider and click 'Analyze Server Log' to query diagnostic advice." 
+                           Foreground="#606065" FontSize="13" TextAlignment="Center"/>
+              </StackPanel>
+
+              <!-- State 2: Loading -->
+              <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" HorizontalAlignment="Center"/>
+                <TextBlock Text="Consulting AI expert (Scrubbing logs, analyzing stack traces...)" 
+                           Foreground="#1e90ff" FontSize="13" FontWeight="Medium" TextAlignment="Center"/>
+              </StackPanel>
+
+              <!-- State 3: Error -->
+              <Border Background="#2a1616" BorderBrush="#501616" BorderThickness="1" CornerRadius="8" Padding="16" VerticalAlignment="Top"
+                      IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <StackPanel Spacing="8">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <lucide:LucideIcon Kind="ShieldAlert" Size="18" Foreground="#e74c3c" VerticalAlignment="Center"/>
+                    <TextBlock Text="Analysis Failed" FontWeight="Bold" Foreground="#e74c3c" VerticalAlignment="Center" FontSize="14"/>
+                  </StackPanel>
+                  <TextBlock Text="{Binding ErrorMessage}" Foreground="#f5b0a7" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+
+              <!-- State 4: Diagnosis rendered markdown -->
+              <ContentControl x:Name="MarkdownHost"
+                              IsVisible="{Binding HasAnalysisResult}"
+                              VerticalAlignment="Top"/>
+            </Panel>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+      
+    </Grid>
+  </Grid>
+
+</UserControl>

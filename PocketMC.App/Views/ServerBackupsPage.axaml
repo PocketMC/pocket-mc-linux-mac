@@ -1,0 +1,204 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.ServerBackupsPage"
+             x:DataType="vm:ServerBackupsViewModel"
+             Background="#141419">
+
+  <Grid RowDefinitions="Auto, *">
+    
+    <!-- HEADER BAR -->
+    <Border Grid.Row="0" Background="#1e1e24" Padding="16,12" BorderBrush="#2c2c35" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto, *, Auto">
+        <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
+                Background="Transparent" BorderThickness="0" Padding="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="White"/>
+            <TextBlock Text="Back to Dashboard" VerticalAlignment="Center" Foreground="White" FontWeight="Medium"/>
+          </StackPanel>
+        </Button>
+        
+        <TextBlock Grid.Column="1" Text="Backups &amp; Restore Manager" 
+                   FontSize="18" FontWeight="Bold" Foreground="White" 
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <ProgressBar IsIndeterminate="True" Width="100" Height="4" 
+                       IsVisible="{Binding IsBusy}" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" 
+                     FontSize="12" Foreground="#a0a0a5" Margin="8,0,0,0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- CONTENT -->
+    <Grid Grid.Row="1" ColumnDefinitions="*, 350" Margin="16" x:Name="ContentGrid">
+      
+      <!-- LEFT SIDE: Backup History & Action buttons -->
+      <Grid Grid.Column="0" RowDefinitions="*, Auto" Margin="0,0,16,0" x:Name="LeftGrid">
+        <!-- Backups List -->
+        <Border Grid.Row="0" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+          <Grid RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0" Text="Backup History" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,12"/>
+            
+            <ListBox Grid.Row="1" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
+                     Background="Transparent" BorderThickness="0" Name="BackupsList">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="*, Auto, Auto" Margin="4,8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                      <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="White" FontSize="14"/>
+                      <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="#808085"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="16,0" Spacing="2">
+                      <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm} UTC'}" FontSize="12" Foreground="#a0a0a5"/>
+                      <TextBlock Text="{Binding SizeBytes, StringFormat='{}{0:N0} bytes'}" FontSize="11" Foreground="#808085"/>
+                    </StackPanel>
+
+                    <lucide:LucideIcon Grid.Column="2" Kind="ShieldCheck" Size="18" Foreground="#2ecc71" 
+                                       IsVisible="{Binding IntegrityVerified}" VerticalAlignment="Center"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+
+        <!-- Actions Panel -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0" HorizontalAlignment="Left">
+          <Button Command="{Binding CreateBackupCommand}" Background="#1e90ff" Foreground="White" CornerRadius="8" Padding="16,10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
+              <TextBlock Text="Create Backup Now" FontWeight="Medium" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding RestoreBackupCommand}" Background="#2ecc71" Foreground="White" CornerRadius="8" Padding="16,10"
+                  IsEnabled="{Binding SelectedBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <lucide:LucideIcon Kind="RotateCcw" Size="16" VerticalAlignment="Center"/>
+              <TextBlock Text="Restore Selected" FontWeight="Medium" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding VerifyIntegrityCommand}" Background="#f39c12" Foreground="White" CornerRadius="8" Padding="16,10"
+                  IsEnabled="{Binding SelectedBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <lucide:LucideIcon Kind="ShieldCheck" Size="16" VerticalAlignment="Center"/>
+              <TextBlock Text="Verify Integrity" FontWeight="Medium" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding DeleteBackupCommand}" Background="#e74c3c" Foreground="White" CornerRadius="8" Padding="12,10"
+                  IsEnabled="{Binding SelectedBackup, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <lucide:LucideIcon Kind="Trash" Size="16"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- RIGHT SIDE: Settings Panel -->
+      <ScrollViewer Grid.Column="1" x:Name="RightPanelScroll">
+        <StackPanel Spacing="16" Margin="0,0,4,0">
+          
+          <!-- Local Backups Configuration -->
+          <Border Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+            <StackPanel Spacing="12">
+              <TextBlock Text="Local Storage Settings" FontSize="15" FontWeight="Bold" Foreground="White"/>
+              
+              <StackPanel Spacing="4">
+                <TextBlock Text="Max Backups to Keep" FontSize="11" Foreground="#a0a0a5"/>
+                <NumericUpDown Value="{Binding MaxBackupsToKeep}" Minimum="1" Maximum="100" Background="#2c2c35" Foreground="White"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Custom Backup Folder (Optional)" FontSize="11" Foreground="#a0a0a5"/>
+                <TextBox Text="{Binding CustomBackupDirectory}" Watermark="e.g. /path/to/backups" Background="#2c2c35" Foreground="White" BorderBrush="#3c3c45"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="External Replication Directory" FontSize="11" Foreground="#a0a0a5"/>
+                <TextBox Text="{Binding ExternalBackupDirectory}" Watermark="e.g. USB or NAS mount path" Background="#2c2c35" Foreground="White" BorderBrush="#3c3c45"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Cloud Backups Configuration -->
+          <Border Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+            <StackPanel Spacing="12">
+              <TextBlock Text="Cloud Storage Integration" FontSize="15" FontWeight="Bold" Foreground="White"/>
+              
+              <ToggleSwitch IsChecked="{Binding EnableCloudBackups}" Content="Enable Cloud Backups" Foreground="White"/>
+              
+              <StackPanel Spacing="6" IsEnabled="{Binding EnableCloudBackups}">
+                <CheckBox IsChecked="{Binding UploadOnManualBackup}" Content="Upload Manual Backups" Foreground="White" FontSize="12"/>
+                <CheckBox IsChecked="{Binding UploadOnScheduledBackup}" Content="Upload Scheduled Backups" Foreground="White" FontSize="12"/>
+                
+                <!-- Google Drive Provider -->
+                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                  <Grid RowDefinitions="Auto, Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsGoogleDriveEnabled}" Content="Google Drive" Foreground="White"/>
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="{Binding GoogleDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectGoogleDrive}"/>
+                        <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsGoogleDriveConnected}"/>
+                      </StackPanel>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsGoogleDriveEnabled}">
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
+                      <NumericUpDown Value="{Binding GoogleDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <!-- OneDrive Provider -->
+                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                  <Grid RowDefinitions="Auto, Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsOneDriveEnabled}" Content="Microsoft OneDrive" Foreground="White"/>
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="{Binding OneDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectOneDrive}"/>
+                        <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsOneDriveConnected}"/>
+                      </StackPanel>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsOneDriveEnabled}">
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
+                      <NumericUpDown Value="{Binding OneDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <!-- Dropbox Provider -->
+                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                  <Grid RowDefinitions="Auto, Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsDropboxEnabled}" Content="Dropbox" Foreground="White"/>
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="{Binding DropboxStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectDropbox}"/>
+                        <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsDropboxConnected}"/>
+                      </StackPanel>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsDropboxEnabled}">
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
+                      <NumericUpDown Value="{Binding DropboxRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Save settings button -->
+          <Button Command="{Binding SaveSettingsCommand}" Content="Save Configurations" 
+                  Background="#3f51b5" Foreground="White" CornerRadius="8" 
+                  Padding="16,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

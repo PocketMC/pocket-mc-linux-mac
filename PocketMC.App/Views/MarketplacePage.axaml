@@ -1,0 +1,172 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.MarketplacePage"
+             x:DataType="vm:MarketplaceViewModel"
+             Background="#141419">
+
+  <Grid RowDefinitions="Auto, *">
+    
+    <!-- HEADER BAR -->
+    <Border Grid.Row="0" Background="#1e1e24" Padding="16,12" BorderBrush="#2c2c35" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto, *, Auto">
+        <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
+                Background="Transparent" BorderThickness="0" Padding="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="White"/>
+            <TextBlock Text="Back to Dashboard" VerticalAlignment="Center" Foreground="White" FontWeight="Medium"/>
+          </StackPanel>
+        </Button>
+        
+        <TextBlock Grid.Column="1" Text="Addons &amp; Marketplace" 
+                   FontSize="18" FontWeight="Bold" Foreground="White" 
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <!-- Top Loader (only for searches) -->
+          <ProgressBar IsIndeterminate="True" Width="100" Height="4" 
+                       IsVisible="{Binding IsSearching}" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" 
+                     FontSize="12" Foreground="#a0a0a5" Margin="8,0,0,0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- CONTENT -->
+    <Grid Grid.Row="1" ColumnDefinitions="*, 350" Margin="16" x:Name="ContentGrid">
+      
+      <!-- LEFT SIDE: Catalog Search & Results -->
+      <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0,0,16,0" x:Name="LeftGrid">
+        
+        <!-- Search Controls -->
+        <Border Grid.Row="0" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16" Margin="0,0,0,16">
+          <Grid ColumnDefinitions="*, 12, Auto, 12, Auto, 12, Auto">
+            <TextBox Grid.Column="0" Text="{Binding SearchQuery}" Watermark="Search for mods, plugins, modpacks..." 
+                     Background="#2c2c35" Foreground="White" BorderBrush="#3c3c45">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+
+            <ComboBox Grid.Column="2" ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"
+                      Background="#2c2c35" Foreground="White" Width="130"/>
+
+            <ComboBox Grid.Column="4" ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}"
+                      Background="#2c2c35" Foreground="White" Width="110"/>
+
+            <Button Grid.Column="6" Command="{Binding SearchCommand}" Background="#1e90ff" Foreground="White" CornerRadius="8" Padding="16,8">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <lucide:LucideIcon Kind="Search" Size="16" VerticalAlignment="Center"/>
+                <TextBlock Text="Search" FontWeight="Medium" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Search Results List -->
+        <Border Grid.Row="1" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+          <Grid RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0" Text="Catalog Results" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,12"/>
+            
+            <ListBox Grid.Row="1" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedResult}"
+                     Background="Transparent" BorderThickness="0" Name="ResultsList">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:SearchResultItemViewModel">
+                  <Grid ColumnDefinitions="Auto, *, Auto" Margin="4,8">
+                    
+                    <!-- Icon or Letter Fallback -->
+                    <Border Grid.Column="0" Width="40" Height="40" Background="#2c2c35" CornerRadius="8" Margin="0,0,12,0" ClipToBounds="True">
+                      <Panel>
+                        <!-- Fallback Letter Circle -->
+                        <Border Background="#3f51b5" CornerRadius="8" IsVisible="{Binding IconBitmap, Converter={x:Static ObjectConverters.IsNull}}">
+                          <TextBlock Text="{Binding InitialLetter}" Foreground="White" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Actual Image -->
+                        <Image Source="{Binding IconBitmap}" Width="40" Height="40" Stretch="UniformToFill" IsVisible="{Binding IconBitmap, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                      </Panel>
+                    </Border>
+                    
+                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Hit.Title}" FontWeight="SemiBold" Foreground="White" FontSize="14"/>
+                      <TextBlock Text="{Binding Hit.Description}" FontSize="12" Foreground="#a0a0a5" TextWrapping="Wrap" MaxLines="2"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="12,0,0,0">
+                      <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="2">
+                        <TextBlock Text="{Binding Hit.Downloads, StringFormat='{}{0:N0} DLs'}" FontSize="11" Foreground="#808085" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Hit.Slug}" FontSize="10" Foreground="#606065" HorizontalAlignment="Right"/>
+                      </StackPanel>
+                      
+                      <!-- Toggle Buttons for Install/Reinstall -->
+                      <Panel>
+                        <!-- Install Button -->
+                        <Button Command="{ReflectionBinding $parent[UserControl].DataContext.InstallAddonCommand}" 
+                                CommandParameter="{Binding}"
+                                Background="#3f51b5" Foreground="White" CornerRadius="6" Padding="10,6"
+                                IsVisible="{Binding !IsInstalled}">
+                          <StackPanel Orientation="Horizontal" Spacing="4">
+                            <lucide:LucideIcon Kind="Download" Size="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Install" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                        
+                        <!-- Reinstall Button -->
+                        <Button Command="{ReflectionBinding $parent[UserControl].DataContext.InstallAddonCommand}" 
+                                CommandParameter="{Binding}"
+                                Background="#2c2c35" BorderBrush="#3c3c45" BorderThickness="1" Foreground="#a0a0a5" CornerRadius="6" Padding="10,6"
+                                IsVisible="{Binding IsInstalled}">
+                          <StackPanel Orientation="Horizontal" Spacing="4">
+                            <lucide:LucideIcon Kind="RefreshCw" Size="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Reinstall" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                      </Panel>
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+
+        <!-- Progress bar for downloads (only visible during download/install) -->
+        <Border Grid.Row="2" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16" Margin="0,16,0,0" IsVisible="{Binding IsDownloading}">
+          <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StatusText}" FontSize="12" Foreground="White"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ProgressPercent, StringFormat='{}{0:F0}%'}" FontSize="12" Foreground="#1e90ff" FontWeight="Bold"/>
+            <ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" Height="8" Margin="0,8,0,0"/>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- RIGHT SIDE: Installed Addons -->
+      <Border Grid.Column="1" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16" x:Name="RightPanel">
+        <Grid RowDefinitions="Auto, *">
+          <TextBlock Grid.Row="0" Text="Installed Addons" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,12"/>
+          
+          <ListBox Grid.Row="1" ItemsSource="{Binding InstalledAddons}" SelectedItem="{Binding SelectedInstalledAddon}"
+                   Background="Transparent" BorderThickness="0" Name="InstalledList">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*, Auto" Margin="4,8">
+                  <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="{Binding ProjectTitle}" FontWeight="SemiBold" Foreground="White" FontSize="13"/>
+                    <TextBlock Text="{Binding DisplayName, StringFormat='Version: {0}'}" FontSize="11" Foreground="#a0a0a5"/>
+                    <TextBlock Text="{Binding FileName}" FontSize="10" Foreground="#606065"/>
+                  </StackPanel>
+
+                  <Button Grid.Column="1" Command="{ReflectionBinding $parent[UserControl].DataContext.UninstallAddonCommand}" 
+                          CommandParameter="{Binding}"
+                          Background="Transparent" BorderThickness="0" Foreground="#e74c3c" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Trash" Size="16"/>
+                  </Button>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>
