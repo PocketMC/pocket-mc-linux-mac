@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace PocketMC.Core.Services
@@ -6,6 +7,6 @@ namespace PocketMC.Core.Services
     {
         Task<string> GetPHPExecutablePathAsync(string version);
         Task<bool> ValidatePHPRuntimeAsync(string executablePath, string expectedVersion);
-        Task ProvisionPHPRuntimeAsync(string version);
+        Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null);
     }
 }
