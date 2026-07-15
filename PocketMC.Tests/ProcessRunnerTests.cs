@@ -50,14 +50,14 @@ namespace PocketMC.Tests
         {
             public Task<string> GetJavaExecutablePathAsync(string version) => Task.FromResult("java");
             public Task<bool> ValidateJavaRuntimeAsync(string path, string version) => Task.FromResult(true);
-            public Task ProvisionJavaRuntimeAsync(string version) => Task.CompletedTask;
+            public Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null) => Task.CompletedTask;
         }
 
         private class MockPHPService : IPHPService
         {
             public Task<string> GetPHPExecutablePathAsync(string version) => Task.FromResult("php");
             public Task<bool> ValidatePHPRuntimeAsync(string path, string version) => Task.FromResult(true);
-            public Task ProvisionPHPRuntimeAsync(string version) => Task.CompletedTask;
+            public Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null) => Task.CompletedTask;
         }
 
         [Fact]
