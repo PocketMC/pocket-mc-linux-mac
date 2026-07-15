@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketMC Remote Control</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>PocketMC Remote Control</h1>
+        </header>
+        
+        <main id="login-view">
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <div id="login-error" style="color: red; display: none;">Invalid password</div>
+        </main>
+
+        <main id="dashboard-view" style="display: none;">
+            <div class="sidebar">
+                <h2>Instances</h2>
+                <ul id="instance-list"></ul>
+            </div>
+            <div class="content">
+                <h2 id="current-instance-name">Select an Instance</h2>
+                <div class="actions" id="instance-actions" style="display: none;">
+                    <button id="btn-start">Start</button>
+                    <button id="btn-stop">Stop</button>
+                    <button id="btn-restart">Restart</button>
+                </div>
+                <div class="console-container">
+                    <pre id="console-output"></pre>
+                    <form id="console-form" style="display: none;">
+                        <input type="text" id="console-input" placeholder="Type command..." autocomplete="off">
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
