@@ -1,0 +1,524 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using PocketMC.Core.Models;
+using PocketMC.Core.Services;
+
+namespace PocketMC.Infrastructure.Services
+{
+    public class CurseForgeService : IAddonProvider
+    {
+        private readonly HttpClient _httpClient;
+        private readonly ISettingsService _settingsService;
+        private readonly ICurseForgeApiKeyDialogService _dialogService;
+        private const string ApiBase = "https://api.curseforge.com/v1";
+
+        public CurseForgeService(ISettingsService settingsService, HttpClient httpClient, ICurseForgeApiKeyDialogService dialogService)
+        {
+            _settingsService = settingsService;
+            _httpClient = httpClient;
+            _dialogService = dialogService;
+        }
+
+        public string Name => "CurseForge";
+
+        private async Task<string?> GetActiveApiKeyAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_settingsService.Settings.CurseForgeApiKey))
+            {
+                return _settingsService.Settings.CurseForgeApiKey;
+            }
+
+            var key = await _dialogService.PromptForApiKeyAsync();
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                _settingsService.Settings.CurseForgeApiKey = key;
+                _settingsService.Save();
+            }
+            return key;
+        }
+
+        private static int MapLoaderType(string loader) => loader.ToLowerInvariant() switch
+        {
+            "forge" => 1,
+            "fabric" => 4,
+            "quilt" => 5,
+            "neoforge" => 6,
+            _ => 0
+        };
+
+        private static bool FileNameMentionsLoaderSafely(string fileName, string loader)
+        {
+            string normalized = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
+
+            return loader.ToLowerInvariant() switch
+            {
+                "forge" => Regex.IsMatch(normalized, @"(^|[-_.])forge($|[-_.])", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100))
+                           && !normalized.Contains("neoforge", StringComparison.OrdinalIgnoreCase),
+                "neoforge" => Regex.IsMatch(normalized, @"(^|[-_.])neoforge($|[-_.])", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100)),
+                "fabric" => Regex.IsMatch(normalized, @"(^|[-_.])fabric($|[-_.])", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100)),
+                "quilt" => Regex.IsMatch(normalized, @"(^|[-_.])quilt($|[-_.])", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100)),
+                "bukkit" or "spigot" or "paper" or "purpur" or "folia" or "bungeecord" or "velocity" or "waterfall" => true,
+                _ => false
+            };
+        }
+
+        private static bool FileSupportsLoader(JsonNode fileNode, string loader)
+        {
+            if (string.IsNullOrWhiteSpace(loader)) return true;
+
+            var normalizedLoader = loader.ToLowerInvariant();
+
+            var allVersions = new List<string>();
+            var gameVersions = fileNode["gameVersions"]?.AsArray();
+            if (gameVersions != null)
+            {
+                foreach (var gv in gameVersions)
+                {
+                    var val = gv?.ToString();
+                    if (!string.IsNullOrWhiteSpace(val)) allVersions.Add(val);
+                }
+            }
+
+            var sortableVersions = fileNode["sortableGameVersions"]?.AsArray();
+            if (sortableVersions != null)
+            {
+                foreach (var sortable in sortableVersions)
+                {
+                    var val = sortable?["gameVersionName"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(val)) allVersions.Add(val);
+                }
+            }
+
+            bool metaMatches = allVersions.Any(v =>
+                v.Equals(normalizedLoader, StringComparison.OrdinalIgnoreCase) ||
+                v.Contains($"-{normalizedLoader}", StringComparison.OrdinalIgnoreCase) ||
+                v.Contains($"{normalizedLoader}-", StringComparison.OrdinalIgnoreCase)
+            );
+
+            if (metaMatches)
+            {
+                return true;
+            }
+
+            var knownLoaders = new[] { "forge", "neoforge", "fabric", "quilt" };
+            bool hasAnyLoaderMetadata = allVersions.Any(v =>
+                knownLoaders.Any(l =>
+                    v.Equals(l, StringComparison.OrdinalIgnoreCase) ||
+                    v.Contains($"-{l}", StringComparison.OrdinalIgnoreCase) ||
+                    v.Contains($"{l}-", StringComparison.OrdinalIgnoreCase)
+                )
+            );
+
+            if (hasAnyLoaderMetadata)
+            {
+                return false;
+            }
+
+            var fileName = fileNode["fileName"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return FileNameMentionsLoaderSafely(fileName, loader);
+            }
+
+            return false;
+        }
+
+        public async Task<List<ModrinthHit>> SearchAsync(string type, string mcVersion, string loader, string query = "", int offset = 0, int sortField = 2, string sortOrder = "desc", int? categoryId = null)
+        {
+            try
+            {
+                string? apiKey = await GetActiveApiKeyAsync();
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return new List<ModrinthHit>
+                    {
+                        new ModrinthHit
+                        {
+                            Title = "CurseForge Key Required",
+                            Description = "Please provide your CurseForge API key in the App Settings page to use this source.",
+                            IconUrl = "",
+                            Slug = "",
+                            Downloads = 0
+                        }
+                    };
+                }
+
+                string classId = type switch
+                {
+                    "project_type:mod" => "6",
+                    "project_type:modpack" => "4471",
+                    "project_type:plugin" => "5",
+                    "project_type:world" => "17",
+                    "6945" => "6945",
+                    _ => "6"
+                };
+
+                string url = $"{ApiBase}/mods/search?gameId=432&classId={classId}&sortField={sortField}&sortOrder={sortOrder}&pageSize=20&index={offset}";
+                if (classId == "6")
+                {
+                    url += $"&modLoaderType={MapLoaderType(loader)}";
+                }
+
+                if (categoryId.HasValue)
+                {
+                    url += $"&categoryId={categoryId.Value}";
+                }
+
+                if (!string.IsNullOrEmpty(mcVersion) && mcVersion != "*")
+                    url += $"&gameVersion={Uri.EscapeDataString(mcVersion)}";
+
+                if (!string.IsNullOrEmpty(query))
+                    url += $"&searchFilter={Uri.EscapeDataString(query)}";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("x-api-key", apiKey);
+
+                var httpResponse = await _httpClient.SendAsync(request);
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    string errorText = await httpResponse.Content.ReadAsStringAsync();
+                    return new List<ModrinthHit>
+                    {
+                        new ModrinthHit
+                        {
+                            Title = $"API Error: {(int)httpResponse.StatusCode} {httpResponse.StatusCode}",
+                            Description = errorText.Length > 150 ? errorText.Substring(0, 150) + "..." : errorText,
+                            IconUrl = "",
+                            Slug = "",
+                            Downloads = 0
+                        }
+                    };
+                }
+
+                var rootNode = await httpResponse.Content.ReadFromJsonAsync<JsonNode>();
+                if (rootNode == null) return new List<ModrinthHit>();
+
+                var data = rootNode["data"]?.AsArray();
+                var results = new List<ModrinthHit>();
+
+                if (data != null)
+                {
+                    foreach (var item in data)
+                    {
+                        if (item == null) continue;
+
+                        string icon = "";
+                        var logoNode = item["logo"];
+                        if (logoNode is JsonObject logoObj)
+                        {
+                            icon = logoObj["thumbnailUrl"]?.ToString() ?? logoObj["url"]?.ToString() ?? "";
+                        }
+
+                        int safeDownloads = 0;
+                        var dlNode = item["downloadCount"];
+                        if (dlNode != null && double.TryParse(dlNode.ToString(), out double parsedDl))
+                        {
+                            safeDownloads = parsedDl > int.MaxValue ? int.MaxValue : (int)parsedDl;
+                        }
+
+                        results.Add(new ModrinthHit
+                        {
+                            Title = item["name"]?.ToString() ?? "Unknown",
+                            Description = item["summary"]?.ToString() ?? "",
+                            IconUrl = icon,
+                            Slug = item["id"]?.ToString() ?? "",
+                            Downloads = safeDownloads
+                        });
+                    }
+                }
+
+                if (results.Count == 0)
+                {
+                    results.Add(new ModrinthHit
+                    {
+                        Title = "No Results",
+                        Description = "The API returned 0 mods for this query/version.",
+                        IconUrl = "",
+                        Slug = ""
+                    });
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                return new List<ModrinthHit>
+                {
+                    new ModrinthHit
+                    {
+                        Title = "Code Exception",
+                        Description = ex.Message,
+                        IconUrl = "",
+                        Slug = ""
+                    }
+                };
+            }
+        }
+
+        public async Task<MarketplaceVersion?> GetLatestVersionAsync(string projectId, string mcVersion, IReadOnlyList<string> loaderCandidates)
+        {
+            var mcCandidates = ModrinthService.BuildMinecraftVersionCandidates(mcVersion);
+            if (mcCandidates.Count == 0) mcCandidates = new List<string> { "" };
+
+            if (loaderCandidates == null || loaderCandidates.Count == 0)
+            {
+                foreach (var candidate in mcCandidates)
+                {
+                    var res = await GetLatestVersionWithProjectInfoAsync(projectId, candidate, "");
+                    if (res != null) return MapToMarketplaceVersion(res.Value.File, res.Value.Project);
+                }
+                return null;
+            }
+
+            foreach (var candidate in mcCandidates)
+            {
+                foreach (var loader in loaderCandidates)
+                {
+                    var res = await GetLatestVersionWithProjectInfoAsync(projectId, candidate, loader);
+                    if (res != null)
+                    {
+                        var mv = MapToMarketplaceVersion(res.Value.File, res.Value.Project);
+                        mv.SelectedLoader = loader;
+                        mv.MatchedMinecraftVersion = candidate;
+                        return mv;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<MarketplaceVersion?> GetLatestVersionAsync(string projectId, string mcVersion, string loader)
+        {
+            var mcCandidates = ModrinthService.BuildMinecraftVersionCandidates(mcVersion);
+            if (mcCandidates.Count == 0) mcCandidates = new List<string> { "" };
+
+            foreach (var candidate in mcCandidates)
+            {
+                var result = await GetLatestVersionWithProjectInfoAsync(projectId, candidate, loader);
+                if (result != null) return MapToMarketplaceVersion(result.Value.File, result.Value.Project);
+            }
+            return null;
+        }
+
+        public async Task<MarketplaceVersion?> GetVersionByIdAsync(string versionId)
+        {
+            try
+            {
+                string? apiKey = await GetActiveApiKeyAsync();
+                if (string.IsNullOrEmpty(apiKey)) return null;
+
+                string projectId = "";
+                string fileId = versionId;
+                if (versionId.Contains(':'))
+                {
+                    var parts = versionId.Split(':');
+                    projectId = parts[0];
+                    fileId = parts[1];
+                }
+
+                string url = $"{ApiBase}/mods/{projectId}/files/{fileId}";
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("x-api-key", apiKey);
+
+                var httpResponse = await _httpClient.SendAsync(request);
+                if (!httpResponse.IsSuccessStatusCode) return null;
+
+                var rootNode = await httpResponse.Content.ReadFromJsonAsync<JsonNode>();
+                var fileNode = rootNode?["data"];
+                if (fileNode == null) return null;
+
+                var projectInfo = await GetProjectInfoAsync(projectId);
+                return MapToMarketplaceVersion(fileNode, projectInfo);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<MarketplaceProjectInfo?> GetProjectInfoAsync(string projectId)
+        {
+            try
+            {
+                string? apiKey = await GetActiveApiKeyAsync();
+                if (string.IsNullOrEmpty(apiKey)) return null;
+
+                string url = $"{ApiBase}/mods/{projectId}";
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("x-api-key", apiKey);
+
+                var httpResponse = await _httpClient.SendAsync(request);
+                if (!httpResponse.IsSuccessStatusCode) return null;
+
+                var rootNode = await httpResponse.Content.ReadFromJsonAsync<JsonNode>();
+                var data = rootNode?["data"];
+                if (data == null) return null;
+
+                return new MarketplaceProjectInfo
+                {
+                    Id = data["id"]?.ToString() ?? "",
+                    Title = data["name"]?.ToString() ?? "",
+                    Slug = data["slug"]?.ToString() ?? "",
+                    IconUrl = data["logo"]?["thumbnailUrl"]?.ToString()
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private MarketplaceVersion MapToMarketplaceVersion(JsonNode fileNode, MarketplaceProjectInfo? project)
+        {
+            long fileId = long.Parse(fileNode["id"]!.ToString());
+            string fileName = fileNode["fileName"]?.ToString() ?? "mod.jar";
+            string downloadUrl = fileNode["downloadUrl"]?.ToString() ?? "";
+
+            var v = new MarketplaceVersion
+            {
+                Id = fileId.ToString(),
+                Name = fileNode["displayName"]?.ToString() ?? "Latest",
+                ProjectId = project?.Id ?? fileNode["modId"]?.ToString() ?? "",
+                ProjectTitle = project?.Title ?? "Unknown Project",
+                FileName = fileName,
+                DownloadUrl = downloadUrl,
+                ReleaseType = MapReleaseType(fileNode["releaseType"])
+            };
+
+            (v.Hash, v.HashType) = GetPreferredHash(fileNode);
+            if (!v.ReleaseType.Equals("release", StringComparison.OrdinalIgnoreCase))
+            {
+                v.Warnings.Add($"Only a {v.ReleaseType} CurseForge file is available for this selection. Review before installing.");
+            }
+
+            var deps = fileNode["dependencies"]?.AsArray();
+            if (deps != null)
+            {
+                foreach (var dep in deps)
+                {
+                    if (dep == null) continue;
+                    int typeInt = dep["relationType"]?.GetValue<int>() ?? 0;
+                    DependencyType type = typeInt switch
+                    {
+                        1 => DependencyType.Embedded,
+                        2 => DependencyType.Optional,
+                        3 => DependencyType.Required,
+                        5 => DependencyType.Incompatible,
+                        _ => DependencyType.Optional
+                    };
+
+                    v.Dependencies.Add(new MarketplaceDependency
+                    {
+                        ProjectId = dep["modId"]?.ToString() ?? "",
+                        Type = type
+                    });
+                }
+            }
+
+            return v;
+        }
+
+        private async Task<(JsonNode File, MarketplaceProjectInfo Project)?> GetLatestVersionWithProjectInfoAsync(string projectId, string mcVersion, string loader)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(projectId)) return null;
+
+                string? apiKey = await GetActiveApiKeyAsync();
+                if (string.IsNullOrEmpty(apiKey)) return null;
+
+                var projectInfo = await GetProjectInfoAsync(projectId);
+                if (projectInfo == null) return null;
+
+                string url = $"{ApiBase}/mods/{projectId}/files";
+                if (!string.IsNullOrEmpty(mcVersion) && mcVersion != "*")
+                    url += $"?gameVersion={Uri.EscapeDataString(mcVersion)}";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("x-api-key", apiKey);
+
+                var httpResponse = await _httpClient.SendAsync(request);
+                if (!httpResponse.IsSuccessStatusCode) return null;
+
+                var rootNode = await httpResponse.Content.ReadFromJsonAsync<JsonNode>();
+                var files = rootNode?["data"]?.AsArray();
+                if (files == null || files.Count == 0) return null;
+
+                var matchingFiles = new List<JsonNode>();
+                foreach (var file in files)
+                {
+                    if (file == null) continue;
+                    if (string.IsNullOrWhiteSpace(loader) || FileSupportsLoader(file, loader))
+                    {
+                        matchingFiles.Add(file);
+                    }
+                }
+
+                if (matchingFiles.Count == 0 && !string.IsNullOrWhiteSpace(loader))
+                {
+                    return null;
+                }
+
+                JsonNode? latestFile = SelectPreferredFile(matchingFiles.Count > 0 ? matchingFiles : files.Where(file => file != null)!);
+                if (latestFile == null) return null;
+
+                return (latestFile, projectInfo);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static JsonNode? SelectPreferredFile(IEnumerable<JsonNode?> files)
+        {
+            var materialized = files.Where(file => file != null).Cast<JsonNode>().ToList();
+            return materialized.FirstOrDefault(file => MapReleaseType(file["releaseType"]).Equals("release", StringComparison.OrdinalIgnoreCase))
+                ?? materialized.FirstOrDefault();
+        }
+
+        private static string MapReleaseType(JsonNode? releaseTypeNode)
+        {
+            int releaseType = 1;
+            if (releaseTypeNode != null)
+            {
+                int.TryParse(releaseTypeNode.ToString(), out releaseType);
+            }
+
+            return releaseType switch
+            {
+                2 => "beta",
+                3 => "alpha",
+                _ => "release"
+            };
+        }
+
+        private static (string? Hash, string? HashType) GetPreferredHash(JsonNode fileNode)
+        {
+            var hashes = fileNode["hashes"]?.AsArray();
+            if (hashes == null) return (null, null);
+
+            foreach (var hash in hashes)
+            {
+                if (hash == null) continue;
+                int algo = hash["algo"]?.GetValue<int>() ?? 0;
+                string? value = hash["value"]?.ToString();
+                if (algo == 1 && !string.IsNullOrWhiteSpace(value))
+                {
+                    return (value, "sha1");
+                }
+            }
+
+            return (null, null);
+        }
+    }
+}
