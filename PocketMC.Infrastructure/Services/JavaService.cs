@@ -96,8 +96,11 @@ namespace PocketMC.Infrastructure.Services
                     process.WaitForExit();
 
                     string fullOutput = err + outStr;
-                    // Check if it runs and prints java version
-                    return Task.FromResult(fullOutput.Contains("version") || process.ExitCode == 0);
+                    // Check if it runs and prints java version info
+                    bool hasJavaIndicator = fullOutput.Contains("version", StringComparison.OrdinalIgnoreCase) || 
+                                           fullOutput.Contains("openjdk", StringComparison.OrdinalIgnoreCase) || 
+                                           fullOutput.Contains("java", StringComparison.OrdinalIgnoreCase);
+                    return Task.FromResult(hasJavaIndicator && process.ExitCode == 0);
                 }
             }
             catch
