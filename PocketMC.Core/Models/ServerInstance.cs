@@ -23,5 +23,10 @@ namespace PocketMC.Core.Models
         public string EngineVersion { get; set; } = string.Empty;
         public string JvmArgs { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Backups
+        public DateTime? LastBackupTime { get; set; }
+        public int MaxBackupsToKeep { get; set; } = 5;
+        public string? CustomBackupDirectory { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace PocketMC.Core.Services
@@ -6,6 +7,6 @@ namespace PocketMC.Core.Services
     {
         Task<string> GetJavaExecutablePathAsync(string version);
         Task<bool> ValidateJavaRuntimeAsync(string executablePath, string expectedVersion);
-        Task ProvisionJavaRuntimeAsync(string version);
+        Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null);
     }
 }
