@@ -80,7 +80,7 @@ namespace PocketMC.Tests
             // Enqueue 10 more lines after exception
             for (int i = 1; i <= 10; i++)
             {
-                _logService.WriteLog(slug, $"Post-crash cleanup line {i}");
+                _logService.WriteLog(slug, $"Post-crash cleanup line {i} with IP 1.2.3.4");
             }
 
             var diagnostics = _redactionService.GetRedactedDiagnosticsLog(slug);

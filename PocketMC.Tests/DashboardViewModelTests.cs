@@ -6,6 +6,8 @@ using PocketMC.App.ViewModels;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
+using PocketMC.RemoteControl.Tunnels;
+using PocketMC.RemoteControl.Services;
 using Xunit;
 
 namespace PocketMC.Tests
@@ -77,8 +79,11 @@ namespace PocketMC.Tests
             var playerService = new FakePlayerService();
             var metricsTracker = new ProcessMetricsTracker();
             var themeManager = new ThemeManager();
+            var settingsService = new FakeSettingsService();
+            var playitClient = new PlayitApiClient(settingsService);
+            var localNetworkAddressService = new LocalNetworkAddressService();
 
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -99,8 +104,11 @@ namespace PocketMC.Tests
             var playerService = new FakePlayerService();
             var metricsTracker = new ProcessMetricsTracker();
             var themeManager = new ThemeManager();
+            var settingsService = new FakeSettingsService();
+            var playitClient = new PlayitApiClient(settingsService);
+            var localNetworkAddressService = new LocalNetworkAddressService();
 
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();

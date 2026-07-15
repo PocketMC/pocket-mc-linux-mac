@@ -12,7 +12,7 @@ namespace PocketMC.Tests
             public bool ShouldSucceed { get; set; } = true;
             public Task<string> GetJavaExecutablePathAsync(string version) => Task.FromResult("java");
             public Task<bool> ValidateJavaRuntimeAsync(string executablePath, string expectedVersion) => Task.FromResult(ShouldSucceed);
-            public Task ProvisionJavaRuntimeAsync(string version) => Task.CompletedTask;
+            public Task ProvisionJavaRuntimeAsync(string version, System.IProgress<double>? progress = null) => Task.CompletedTask;
         }
 
         private class FakePHPService : IPHPService
@@ -20,7 +20,7 @@ namespace PocketMC.Tests
             public bool ShouldSucceed { get; set; } = true;
             public Task<string> GetPHPExecutablePathAsync(string version) => Task.FromResult("php");
             public Task<bool> ValidatePHPRuntimeAsync(string executablePath, string expectedVersion) => Task.FromResult(ShouldSucceed);
-            public Task ProvisionPHPRuntimeAsync(string version) => Task.CompletedTask;
+            public Task ProvisionPHPRuntimeAsync(string version, System.IProgress<double>? progress = null) => Task.CompletedTask;
         }
 
         [Fact]

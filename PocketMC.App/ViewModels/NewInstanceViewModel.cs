@@ -139,7 +139,7 @@ namespace PocketMC.App.ViewModels
         public async Task LoadVersionsAsync()
         {
             IsLoadingVersions = true;
-            Versions.Clear();
+            var list = new List<string>();
             try
             {
                 using var client = new HttpClient();
@@ -154,7 +154,7 @@ namespace PocketMC.App.ViewModels
                         var tag = release.GetProperty("tag_name").GetString();
                         if (!string.IsNullOrEmpty(tag))
                         {
-                            Versions.Add(tag);
+                            list.Add(tag);
                         }
                     }
                 }
@@ -167,7 +167,7 @@ namespace PocketMC.App.ViewModels
                     {
                         if (property.Value.TryGetProperty("linux", out var linuxProp))
                         {
-                            Versions.Add(property.Name);
+                            list.Add(property.Name);
                         }
                     }
                 }
@@ -203,7 +203,7 @@ namespace PocketMC.App.ViewModels
 
                     foreach (var v in sortedVersions)
                     {
-                        Versions.Add(v);
+                        list.Add(v);
                         count++;
                         if (count >= 15) break;
                     }
@@ -219,7 +219,7 @@ namespace PocketMC.App.ViewModels
                         var stable = ver.GetProperty("stable").GetBoolean();
                         if (stable && !string.IsNullOrEmpty(id))
                         {
-                            Versions.Add(id);
+                            list.Add(id);
                             count++;
                             if (count >= 15) break;
                         }
@@ -262,7 +262,7 @@ namespace PocketMC.App.ViewModels
                     int count = 0;
                     foreach (var v in sortedMcVersions)
                     {
-                        Versions.Add(v);
+                        list.Add(v);
                         count++;
                         if (count >= 15) break;
                     }
@@ -304,7 +304,7 @@ namespace PocketMC.App.ViewModels
                     int count = 0;
                     foreach (var v in sortedMcVersions)
                     {
-                        Versions.Add(v);
+                        list.Add(v);
                         count++;
                         if (count >= 15) break;
                     }
@@ -313,60 +313,71 @@ namespace PocketMC.App.ViewModels
                 {
                     var response = await client.GetStringAsync("https://launchermeta.mojang.com/mc/game/version_manifest.json");
                     using var doc = JsonDocument.Parse(response);
-                    var list = doc.RootElement.GetProperty("versions");
+                    var manifestList = doc.RootElement.GetProperty("versions");
                     int count = 0;
-                    foreach (var ver in list.EnumerateArray())
+                    foreach (var ver in manifestList.EnumerateArray())
                     {
                         var id = ver.GetProperty("id").GetString();
                         var type = ver.GetProperty("type").GetString();
                         if (type == "release" && !string.IsNullOrEmpty(id))
                         {
-                            Versions.Add(id);
+                            list.Add(id);
                             count++;
-                            if (count >= 15) break; // Limit to latest 15 releases for usability
+                            if (count >= 15) break;
                         }
                     }
                 }
 
-                if (!Versions.Any())
+                if (list.Count == 0)
                 {
                     if (SelectedEngine == EngineType.PocketMine)
                     {
-                        Versions.Add("5.1.0");
-                        Versions.Add("5.0.0");
+                        list.Add("5.1.0");
+                        list.Add("5.0.0");
                     }
                     else if (SelectedEngine == EngineType.Bedrock)
                     {
-                        Versions.Add("1.21.0");
-                        Versions.Add("1.20.80");
+                        list.Add("1.21.0");
+                        list.Add("1.20.80");
                     }
                     else
                     {
-                        Versions.Add("1.21");
-                        Versions.Add("1.20.4");
-                        Versions.Add("1.20.1");
+                        list.Add("1.21");
+                        list.Add("1.20.4");
+                        list.Add("1.20.1");
                     }
                 }
 
-                SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Versions.Clear();
+                    foreach (var v in list) Versions.Add(v);
+                    SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
+                });
             }
             catch (Exception ex)
             {
                 if (SelectedEngine == EngineType.PocketMine)
                 {
-                    Versions.Add("5.1.0");
+                    list.Add("5.1.0");
                 }
                 else if (SelectedEngine == EngineType.Bedrock)
                 {
-                    Versions.Add("1.21.0");
+                    list.Add("1.21.0");
                 }
                 else
                 {
-                    Versions.Add("1.21");
-                    Versions.Add("1.20.4");
+                    list.Add("1.21");
+                    list.Add("1.20.4");
                 }
-                SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
-                ProgressText = $"Error loading versions (using fallbacks): {ex.Message}";
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Versions.Clear();
+                    foreach (var v in list) Versions.Add(v);
+                    SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
+                    ProgressText = $"Error loading versions (using fallbacks): {ex.Message}";
+                });
             }
             finally
             {

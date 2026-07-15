@@ -68,6 +68,9 @@ namespace PocketMC.Tests
                 using var vm = new PlayerManagementViewModel(instService, playerService, processRunner);
                 vm.Initialize(instance);
 
+                await vm.LoadListsAsync();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
                 // Verify initial online players load
                 Assert.Contains("Player1", vm.OnlinePlayers);
                 Assert.Contains("Player2", vm.OnlinePlayers);
@@ -75,28 +78,34 @@ namespace PocketMC.Tests
                 // Add to Whitelist
                 vm.NewWhitelistPlayer = "WhitelistPlayer";
                 await vm.AddWhitelistPlayerCommand.ExecuteAsync(null);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Contains("WhitelistPlayer", vm.Whitelist);
 
                 // Remove from Whitelist
                 await vm.RemoveWhitelistPlayerCommand.ExecuteAsync("WhitelistPlayer");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.DoesNotContain("WhitelistPlayer", vm.Whitelist);
 
                 // Add Op
                 vm.NewOpPlayer = "OpPlayer";
                 await vm.AddOpPlayerCommand.ExecuteAsync(null);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Contains("OpPlayer", vm.Ops);
 
                 // Remove Op
                 await vm.RemoveOpPlayerCommand.ExecuteAsync("OpPlayer");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.DoesNotContain("OpPlayer", vm.Ops);
 
                 // Ban Player
                 vm.NewBanPlayer = "BannedPlayer";
                 await vm.BanPlayerCommand.ExecuteAsync("BannedPlayer");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Contains("BannedPlayer", vm.BannedPlayers);
 
                 // Unban Player
                 await vm.UnbanPlayerCommand.ExecuteAsync("BannedPlayer");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.DoesNotContain("BannedPlayer", vm.BannedPlayers);
             }
             finally

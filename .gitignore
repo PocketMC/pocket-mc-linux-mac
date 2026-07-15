@@ -12,6 +12,6 @@ publish/
 publish-osx-x64/
 publish-osx-arm64/
 PocketMC-linux-x64.tar.gz
-PocketMC-osx-x64.zip
-PocketMC-osx-arm64.zip
+PocketMC-*.tar.gz
+PocketMC-*.zip
 .planning/

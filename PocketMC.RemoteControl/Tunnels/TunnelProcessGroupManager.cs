@@ -23,7 +23,15 @@ public class TunnelProcessGroupManager
     private int _pgid;
 
     public int Pgid => _pgid;
-    public bool IsRunning => _process != null && !_process.HasExited;
+    public bool IsRunning
+    {
+        get
+        {
+            if (_process == null) return false;
+            try { _process.Refresh(); } catch { }
+            return !_process.HasExited;
+        }
+    }
 
     public void StartProcess(ProcessStartInfo startInfo)
     {
@@ -56,10 +64,19 @@ public class TunnelProcessGroupManager
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 UnixNative.kill(-_pgid, UnixNative.SIGTERM);
-                Task.Delay(1000).Wait();
+                Task.Delay(500).Wait();
+                try { _process.Refresh(); } catch { }
+                
                 if (!_process.HasExited)
                 {
                     UnixNative.kill(-_pgid, UnixNative.SIGKILL);
+                    Task.Delay(500).Wait();
+                    try { _process.Refresh(); } catch { }
+                }
+
+                if (!_process.HasExited)
+                {
+                    _process.Kill(true);
                 }
             }
             else

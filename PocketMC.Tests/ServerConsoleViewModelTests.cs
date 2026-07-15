@@ -13,6 +13,7 @@ namespace PocketMC.Tests
     {
         public List<string> Logs { get; } = new();
         public event Action<string, string>? LogReceived;
+        public event Action<string>? LogsCleared;
 
         public void WriteLog(string slug, string line)
         {
@@ -22,6 +23,12 @@ namespace PocketMC.Tests
 
         public IReadOnlyList<string> GetLogs(string slug) => Logs;
         public IReadOnlyList<string> SearchLogs(string slug, string query) => Logs.Where(l => l.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        public void ClearLogs(string slug)
+        {
+            Logs.Clear();
+            LogsCleared?.Invoke(slug);
+        }
 
         public void TriggerLogReceived(string slug, string line)
         {
@@ -50,6 +57,8 @@ namespace PocketMC.Tests
             logService.TriggerLogReceived("server-1", "Inst 1 Log Message");
             // Trigger log for inst2 (not selected)
             logService.TriggerLogReceived("server-2", "Inst 2 Log Message");
+
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
             Assert.Contains(vm.LogLines, l => l.Text == "Inst 1 Log Message");
             Assert.DoesNotContain(vm.LogLines, l => l.Text == "Inst 2 Log Message");

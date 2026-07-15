@@ -74,7 +74,7 @@ namespace PocketMC.Tests
                     Slug = "sleep-server",
                     Path = _testTempDir,
                     EngineType = EngineType.VanillaJava,
-                    EngineVersion = "mock:/bin/sleep:30" // Mock: runs /bin/sleep with arg 30
+                    EngineVersion = "mock:sleep:30" // Mock: runs sleep with arg 30
                 };
 
                 string lastState = "";
@@ -86,7 +86,14 @@ namespace PocketMC.Tests
                     }
                 };
 
+                File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
+
                 await _runner.StartAsync(instance);
+                if (lastState != "Running")
+                {
+                    var logs = _logService.GetLogs(instance.Slug);
+                    throw new Exception("Test failed! State: " + lastState + ". Logs: " + string.Join("; ", logs));
+                }
                 Assert.Equal("Running", lastState);
 
                 // Stop should timeout (since sleep doesn't respond to 'stop' stdin command) and escalate to SIGKILL
@@ -109,8 +116,10 @@ namespace PocketMC.Tests
                     Slug = "crash-server",
                     Path = _testTempDir,
                     EngineType = EngineType.VanillaJava,
-                    EngineVersion = "mock:/bin/false"
+                    EngineVersion = "mock:false"
                 };
+
+                File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
 
                 int crashTransitions = 0;
                 int startTransitions = 0;

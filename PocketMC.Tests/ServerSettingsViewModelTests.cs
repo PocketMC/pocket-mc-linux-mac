@@ -13,6 +13,10 @@ namespace PocketMC.Tests
         public Settings Settings { get; set; } = new Settings();
         public string GetSettingsDirectory() => Path.GetTempPath();
         public string GetInstancesDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Instances");
+        public string GetBackupsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Backups");
+        public string GetDownloadsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Downloads");
+        public string GetCacheDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Cache");
+        public string GetLogsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Logs");
         public void Load() { }
         public void Save() { }
     }

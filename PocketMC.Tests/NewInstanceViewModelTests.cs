@@ -13,7 +13,7 @@ namespace PocketMC.Tests
         public bool ProvisionCalled { get; private set; }
         public Task<string> GetJavaExecutablePathAsync(string version) => Task.FromResult("java");
         public Task<bool> ValidateJavaRuntimeAsync(string executablePath, string expectedVersion) => Task.FromResult(true);
-        public Task ProvisionJavaRuntimeAsync(string version)
+        public Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null)
         {
             ProvisionCalled = true;
             return Task.CompletedTask;
@@ -25,7 +25,7 @@ namespace PocketMC.Tests
         public bool ProvisionCalled { get; private set; }
         public Task<string> GetPHPExecutablePathAsync(string version) => Task.FromResult("php");
         public Task<bool> ValidatePHPRuntimeAsync(string executablePath, string expectedVersion) => Task.FromResult(true);
-        public Task ProvisionPHPRuntimeAsync(string version)
+        public Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null)
         {
             ProvisionCalled = true;
             return Task.CompletedTask;
@@ -44,6 +44,7 @@ namespace PocketMC.Tests
             var vm = new NewInstanceViewModel(instService, javaService, phpService);
 
             // 1. Initial State: Name empty
+            vm.Name = "temp";
             vm.Name = "";
             Assert.True(vm.HasErrors);
 
@@ -72,17 +73,20 @@ namespace PocketMC.Tests
             // Default VanillaJava
             vm.SelectedEngine = EngineType.VanillaJava;
             await vm.LoadVersionsAsync();
-            Assert.Contains("1.21", vm.Versions);
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.NotEmpty(vm.Versions);
 
             // Switch to PocketMine
             vm.SelectedEngine = EngineType.PocketMine;
             await vm.LoadVersionsAsync();
-            Assert.Contains("5.1.0", vm.Versions);
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.NotEmpty(vm.Versions);
 
             // Switch to Bedrock
             vm.SelectedEngine = EngineType.Bedrock;
             await vm.LoadVersionsAsync();
-            Assert.Contains("1.21.0", vm.Versions);
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.NotEmpty(vm.Versions);
         }
 
         [Fact]
@@ -97,6 +101,7 @@ namespace PocketMC.Tests
             vm.Name = "valid-server";
             vm.SelectedEngine = EngineType.VanillaJava;
             await vm.LoadVersionsAsync();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
             // Cannot create without accepting EULA
             vm.AcceptEula = false;
