@@ -25,6 +25,7 @@
     <ProjectReference Include="..\PocketMC.Infrastructure\PocketMC.Infrastructure.csproj" />
     <ProjectReference Include="..\PocketMC.Platform\PocketMC.Platform.csproj" />
     <ProjectReference Include="..\PocketMC.App\PocketMC.App.csproj" />
+    <ProjectReference Include="..\PocketMC.RemoteControl\PocketMC.RemoteControl.csproj" />
   </ItemGroup>
 
 </Project>
