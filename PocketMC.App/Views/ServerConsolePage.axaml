@@ -101,23 +101,38 @@
             </Grid>
         </Border>
 
-        <!-- Command Input Box -->
-        <Grid Grid.Row="2" Margin="0,16,0,0" ColumnDefinitions="*, Auto">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding CommandInput, Mode=TwoWay}" 
-                     KeyDown="OnCommandBoxKeyDown" 
-                     Watermark="Type server command (e.g., say Hello, op Player, stop)..." 
-                     FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" 
-                     FontSize="13" 
-                     Padding="12,10"
-                     VerticalContentAlignment="Center"
-                     Height="40"/>
-            <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Cursor="Hand" Margin="12,0,0,0" Padding="20,0" Height="40" Background="#1E90FF" Foreground="White" CornerRadius="6">
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="Send" Size="14" VerticalAlignment="Center"/>
-                    <TextBlock Text="Send" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <!-- Quick Commands & Command Input Box -->
+        <StackPanel Grid.Row="2" Margin="0,12,0,0" Spacing="8">
+            <!-- Quick Command Pills -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Quick Actions:" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Opacity="0.8" Margin="0,0,4,0"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="stop" Content="/stop" CornerRadius="12" Padding="10,4" FontSize="12" Background="#20DC3545" Foreground="#DC3545" BorderBrush="#30DC3545" BorderThickness="1"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="say Server notice!" Content="/say notice" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="gamemode creative @a" Content="/gamemode creative" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="gamemode survival @a" Content="/gamemode survival" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="time set day" Content="/time set day" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="weather clear" Content="/weather clear" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
                 </StackPanel>
-            </Button>
-        </Grid>
+            </ScrollViewer>
+
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding CommandInput, Mode=TwoWay}" 
+                         KeyDown="OnCommandBoxKeyDown" 
+                         Watermark="Type server command (e.g., say Hello, op Player, stop)..." 
+                         FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" 
+                         FontSize="13" 
+                         Padding="12,10"
+                         VerticalContentAlignment="Center"
+                         Height="40"/>
+                <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Cursor="Hand" Margin="12,0,0,0" Padding="20,0" Height="40" Background="#1E90FF" Foreground="White" CornerRadius="6">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <lucide:LucideIcon Kind="Send" Size="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="Send" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
     </Grid>
 </UserControl>

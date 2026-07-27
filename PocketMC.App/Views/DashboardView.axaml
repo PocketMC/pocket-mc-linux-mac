@@ -56,12 +56,18 @@
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto, 12, *">
+                                    <Grid ColumnDefinitions="Auto, 12, *, Auto">
                                         <Image Grid.Column="0" Source="{Binding EngineType, Converter={StaticResource EngineIconConverter}}" Width="20" Height="20" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding EngineType}" FontSize="11" Opacity="0.7"/>
                                         </StackPanel>
+                                        <Button Grid.Column="3" 
+                                                Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" BorderThickness="0" Padding="4" ToolTip.Tip="Open Server Folder" VerticalAlignment="Center">
+                                            <lucide:LucideIcon Kind="FolderOpen" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -98,6 +104,19 @@
                             </Grid>
                         </Button>
                         
+                        <Button Command="{Binding NavigateToJavaManagementCommand}" 
+                                HorizontalAlignment="Stretch" 
+                                Background="Transparent" 
+                                BorderThickness="1" 
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                CornerRadius="8"
+                                Padding="8">
+                            <Grid ColumnDefinitions="Auto, 8, *">
+                                <lucide:LucideIcon Grid.Column="0" Kind="Coffee" Size="18" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Java Runtimes" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
                         <Button Command="{Binding ToggleThemeCommand}" 
                                 HorizontalAlignment="Stretch" 
                                 Background="Transparent" 
@@ -108,6 +127,19 @@
                             <Grid ColumnDefinitions="Auto, 8, *">
                                 <lucide:LucideIcon Grid.Column="0" Kind="Sun" Size="18" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="2" Text="{Binding ThemeOverride, StringFormat='Theme: {0}'}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToAboutCommand}" 
+                                HorizontalAlignment="Stretch" 
+                                Background="Transparent" 
+                                BorderThickness="1" 
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                CornerRadius="8"
+                                Padding="8">
+                            <Grid ColumnDefinitions="Auto, 8, *">
+                                <lucide:LucideIcon Grid.Column="0" Kind="Info" Size="18" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="About PocketMC" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                             </Grid>
                         </Button>
                     </StackPanel>
@@ -186,7 +218,7 @@
                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="8" Padding="8" ToolTip.Tip="Open Console">
                                 <lucide:LucideIcon Kind="Terminal" Size="16"/>
                             </Button>
-                            
+
                             <Button Command="{Binding NavigateToSettingsCommand}" 
                                     Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="8" Padding="8" ToolTip.Tip="Server Settings">
@@ -272,10 +304,22 @@
                             BoxShadow="0 8 24 0 #20000000"
                             Padding="16">
                         <StackPanel Spacing="12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <lucide:LucideIcon Kind="Wifi" Size="20" Foreground="#1E90FF"/>
-                                <TextBlock Text="Network Listener" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                    <lucide:LucideIcon Kind="Wifi" Size="20" Foreground="#1E90FF"/>
+                                    <TextBlock Text="Network Listener" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Command="{Binding CreateOrToggleTunnelsCommand}"
+                                        Background="#1E90FF" Foreground="White"
+                                        CornerRadius="6" Padding="8,4" FontSize="11" FontWeight="SemiBold"
+                                        IsEnabled="{Binding !IsCreatingTunnels}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <lucide:LucideIcon Kind="Globe" Size="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Create Tunnels" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
                             
                             <StackPanel Spacing="8" Margin="4,0,0,0">
                                 <Grid ColumnDefinitions="Auto, *">
@@ -290,29 +334,49 @@
 
                                 <!-- LAN Address -->
                                 <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="6" Padding="8,4" IsVisible="{Binding HasLanAddress}">
-                                    <Grid ColumnDefinitions="Auto, *">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
                                         <TextBlock Grid.Column="0" Text="LAN / Local:" FontSize="11" FontWeight="Medium" Opacity="0.8" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding LanAddressDisplayText}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                        <SelectableTextBlock Grid.Column="1" Text="{Binding LanAddressDisplayText}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="2" Command="{Binding CopyAddressCommand}" CommandParameter="{Binding LanAddressDisplayText}" Background="Transparent" BorderThickness="0" Padding="4" ToolTip.Tip="Copy LAN IP">
+                                            <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </Button>
                                     </Grid>
                                 </Border>
 
                                 <!-- Java Playit IP -->
                                 <Border Background="#1E90FF" CornerRadius="6" Padding="8,4" IsVisible="{Binding ShowJavaTunnel}">
-                                    <Grid ColumnDefinitions="Auto, *">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
                                         <TextBlock Grid.Column="0" Text="Java Public IP:" FontSize="11" FontWeight="Medium" Foreground="White" Opacity="0.9" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <SelectableTextBlock Grid.Column="1" Text="{Binding JavaTunnelAddress}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="2" Command="{Binding CopyAddressCommand}" CommandParameter="{Binding JavaTunnelAddress}" Background="Transparent" BorderThickness="0" Padding="4" ToolTip.Tip="Copy Java IP">
+                                            <lucide:LucideIcon Kind="Copy" Size="14" Foreground="White"/>
+                                        </Button>
                                     </Grid>
                                 </Border>
 
                                 <!-- Bedrock / Geyser Playit IP -->
                                 <Border Background="#2ecc71" CornerRadius="6" Padding="8,4" IsVisible="{Binding ShowBedrockTunnel}">
-                                    <Grid ColumnDefinitions="Auto, *">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
                                         <TextBlock Grid.Column="0" Text="Bedrock IP:" FontSize="11" FontWeight="Medium" Foreground="White" Opacity="0.9" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <SelectableTextBlock Grid.Column="1" Text="{Binding BedrockTunnelAddress}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="2" Command="{Binding CopyAddressCommand}" CommandParameter="{Binding BedrockTunnelAddress}" Background="Transparent" BorderThickness="0" Padding="4" ToolTip.Tip="Copy Bedrock IP">
+                                            <lucide:LucideIcon Kind="Copy" Size="14" Foreground="White"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Simple Voice Chat Playit IP -->
+                                <Border Background="#9b59b6" CornerRadius="6" Padding="8,4" IsVisible="{Binding ShowVoiceChatTunnel}">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <TextBlock Grid.Column="0" Text="Voice Chat IP:" FontSize="11" FontWeight="Medium" Foreground="White" Opacity="0.9" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <SelectableTextBlock Grid.Column="1" Text="{Binding VoiceChatTunnelAddress}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="2" Command="{Binding CopyAddressCommand}" CommandParameter="{Binding VoiceChatTunnelAddress}" Background="Transparent" BorderThickness="0" Padding="4" ToolTip.Tip="Copy Voice Chat IP">
+                                            <lucide:LucideIcon Kind="Copy" Size="14" Foreground="White"/>
+                                        </Button>
                                     </Grid>
                                 </Border>
                                 
-                                <TextBlock Text="Create a tunnel in Tunnels page to play with friends online." FontSize="11" Opacity="0.5" TextWrapping="Wrap" IsVisible="{Binding !HasPlayitTunnels}" Margin="0,4,0,0"/>
+                                <TextBlock Text="Create a tunnel in Tunnels page or click 'Create Tunnels' above." FontSize="11" Opacity="0.5" TextWrapping="Wrap" IsVisible="{Binding !HasPlayitTunnels}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

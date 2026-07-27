@@ -72,6 +72,20 @@ namespace PocketMC.Infrastructure.Services
 
             try
             {
+                // Clean up stale session.lock files left by previous crashes or orphaned processes
+                try
+                {
+                    if (Directory.Exists(instance.Path))
+                    {
+                        var lockFiles = Directory.GetFiles(instance.Path, "session.lock", SearchOption.AllDirectories);
+                        foreach (var lockFile in lockFiles)
+                        {
+                            try { File.Delete(lockFile); } catch { }
+                        }
+                    }
+                }
+                catch { }
+
                 string execPath = "";
                 string arguments = "";
 
@@ -470,6 +484,14 @@ namespace PocketMC.Infrastructure.Services
             {
                 try
                 {
+                    if (info.Process.HasExited)
+                    {
+                        _runningInstances.TryRemove(instance.Slug, out _);
+                        TransitionState(instance.Slug, info.Process.ExitCode == 0 ? "Stopped" : "Crashed");
+                        _logService.WriteLog(instance.Slug, "[System] Cannot send command: Server process has terminated.");
+                        return Task.CompletedTask;
+                    }
+
                     info.Process.StandardInput.WriteLine(command);
                     info.Process.StandardInput.Flush();
                 }
@@ -478,19 +500,37 @@ namespace PocketMC.Infrastructure.Services
                     _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Failed to write command to stdin: {ex.Message}");
                 }
             }
+            else
+            {
+                _logService.WriteLog(instance.Slug, "[System] Cannot send command: Server instance is not running.");
+            }
             return Task.CompletedTask;
         }
 
         public bool TryGetRunningInfo(string slug, out int pgid, out string state)
         {
-            _states.TryGetValue(slug, out var lastState);
-            state = lastState ?? "Stopped";
-
             if (_runningInstances.TryGetValue(slug, out var info))
             {
+                try
+                {
+                    if (info.Process.HasExited)
+                    {
+                        _runningInstances.TryRemove(slug, out _);
+                        TransitionState(slug, info.Process.ExitCode == 0 ? "Stopped" : "Crashed");
+                        pgid = 0;
+                        state = _states.TryGetValue(slug, out var s) ? s : "Stopped";
+                        return false;
+                    }
+                }
+                catch { }
+
                 pgid = info.Pgid;
+                state = info.State;
                 return true;
             }
+
+            _states.TryGetValue(slug, out var lastState);
+            state = lastState ?? "Stopped";
             pgid = 0;
             return false;
         }

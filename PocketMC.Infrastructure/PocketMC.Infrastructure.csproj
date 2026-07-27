@@ -8,7 +8,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
     <PackageReference Include="Avalonia" Version="11.2.2" />
     <PackageReference Include="Dropbox.Api" Version="6.37.0" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3423" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3428" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
   </ItemGroup>
 

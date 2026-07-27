@@ -398,6 +398,13 @@ namespace PocketMC.App.ViewModels
         {
             if (entry == null) return;
 
+            bool confirmed = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+                "Uninstall Addon",
+                $"Are you sure you want to uninstall '{entry.ProjectTitle}' ({entry.FileName})?",
+                "Uninstall");
+
+            if (!confirmed) return;
+
             IsDownloading = true;
             StatusText = $"Uninstalling {entry.ProjectTitle}...";
 

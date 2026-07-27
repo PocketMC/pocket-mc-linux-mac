@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.App.Views;
 
 namespace PocketMC.App.ViewModels
 {
@@ -45,9 +46,211 @@ namespace PocketMC.App.ViewModels
             {
                 if (SetProperty(ref _selectedEngine, value))
                 {
+                    OnPropertyChanged(nameof(IsJavaEngine));
                     _ = LoadVersionsAsync();
                 }
             }
+        }
+
+        private string _description = string.Empty;
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        private bool _enableGeyser;
+        public bool EnableGeyser
+        {
+            get => _enableGeyser;
+            set => SetProperty(ref _enableGeyser, value);
+        }
+
+        private bool _showSnapshots;
+        public bool ShowSnapshots
+        {
+            get => _showSnapshots;
+            set
+            {
+                if (SetProperty(ref _showSnapshots, value))
+                {
+                    _ = LoadVersionsAsync();
+                }
+            }
+        }
+
+        private string _worldSeed = string.Empty;
+        public string WorldSeed
+        {
+            get => _worldSeed;
+            set => SetProperty(ref _worldSeed, value);
+        }
+
+        private string _selectedLevelType = "Default";
+        public string SelectedLevelType
+        {
+            get => _selectedLevelType;
+            set => SetProperty(ref _selectedLevelType, value);
+        }
+
+        private string _selectedGamemode = "Survival";
+        public string SelectedGamemode
+        {
+            get => _selectedGamemode;
+            set => SetProperty(ref _selectedGamemode, value);
+        }
+
+        private string _selectedDifficulty = "Easy";
+        public string SelectedDifficulty
+        {
+            get => _selectedDifficulty;
+            set => SetProperty(ref _selectedDifficulty, value);
+        }
+
+        private string _maxPlayers = "20";
+        public string MaxPlayers
+        {
+            get => _maxPlayers;
+            set => SetProperty(ref _maxPlayers, value);
+        }
+
+        private string _customWorldPath = string.Empty;
+        public string CustomWorldPath
+        {
+            get => _customWorldPath;
+            set => SetProperty(ref _customWorldPath, value);
+        }
+
+        public bool IsJavaEngine => SelectedEngine != EngineType.Bedrock && SelectedEngine != EngineType.PocketMine;
+
+        public List<string> LevelTypes { get; } = new() { "Default", "Flat", "LargeBiomes", "Amplified" };
+        public List<string> Gamemodes { get; } = new() { "Survival", "Creative", "Adventure", "Spectator" };
+        public List<string> Difficulties { get; } = new() { "Peaceful", "Easy", "Normal", "Hard" };
+
+        private double _progress;
+        public double Progress
+        {
+            get => _progress;
+            set => SetProperty(ref _progress, value);
+        }
+
+        private string _progressText = string.Empty;
+        public string ProgressText
+        {
+            get => _progressText;
+            set => SetProperty(ref _progressText, value);
+        }
+
+        public ObservableCollection<string> Versions { get; } = new();
+        public List<EngineType> EngineTypes { get; } = Enum.GetValues(typeof(EngineType)).Cast<EngineType>().ToList();
+
+        public IAsyncRelayCommand CreateInstanceCommand { get; }
+        public IAsyncRelayCommand CancelCommand { get; }
+        public IAsyncRelayCommand BrowseWorldCommand { get; }
+        public IRelayCommand OpenEulaLinkCommand { get; }
+
+        public NewInstanceViewModel(
+            IInstanceService instanceService,
+            IJavaService javaService,
+            IPHPService phpService)
+        {
+            _instanceService = instanceService;
+            _javaService = javaService;
+            _phpService = phpService;
+
+            CreateInstanceCommand = new AsyncRelayCommand(CreateInstanceAsync, CanCreate);
+            CancelCommand = new AsyncRelayCommand(CancelAsync);
+            BrowseWorldCommand = new AsyncRelayCommand(BrowseWorldAsync);
+            OpenEulaLinkCommand = new RelayCommand(OpenEulaLink);
+
+            // Initial load
+            _ = LoadVersionsAsync();
+        }
+
+        private async Task BrowseWorldAsync()
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(desktop.MainWindow);
+                if (topLevel != null)
+                {
+                    var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+                    {
+                        Title = "Select World Archive (.zip / .mcworld)",
+                        AllowMultiple = false,
+                        FileTypeFilter = new[]
+                        {
+                            new Avalonia.Platform.Storage.FilePickerFileType("World Archive") { Patterns = new[] { "*.zip", "*.mcworld" } }
+                        }
+                    });
+
+                    if (files.Count > 0)
+                    {
+                        CustomWorldPath = files[0].Path.LocalPath;
+                    }
+                }
+            }
+        }
+
+        private void OpenEulaLink()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://aka.ms/MinecraftEULA",
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
+        [RelayCommand]
+        private void ApplyPresetVanillaJava()
+        {
+            Name = "Vanilla-Survival-Server";
+            Description = "Standard Vanilla Minecraft Survival Server";
+            SelectedEngine = EngineType.VanillaJava;
+            EnableGeyser = false;
+            SelectedGamemode = "Survival";
+            SelectedDifficulty = "Easy";
+            MaxPlayers = "20";
+        }
+
+        [RelayCommand]
+        private void ApplyPresetCrossplayGeyser()
+        {
+            Name = "Crossplay-Java-Bedrock";
+            Description = "Paper Minecraft Server with Geyser + Floodgate Crossplay";
+            SelectedEngine = EngineType.Paper;
+            EnableGeyser = true;
+            SelectedGamemode = "Survival";
+            SelectedDifficulty = "Easy";
+            MaxPlayers = "30";
+        }
+
+        [RelayCommand]
+        private void ApplyPresetBedrock()
+        {
+            Name = "Bedrock-Dedicated-Server";
+            Description = "Native Bedrock Dedicated Server";
+            SelectedEngine = EngineType.Bedrock;
+            EnableGeyser = false;
+            SelectedGamemode = "Survival";
+            SelectedDifficulty = "Easy";
+            MaxPlayers = "20";
+        }
+
+        [RelayCommand]
+        private void ApplyPresetPocketMine()
+        {
+            Name = "PocketMine-Bedrock-Server";
+            Description = "PocketMine-MP PHP Bedrock Server";
+            SelectedEngine = EngineType.PocketMine;
+            EnableGeyser = false;
+            SelectedGamemode = "Survival";
+            SelectedDifficulty = "Easy";
+            MaxPlayers = "20";
         }
 
         private string _selectedVersion = string.Empty;
@@ -100,44 +303,46 @@ namespace PocketMC.App.ViewModels
             }
         }
 
-        private double _progress;
-        public double Progress
+        private static List<string> SortVersionsDescending(IEnumerable<string> versions)
         {
-            get => _progress;
-            set => SetProperty(ref _progress, value);
+            return versions.Distinct()
+                .Select(v =>
+                {
+                    var clean = v.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? v[1..] : v;
+                    var coreVer = clean.Split(new[] { '-', '+' }, 2)[0];
+                    Version.TryParse(coreVer, out var parsed);
+                    return new { Original = v, Parsed = parsed ?? new Version(0, 0) };
+                })
+                .OrderByDescending(x => x.Parsed)
+                .ThenByDescending(x => x.Original, StringComparer.OrdinalIgnoreCase)
+                .Select(x => x.Original)
+                .ToList();
         }
 
-        private string _progressText = string.Empty;
-        public string ProgressText
+        private System.Threading.CancellationTokenSource? _loadVersionsCts;
+
+        private static bool IsSnapshotOrPreRelease(string version)
         {
-            get => _progressText;
-            set => SetProperty(ref _progressText, value);
-        }
-
-        public ObservableCollection<string> Versions { get; } = new();
-        public List<EngineType> EngineTypes { get; } = Enum.GetValues(typeof(EngineType)).Cast<EngineType>().ToList();
-
-        public IAsyncRelayCommand CreateInstanceCommand { get; }
-        public IRelayCommand CancelCommand { get; }
-
-        public NewInstanceViewModel(
-            IInstanceService instanceService,
-            IJavaService javaService,
-            IPHPService phpService)
-        {
-            _instanceService = instanceService;
-            _javaService = javaService;
-            _phpService = phpService;
-
-            CreateInstanceCommand = new AsyncRelayCommand(CreateInstanceAsync, CanCreate);
-            CancelCommand = new RelayCommand(Cancel);
-
-            // Initial load
-            _ = LoadVersionsAsync();
+            if (string.IsNullOrWhiteSpace(version)) return false;
+            var lower = version.ToLowerInvariant();
+            return lower.Contains("-rc") ||
+                   lower.Contains(".rc") ||
+                   lower.Contains("-pre") ||
+                   lower.Contains(".pre") ||
+                   lower.Contains("snapshot") ||
+                   lower.Contains("preview") ||
+                   lower.Contains("beta") ||
+                   lower.Contains("alpha") ||
+                   lower.Contains("-dev") ||
+                   System.Text.RegularExpressions.Regex.IsMatch(lower, @"\d{2}w\d{2}[a-z]");
         }
 
         public async Task LoadVersionsAsync()
         {
+            _loadVersionsCts?.Cancel();
+            _loadVersionsCts = new System.Threading.CancellationTokenSource();
+            var ct = _loadVersionsCts.Token;
+
             IsLoadingVersions = true;
             var list = new List<string>();
             try
@@ -147,39 +352,57 @@ namespace PocketMC.App.ViewModels
 
                 if (SelectedEngine == EngineType.PocketMine)
                 {
-                    var response = await client.GetStringAsync("https://api.github.com/repos/pmmp/PocketMine-MP/releases");
+                    var response = await client.GetStringAsync("https://api.github.com/repos/pmmp/PocketMine-MP/releases", ct);
                     using var doc = JsonDocument.Parse(response);
+                    var versionList = new List<string>();
                     foreach (var release in doc.RootElement.EnumerateArray())
                     {
+                        var isPrerelease = release.TryGetProperty("prerelease", out var preProp) && preProp.GetBoolean();
                         var tag = release.GetProperty("tag_name").GetString();
                         if (!string.IsNullOrEmpty(tag))
                         {
-                            list.Add(tag);
+                            if (ShowSnapshots || (!isPrerelease && !IsSnapshotOrPreRelease(tag)))
+                            {
+                                versionList.Add(tag);
+                            }
                         }
                     }
+                    list.AddRange(SortVersionsDescending(versionList).Take(25));
                 }
                 else if (SelectedEngine == EngineType.Bedrock)
                 {
-                    var response = await client.GetStringAsync("https://raw.githubusercontent.com/kittizz/bedrock-server-downloads/main/bedrock-server-downloads.json");
+                    var response = await client.GetStringAsync("https://raw.githubusercontent.com/kittizz/bedrock-server-downloads/main/bedrock-server-downloads.json", ct);
                     using var doc = JsonDocument.Parse(response);
-                    var releases = doc.RootElement.GetProperty("release");
-                    foreach (var property in releases.EnumerateObject())
+                    var versionList = new List<string>();
+
+                    if (doc.RootElement.TryGetProperty("release", out var releases))
                     {
-                        if (property.Value.TryGetProperty("linux", out var linuxProp))
+                        foreach (var property in releases.EnumerateObject())
                         {
-                            list.Add(property.Name);
+                            if (ShowSnapshots || !IsSnapshotOrPreRelease(property.Name))
+                            {
+                                versionList.Add(property.Name);
+                            }
                         }
                     }
+
+                    if (ShowSnapshots && doc.RootElement.TryGetProperty("preview", out var previews))
+                    {
+                        foreach (var property in previews.EnumerateObject())
+                        {
+                            versionList.Add(property.Name);
+                        }
+                    }
+
+                    list.AddRange(SortVersionsDescending(versionList).Take(25));
                 }
                 else if (SelectedEngine == EngineType.Paper)
                 {
-                    var response = await client.GetStringAsync("https://fill.papermc.io/v3/projects/paper");
+                    var response = await client.GetStringAsync("https://fill.papermc.io/v3/projects/paper", ct);
                     using var doc = JsonDocument.Parse(response);
                     var versionsObj = doc.RootElement.GetProperty("versions");
-                    int count = 0;
-
-                    // The v3 API contains version keys mapped to arrays of sub-versions. Let's gather all versions.
                     var allVersions = new List<string>();
+
                     foreach (var prop in versionsObj.EnumerateObject())
                     {
                         foreach (var verNode in prop.Value.EnumerateArray())
@@ -187,47 +410,43 @@ namespace PocketMC.App.ViewModels
                             var vStr = verNode.GetString();
                             if (!string.IsNullOrEmpty(vStr))
                             {
-                                allVersions.Add(vStr);
+                                if (ShowSnapshots || !IsSnapshotOrPreRelease(vStr))
+                                {
+                                    allVersions.Add(vStr);
+                                }
                             }
                         }
                     }
 
-                    // Sort them in reverse order using Version parser if possible, or string sort fallback
-                    var sortedVersions = allVersions.Select(v => {
-                        Version.TryParse(v.Split('-')[0], out var pv);
-                        return new { Original = v, Parsed = pv ?? new Version(0, 0) };
-                    })
-                    .OrderByDescending(x => x.Parsed)
-                    .ThenByDescending(x => x.Original)
-                    .Select(x => x.Original);
-
-                    foreach (var v in sortedVersions)
-                    {
-                        list.Add(v);
-                        count++;
-                        if (count >= 15) break;
-                    }
+                    list.AddRange(SortVersionsDescending(allVersions).Take(25));
                 }
                 else if (SelectedEngine == EngineType.Fabric)
                 {
-                    var response = await client.GetStringAsync("https://meta.fabricmc.net/v2/versions/game");
+                    var response = await client.GetStringAsync("https://meta.fabricmc.net/v2/versions/game", ct);
                     using var doc = JsonDocument.Parse(response);
-                    int count = 0;
+                    var versionList = new List<string>();
+
                     foreach (var ver in doc.RootElement.EnumerateArray())
                     {
-                        var id = ver.GetProperty("version").GetString();
-                        var stable = ver.GetProperty("stable").GetBoolean();
-                        if (stable && !string.IsNullOrEmpty(id))
+                        string? id = null;
+                        if (ver.TryGetProperty("version", out var vProp)) id = vProp.GetString();
+                        else if (ver.TryGetProperty("id", out var iProp)) id = iProp.GetString();
+
+                        var stable = ver.TryGetProperty("stable", out var sProp) && sProp.GetBoolean();
+                        if (!string.IsNullOrEmpty(id))
                         {
-                            list.Add(id);
-                            count++;
-                            if (count >= 15) break;
+                            if (ShowSnapshots || (stable && !IsSnapshotOrPreRelease(id)))
+                            {
+                                versionList.Add(id);
+                            }
                         }
                     }
+
+                    list.AddRange(SortVersionsDescending(versionList).Take(25));
                 }
                 else if (SelectedEngine == EngineType.Forge)
                 {
-                    var response = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.minecraftforge/index.json");
+                    var response = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.minecraftforge/index.json", ct);
                     using var doc = JsonDocument.Parse(response);
                     var versionsArray = doc.RootElement.GetProperty("versions");
                     var mcVersionsSet = new HashSet<string>();
@@ -243,7 +462,10 @@ namespace PocketMC.App.ViewModels
                                     var mcEquals = req.GetProperty("equals").GetString();
                                     if (!string.IsNullOrEmpty(mcEquals))
                                     {
-                                        mcVersionsSet.Add(mcEquals);
+                                        if (ShowSnapshots || !IsSnapshotOrPreRelease(mcEquals))
+                                        {
+                                            mcVersionsSet.Add(mcEquals);
+                                        }
                                     }
                                     break;
                                 }
@@ -251,25 +473,11 @@ namespace PocketMC.App.ViewModels
                         }
                     }
 
-                    var sortedMcVersions = mcVersionsSet.Select(v => {
-                        Version.TryParse(v, out var pv);
-                        return new { Original = v, Parsed = pv ?? new Version(0, 0) };
-                    })
-                    .OrderByDescending(x => x.Parsed)
-                    .ThenByDescending(x => x.Original)
-                    .Select(x => x.Original);
-
-                    int count = 0;
-                    foreach (var v in sortedMcVersions)
-                    {
-                        list.Add(v);
-                        count++;
-                        if (count >= 15) break;
-                    }
+                    list.AddRange(SortVersionsDescending(mcVersionsSet).Take(25));
                 }
                 else if (SelectedEngine == EngineType.NeoForge)
                 {
-                    var response = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.neoforged/index.json");
+                    var response = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.neoforged/index.json", ct);
                     using var doc = JsonDocument.Parse(response);
                     var versionsArray = doc.RootElement.GetProperty("versions");
                     var mcVersionsSet = new HashSet<string>();
@@ -285,7 +493,10 @@ namespace PocketMC.App.ViewModels
                                     var mcEquals = req.GetProperty("equals").GetString();
                                     if (!string.IsNullOrEmpty(mcEquals))
                                     {
-                                        mcVersionsSet.Add(mcEquals);
+                                        if (ShowSnapshots || !IsSnapshotOrPreRelease(mcEquals))
+                                        {
+                                            mcVersionsSet.Add(mcEquals);
+                                        }
                                     }
                                     break;
                                 }
@@ -293,40 +504,36 @@ namespace PocketMC.App.ViewModels
                         }
                     }
 
-                    var sortedMcVersions = mcVersionsSet.Select(v => {
-                        Version.TryParse(v, out var pv);
-                        return new { Original = v, Parsed = pv ?? new Version(0, 0) };
-                    })
-                    .OrderByDescending(x => x.Parsed)
-                    .ThenByDescending(x => x.Original)
-                    .Select(x => x.Original);
-
-                    int count = 0;
-                    foreach (var v in sortedMcVersions)
-                    {
-                        list.Add(v);
-                        count++;
-                        if (count >= 15) break;
-                    }
+                    list.AddRange(SortVersionsDescending(mcVersionsSet).Take(25));
                 }
                 else // VanillaJava
                 {
-                    var response = await client.GetStringAsync("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                    var response = await client.GetStringAsync("https://launchermeta.mojang.com/mc/game/version_manifest.json", ct);
                     using var doc = JsonDocument.Parse(response);
                     var manifestList = doc.RootElement.GetProperty("versions");
-                    int count = 0;
+                    var versionList = new List<string>();
+
                     foreach (var ver in manifestList.EnumerateArray())
                     {
                         var id = ver.GetProperty("id").GetString();
                         var type = ver.GetProperty("type").GetString();
-                        if (type == "release" && !string.IsNullOrEmpty(id))
+                        if (!string.IsNullOrEmpty(id))
                         {
-                            list.Add(id);
-                            count++;
-                            if (count >= 15) break;
+                            if (type == "release" && (!IsSnapshotOrPreRelease(id) || ShowSnapshots))
+                            {
+                                versionList.Add(id);
+                            }
+                            else if (ShowSnapshots && (type == "snapshot" || type == "old_beta" || type == "old_alpha"))
+                            {
+                                versionList.Add(id);
+                            }
                         }
                     }
+
+                    list.AddRange(SortVersionsDescending(versionList).Take(35));
                 }
+
+                if (ct.IsCancellationRequested) return;
 
                 if (list.Count == 0)
                 {
@@ -342,6 +549,7 @@ namespace PocketMC.App.ViewModels
                     }
                     else
                     {
+                        list.Add("1.21.4");
                         list.Add("1.21");
                         list.Add("1.20.4");
                         list.Add("1.20.1");
@@ -350,13 +558,20 @@ namespace PocketMC.App.ViewModels
 
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (ct.IsCancellationRequested) return;
                     Versions.Clear();
                     foreach (var v in list) Versions.Add(v);
                     SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
                 });
             }
+            catch (OperationCanceledException)
+            {
+                // Ignored due to cancelled task
+            }
             catch (Exception ex)
             {
+                if (ct.IsCancellationRequested) return;
+
                 if (SelectedEngine == EngineType.PocketMine)
                 {
                     list.Add("5.1.0");
@@ -367,12 +582,14 @@ namespace PocketMC.App.ViewModels
                 }
                 else
                 {
+                    list.Add("1.21.4");
                     list.Add("1.21");
                     list.Add("1.20.4");
                 }
 
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (ct.IsCancellationRequested) return;
                     Versions.Clear();
                     foreach (var v in list) Versions.Add(v);
                     SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
@@ -381,7 +598,10 @@ namespace PocketMC.App.ViewModels
             }
             finally
             {
-                IsLoadingVersions = false;
+                if (!ct.IsCancellationRequested)
+                {
+                    IsLoadingVersions = false;
+                }
             }
         }
 
@@ -466,6 +686,55 @@ namespace PocketMC.App.ViewModels
                         string javaExec = await _javaService.GetJavaExecutablePathAsync(javaVersion);
                         await RunInstallerAsync(javaExec, targetDir, installerPath);
                     }
+                    // Write customized server.properties
+                    string propPath = Path.Combine(targetDir, "server.properties");
+                    string propsContent = $"# Minecraft server properties\n" +
+                                          $"level-name=world\n" +
+                                          $"level-seed={WorldSeed}\n" +
+                                          $"level-type={SelectedLevelType.ToLower()}\n" +
+                                          $"gamemode={SelectedGamemode.ToLower()}\n" +
+                                          $"difficulty={SelectedDifficulty.ToLower()}\n" +
+                                          $"max-players={(string.IsNullOrWhiteSpace(MaxPlayers) ? "20" : MaxPlayers)}\n" +
+                                          $"motd={(string.IsNullOrWhiteSpace(Description) ? "A Minecraft Server created with PocketMC" : Description)}\n" +
+                                          $"server-port=25565\n" +
+                                          $"enable-rcon=false\n";
+                    await File.WriteAllTextAsync(propPath, propsContent);
+
+                    if (EnableGeyser)
+                    {
+                        try
+                        {
+                            ProgressText = "Downloading Geyser & Floodgate cross-play plugins...";
+                            using var client = new HttpClient();
+                            client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
+
+                            if (SelectedEngine == EngineType.Fabric)
+                            {
+                                string modsDir = Path.Combine(targetDir, "mods");
+                                Directory.CreateDirectory(modsDir);
+                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/fabric", Path.Combine(modsDir, "Geyser-Fabric.jar"), "Downloading Geyser Fabric mod");
+                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/fabric", Path.Combine(modsDir, "Floodgate-Fabric.jar"), "Downloading Floodgate Fabric mod");
+                            }
+                            else if (SelectedEngine == EngineType.NeoForge || SelectedEngine == EngineType.Forge)
+                            {
+                                string modsDir = Path.Combine(targetDir, "mods");
+                                Directory.CreateDirectory(modsDir);
+                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/neoforge", Path.Combine(modsDir, "Geyser-NeoForge.jar"), "Downloading Geyser NeoForge mod");
+                            }
+                            else
+                            {
+                                string pluginsDir = Path.Combine(targetDir, "plugins");
+                                Directory.CreateDirectory(pluginsDir);
+                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot", Path.Combine(pluginsDir, "Geyser-Spigot.jar"), "Downloading Geyser plugin");
+                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot", Path.Combine(pluginsDir, "Floodgate-Spigot.jar"), "Downloading Floodgate plugin");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to download Geyser/Floodgate: {ex.Message}");
+                        }
+                    }
+
                     Progress = 0.8;
                 }
                 else if (SelectedEngine == EngineType.PocketMine)
@@ -510,19 +779,33 @@ namespace PocketMC.App.ViewModels
                     Progress = 0.9;
                 }
 
+                if (!string.IsNullOrWhiteSpace(CustomWorldPath) && File.Exists(CustomWorldPath))
+                {
+                    try
+                    {
+                        ProgressText = "Extracting custom world archive...";
+                        string worldDir = Path.Combine(targetDir, "world");
+                        Directory.CreateDirectory(worldDir);
+                        System.IO.Compression.ZipFile.ExtractToDirectory(CustomWorldPath, worldDir, true);
+                    }
+                    catch { }
+                }
+
                 Progress = 1.0;
                 ProgressText = "Created successfully!";
                 await Task.Delay(1000);
 
                 var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-                if (mainVM != null)
+                var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+                if (mainVM != null && dashVM != null)
                 {
-                    var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
-                    if (dashVM != null)
+                    await dashVM.LoadInstancesAsync();
+                    var createdInstance = dashVM.Instances.FirstOrDefault(i => string.Equals(i.Name, instance.Name, StringComparison.OrdinalIgnoreCase)) ?? dashVM.Instances.LastOrDefault();
+                    if (createdInstance != null)
                     {
-                        await dashVM.LoadInstancesAsync();
-                        mainVM.CurrentViewModel = dashVM;
+                        dashVM.SelectedInstance = createdInstance;
                     }
+                    mainVM.CurrentViewModel = dashVM;
                 }
             }
             catch (Exception ex)
@@ -533,6 +816,15 @@ namespace PocketMC.App.ViewModels
                     await _instanceService.DeleteInstanceAsync(Slugify(Name));
                 }
                 catch { }
+
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    await ConfirmationDialogWindow.ShowAsync(
+                        "Instance Creation Failed",
+                        $"Could not create server instance '{Name}':\n\n{ex.Message}\n\nPlease select a supported server version and try again.",
+                        "OK"
+                    );
+                });
             }
             finally
             {
@@ -564,7 +856,37 @@ namespace PocketMC.App.ViewModels
 
         private async Task DownloadFileWithProgressAsync(HttpClient client, string url, string destinationPath, string prefixText)
         {
-            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            var currentUrl = url;
+            HttpResponseMessage response;
+            int redirects = 0;
+
+            while (true)
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
+                response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                int statusCode = (int)response.StatusCode;
+                if ((statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 307 || statusCode == 308) && response.Headers.Location != null)
+                {
+                    redirects++;
+                    if (redirects > 10)
+                        throw new Exception("Too many redirects while downloading file.");
+
+                    var loc = response.Headers.Location;
+                    if (!loc.IsAbsoluteUri)
+                    {
+                        currentUrl = new Uri(new Uri(currentUrl), loc).ToString();
+                    }
+                    else
+                    {
+                        currentUrl = loc.ToString();
+                    }
+                    response.Dispose();
+                    continue;
+                }
+                break;
+            }
+
             response.EnsureSuccessStatusCode();
 
             var totalBytes = response.Content.Headers.ContentLength ?? -1L;
@@ -706,7 +1028,7 @@ namespace PocketMC.App.ViewModels
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
 
-            string url = $"https://api.papermc.io/v2/projects/paper/versions/{mcVersion}";
+            string url = $"https://fill.papermc.io/v3/projects/paper/versions/{mcVersion}";
             var responseStr = await client.GetStringAsync(url);
             using var doc = JsonDocument.Parse(responseStr);
             var builds = doc.RootElement.GetProperty("builds");
@@ -721,7 +1043,28 @@ namespace PocketMC.App.ViewModels
             if (maxBuild == 0)
                 throw new Exception($"No builds found for Paper version {mcVersion}.");
 
-            string downloadUrl = $"https://api.papermc.io/v2/projects/paper/versions/{mcVersion}/builds/{maxBuild}/downloads/paper-{mcVersion}-{maxBuild}.jar";
+            string buildUrl = $"https://fill.papermc.io/v3/projects/paper/versions/{mcVersion}/builds/{maxBuild}";
+            var buildStr = await client.GetStringAsync(buildUrl);
+            using var buildDoc = JsonDocument.Parse(buildStr);
+
+            string? downloadUrl = null;
+            if (buildDoc.RootElement.TryGetProperty("downloads", out var downloadsEl))
+            {
+                foreach (var prop in downloadsEl.EnumerateObject())
+                {
+                    if (prop.Value.TryGetProperty("url", out var u))
+                    {
+                        downloadUrl = u.GetString();
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(downloadUrl))
+            {
+                throw new Exception($"Could not resolve download URL for Paper {mcVersion} build {maxBuild}.");
+            }
+
             await DownloadFileWithProgressAsync(client, downloadUrl, destinationPath, "Downloading Paper server jar");
         }
 
@@ -939,8 +1282,28 @@ namespace PocketMC.App.ViewModels
                    !string.IsNullOrWhiteSpace(SelectedVersion);
         }
 
-        private void Cancel()
+        private async Task CancelAsync()
         {
+            if (IsCreating)
+            {
+                bool confirmed = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+                    "Cancel Download?",
+                    "A server instance download is currently in progress. Navigating away or cancelling will abort the download and clean up temporary files.",
+                    "Yes, Cancel Download");
+
+                if (!confirmed) return;
+
+                _loadVersionsCts?.Cancel();
+                IsCreating = false;
+                ProgressText = "Download cancelled.";
+                
+                try
+                {
+                    await _instanceService.DeleteInstanceAsync(Slugify(Name));
+                }
+                catch { }
+            }
+
             var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
             if (mainVM != null)
             {

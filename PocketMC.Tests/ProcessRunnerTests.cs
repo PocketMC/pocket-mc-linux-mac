@@ -51,6 +51,9 @@ namespace PocketMC.Tests
             public Task<string> GetJavaExecutablePathAsync(string version) => Task.FromResult("java");
             public Task<bool> ValidateJavaRuntimeAsync(string path, string version) => Task.FromResult(true);
             public Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null) => Task.CompletedTask;
+            public Task<bool> IsJavaRuntimeInstalledAsync(string version) => Task.FromResult(true);
+            public Task DeleteJavaRuntimeAsync(string version) => Task.CompletedTask;
+            public Task RegisterCustomJavaRuntimeAsync(string version, string path) => Task.CompletedTask;
         }
 
         private class MockPHPService : IPHPService

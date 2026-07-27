@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
-             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.PlayerManagementPage"
              x:DataType="vm:PlayerManagementViewModel"
              x:CompileBindings="True"
@@ -18,21 +18,15 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
         </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
         
         <!-- Player card wrapper -->
         <Style Selector="Border.player-card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16,12"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="20,14"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>
         <Style Selector="TextBlock.player-name">
             <Setter Property="FontSize" Value="14"/>
@@ -42,8 +36,8 @@
         
         <!-- Action Buttons -->
         <Style Selector="Button.action-btn">
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -51,9 +45,9 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
         <Style Selector="Button.danger">
-            <Setter Property="Background" Value="#10FF0000"/>
+            <Setter Property="Background" Value="#20EF4444"/>
             <Setter Property="Foreground" Value="#EF4444"/>
-            <Setter Property="BorderBrush" Value="#20FF0000"/>
+            <Setter Property="BorderBrush" Value="#40EF4444"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
         <Style Selector="Button.danger:pointerover">
@@ -61,7 +55,7 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Button.secondary">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -71,204 +65,269 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Background="{DynamicResource CardBackgroundBrush}"
-            BorderBrush="{DynamicResource CardBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="12"
-            Padding="24">
-        <Grid RowDefinitions="Auto, 24, *">
-            <!-- Header -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto, 16, *">
-                <Button Grid.Column="0" Command="{Binding GoBackCommand}"
-                        Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
-                    <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2"/>
-                </Button>
-                <TextBlock Grid.Column="2" Text="{Binding SelectedInstance.Name, StringFormat='{}Player Administration - {0}'}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-            </Grid>
+    <Grid RowDefinitions="Auto, 20, *">
+        <!-- HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, 16, *, Auto">
+            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
+                    Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
+                <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Button>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Player Administration - {0}'}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Manage connected players, access whitelists, ban lists, and operator permissions." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
 
-            <!-- Navigation Sidebar inside TabControl -->
-            <TabControl Grid.Row="2" TabStripPlacement="Left" Margin="0" Padding="0">
-                
-                <!-- ONLINE PLAYERS -->
-                <TabItem Header="Online Players" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                    <Grid RowDefinitions="Auto, *" Margin="20,0,0,0">
-                        <TextBlock Grid.Row="0" Text="Currently Connected Players" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <TextBlock Text="No players currently online." 
-                                           IsVisible="{Binding !OnlinePlayers.Count}" 
-                                           HorizontalAlignment="Center" 
-                                           Margin="0,40,0,0" 
-                                           Opacity="0.5" 
-                                           FontSize="13"/>
-                                
-                                <ItemsControl ItemsSource="{Binding OnlinePlayers}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Classes="player-card">
-                                                <Grid ColumnDefinitions="Auto, 12, *, Auto">
-                                                    <!-- Avatar -->
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#1E90FF" Opacity="0.8">
-                                                        <lucide:LucideIcon Kind="User" Size="16" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <TextBlock Grid.Column="2" Text="{Binding}" Classes="player-name" VerticalAlignment="Center"/>
-                                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                        <Button Classes="action-btn secondary"
-                                                                Command="{Binding ((vm:PlayerManagementViewModel)DataContext).KickPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}" Content="Kick" />
-                                                        <Button Classes="action-btn danger"
-                                                                Command="{Binding ((vm:PlayerManagementViewModel)DataContext).BanPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}" Content="Ban" />
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </TabItem>
-
-                <!-- WHITELIST -->
-                <TabItem Header="Whitelist" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                    <Grid RowDefinitions="Auto, Auto, *" Margin="20,0,0,0">
-                        <TextBlock Grid.Row="0" Text="Access Whitelist" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,4" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="0" Text="When whitelist is enabled in server properties, only these players can join." FontSize="12" Opacity="0.6" Margin="0,38,0,12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <!-- Add Player Input -->
-                        <Border Grid.Row="1" Classes="player-card" Margin="0,0,0,16" Padding="12">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Grid.Column="0" Text="{Binding NewWhitelistPlayer, Mode=TwoWay}" Watermark="Enter player username..." Height="36" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
-                                <Button Grid.Column="1" Command="{Binding AddWhitelistPlayerCommand}" Content="Add to Whitelist" Classes="action-btn" Background="#1E90FF" Foreground="White" Height="36"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Player List -->
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <TextBlock Text="Whitelist is empty." 
-                                           IsVisible="{Binding !Whitelist.Count}" 
-                                           HorizontalAlignment="Center" 
-                                           Margin="0,40,0,0" 
-                                           Opacity="0.5" 
-                                           FontSize="13"/>
-                                
-                                <ItemsControl ItemsSource="{Binding Whitelist}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Classes="player-card">
-                                                <Grid ColumnDefinitions="Auto, 12, *, Auto">
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#1E90FF" Opacity="0.5">
-                                                        <lucide:LucideIcon Kind="UserCheck" Size="16" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <TextBlock Grid.Column="2" Text="{Binding}" Classes="player-name" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="3" Classes="action-btn danger"
-                                                            Command="{Binding ((vm:PlayerManagementViewModel)DataContext).RemoveWhitelistPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" Content="Remove" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </TabItem>
-
-                <!-- BAN LIST -->
-                <TabItem Header="Banned Players" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                    <Grid RowDefinitions="Auto, Auto, *" Margin="20,0,0,0">
-                        <TextBlock Grid.Row="0" Text="Banned Players (Blacklist)" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,4" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="0" Text="Players explicitly blocked from connecting to this server." FontSize="12" Opacity="0.6" Margin="0,38,0,12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <!-- Ban Player Input -->
-                        <Border Grid.Row="1" Classes="player-card" Margin="0,0,0,16" Padding="12">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Grid.Column="0" Text="{Binding NewBanPlayer, Mode=TwoWay}" Watermark="Enter player username to ban..." Height="36" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
-                                <Button Grid.Column="1" Command="{Binding BanPlayerCommand}" Content="Ban Player" Classes="action-btn danger" Height="36"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Player List -->
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <TextBlock Text="No players are currently banned." 
-                                           IsVisible="{Binding !BannedPlayers.Count}" 
-                                           HorizontalAlignment="Center" 
-                                           Margin="0,40,0,0" 
-                                           Opacity="0.5" 
-                                           FontSize="13"/>
-                                
-                                <ItemsControl ItemsSource="{Binding BannedPlayers}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Classes="player-card">
-                                                <Grid ColumnDefinitions="Auto, 12, *, Auto">
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#EF4444" Opacity="0.6">
-                                                        <lucide:LucideIcon Kind="UserX" Size="16" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <TextBlock Grid.Column="2" Text="{Binding}" Classes="player-name" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="3" Classes="action-btn secondary"
-                                                            Command="{Binding ((vm:PlayerManagementViewModel)DataContext).UnbanPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" Content="Unban" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </TabItem>
-
-                <!-- OPERATORS -->
-                <TabItem Header="Operators (Ops)" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                    <Grid RowDefinitions="Auto, Auto, *" Margin="20,0,0,0">
-                        <TextBlock Grid.Row="0" Text="Server Administrators (Ops)" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,4" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="0" Text="Operators have access to in-game console commands (e.g. /gamemode, /tp)." FontSize="12" Opacity="0.6" Margin="0,38,0,12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <!-- Make Op Input -->
-                        <Border Grid.Row="1" Classes="player-card" Margin="0,0,0,16" Padding="12">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Grid.Column="0" Text="{Binding NewOpPlayer, Mode=TwoWay}" Watermark="Enter player username..." Height="36" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
-                                <Button Grid.Column="1" Command="{Binding AddOpPlayerCommand}" Content="Grant Op Status" Classes="action-btn" Background="#1E90FF" Foreground="White" Height="36"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Player List -->
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <TextBlock Text="No server operators defined." 
-                                           IsVisible="{Binding !Ops.Count}" 
-                                           HorizontalAlignment="Center" 
-                                           Margin="0,40,0,0" 
-                                           Opacity="0.5" 
-                                           FontSize="13"/>
-                                
-                                <ItemsControl ItemsSource="{Binding Ops}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Classes="player-card">
-                                                <Grid ColumnDefinitions="Auto, 12, *, Auto">
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#10B981" Opacity="0.7">
-                                                        <lucide:LucideIcon Kind="Shield" Size="16" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <TextBlock Grid.Column="2" Text="{Binding}" Classes="player-name" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="3" Classes="action-btn danger"
-                                                            Command="{Binding ((vm:PlayerManagementViewModel)DataContext).RemoveOpPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" Content="Deop" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </TabItem>
-            </TabControl>
+            <!-- Status Count Summary -->
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <lucide:LucideIcon Kind="Users" Size="14" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding OnlinePlayers.Count, StringFormat='{}Online: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
-    </Border>
+
+        <!-- TOP TAB CONTROL -->
+        <TabControl Grid.Row="2" Margin="0" Padding="0">
+            <!-- ONLINE PLAYERS TAB -->
+            <TabItem FontSize="14" FontWeight="Medium" Padding="0,0,20,12">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <lucide:LucideIcon Kind="Users" Size="16" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                        <TextBlock Text="Online Players" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid RowDefinitions="Auto, *" Margin="0,16,0,0">
+                    <TextBlock Grid.Row="0" Text="Active Session Connections" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,14" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Stretch">
+                            <!-- EMPTY STATE -->
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" IsVisible="{Binding !OnlinePlayers.Count}">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="#1A1E90FF" HorizontalAlignment="Center">
+                                        <lucide:LucideIcon Kind="Users" Size="28" Foreground="#1E90FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="No Players Connected" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="There are currently no active players connected to this server instance." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- PLAYER LIST -->
+                            <ItemsControl ItemsSource="{Binding OnlinePlayers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="player-card">
+                                            <Grid ColumnDefinitions="Auto, 16, *, Auto">
+                                                <!-- Avatar -->
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#1E90FF">
+                                                    <lucide:LucideIcon Kind="User" Size="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding}" Classes="player-name" />
+                                                    <TextBlock Text="Status: Connected" FontSize="12" Foreground="#10B981" FontWeight="Medium"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                    <Button Classes="action-btn secondary"
+                                                            Command="{Binding ((vm:PlayerManagementViewModel)DataContext).KickPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" Content="Kick Player" />
+                                                    <Button Classes="action-btn danger"
+                                                            Command="{Binding ((vm:PlayerManagementViewModel)DataContext).BanPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" Content="Ban Player" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- WHITELIST TAB -->
+            <TabItem FontSize="14" FontWeight="Medium" Padding="0,0,20,12">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <lucide:LucideIcon Kind="UserCheck" Size="16" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                        <TextBlock Text="Whitelist" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid RowDefinitions="Auto, Auto, *" Margin="0,16,0,0">
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+                        <TextBlock Text="Access Whitelist" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Only player usernames listed here are granted permission to connect when whitelist is enabled." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Add Player Input Bar -->
+                    <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                        <Grid ColumnDefinitions="*, 12, Auto">
+                            <TextBox Grid.Column="0" Text="{Binding NewWhitelistPlayer, Mode=TwoWay}" Watermark="Enter Minecraft username to whitelist..." Height="38" VerticalContentAlignment="Center" CornerRadius="8" Background="{DynamicResource InputBackgroundBrush}"/>
+                            <Button Grid.Column="1" Command="{Binding AddWhitelistPlayerCommand}" Content="Add to Whitelist" Classes="action-btn" Background="#1E90FF" Foreground="White" Height="38" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Player List -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Stretch">
+                            <!-- EMPTY STATE -->
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" IsVisible="{Binding !Whitelist.Count}">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="#1A1E90FF" HorizontalAlignment="Center">
+                                        <lucide:LucideIcon Kind="UserCheck" Size="28" Foreground="#1E90FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Whitelist is Empty" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No player usernames are currently on the whitelist." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Whitelist}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="player-card">
+                                            <Grid ColumnDefinitions="Auto, 16, *, Auto">
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#1A1E90FF">
+                                                    <lucide:LucideIcon Kind="UserCheck" Size="20" Foreground="#1E90FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding}" Classes="player-name" />
+                                                    <TextBlock Text="Access: Allowed" FontSize="12" Foreground="#1E90FF" FontWeight="Medium"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="3" Classes="action-btn danger"
+                                                        Command="{Binding ((vm:PlayerManagementViewModel)DataContext).RemoveWhitelistPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Content="Remove" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- BANNED PLAYERS TAB -->
+            <TabItem FontSize="14" FontWeight="Medium" Padding="0,0,20,12">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <lucide:LucideIcon Kind="UserX" Size="16" Foreground="#EF4444" VerticalAlignment="Center"/>
+                        <TextBlock Text="Banned Players" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid RowDefinitions="Auto, Auto, *" Margin="0,16,0,0">
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+                        <TextBlock Text="Banned Players (Blacklist)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Players listed here are permanently restricted from connecting to this server." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Ban Player Input Bar -->
+                    <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                        <Grid ColumnDefinitions="*, 12, Auto">
+                            <TextBox Grid.Column="0" Text="{Binding NewBanPlayer, Mode=TwoWay}" Watermark="Enter username to ban..." Height="38" VerticalContentAlignment="Center" CornerRadius="8" Background="{DynamicResource InputBackgroundBrush}"/>
+                            <Button Grid.Column="1" Command="{Binding BanPlayerCommand}" Content="Ban Player" Classes="action-btn danger" Height="38" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Player List -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Stretch">
+                            <!-- EMPTY STATE -->
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" IsVisible="{Binding !BannedPlayers.Count}">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="#1AEF4444" HorizontalAlignment="Center">
+                                        <lucide:LucideIcon Kind="UserX" Size="28" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="No Banned Players" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="There are currently no banned players on this server instance." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding BannedPlayers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="player-card">
+                                            <Grid ColumnDefinitions="Auto, 16, *, Auto">
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#1AEF4444">
+                                                    <lucide:LucideIcon Kind="UserX" Size="20" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding}" Classes="player-name" />
+                                                    <TextBlock Text="Status: Banned" FontSize="12" Foreground="#EF4444" FontWeight="Medium"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="3" Classes="action-btn secondary"
+                                                        Command="{Binding ((vm:PlayerManagementViewModel)DataContext).UnbanPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Content="Unban Player" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- OPERATORS TAB -->
+            <TabItem FontSize="14" FontWeight="Medium" Padding="0,0,20,12">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <lucide:LucideIcon Kind="Shield" Size="16" Foreground="#10B981" VerticalAlignment="Center"/>
+                        <TextBlock Text="Operators (Ops)" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid RowDefinitions="Auto, Auto, *" Margin="0,16,0,0">
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+                        <TextBlock Text="Server Administrators (Operators)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Operators have elevated permissions and access to in-game admin commands." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Make Op Input Bar -->
+                    <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                        <Grid ColumnDefinitions="*, 12, Auto">
+                            <TextBox Grid.Column="0" Text="{Binding NewOpPlayer, Mode=TwoWay}" Watermark="Enter username to grant operator status..." Height="38" VerticalContentAlignment="Center" CornerRadius="8" Background="{DynamicResource InputBackgroundBrush}"/>
+                            <Button Grid.Column="1" Command="{Binding AddOpPlayerCommand}" Content="Grant Op Status" Classes="action-btn" Background="#10B981" Foreground="White" Height="38" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Player List -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Stretch">
+                            <!-- EMPTY STATE -->
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" IsVisible="{Binding !Ops.Count}">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="#1A10B981" HorizontalAlignment="Center">
+                                        <lucide:LucideIcon Kind="Shield" Size="28" Foreground="#10B981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="No Server Operators" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No operators are currently assigned to this server instance." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Ops}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="player-card">
+                                            <Grid ColumnDefinitions="Auto, 16, *, Auto">
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#1A10B981">
+                                                    <lucide:LucideIcon Kind="Shield" Size="20" Foreground="#10B981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding}" Classes="player-name" />
+                                                    <TextBlock Text="Permission: Operator (Level 4)" FontSize="12" Foreground="#10B981" FontWeight="Medium"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="3" Classes="action-btn danger"
+                                                        Command="{Binding ((vm:PlayerManagementViewModel)DataContext).RemoveOpPlayerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Content="Revoke Op Status" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
 </UserControl>

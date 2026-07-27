@@ -18,6 +18,9 @@ namespace PocketMC.Tests
             ProvisionCalled = true;
             return Task.CompletedTask;
         }
+        public Task<bool> IsJavaRuntimeInstalledAsync(string version) => Task.FromResult(true);
+        public Task DeleteJavaRuntimeAsync(string version) => Task.CompletedTask;
+        public Task RegisterCustomJavaRuntimeAsync(string version, string path) => Task.CompletedTask;
     }
 
     public class FakePHPService : IPHPService

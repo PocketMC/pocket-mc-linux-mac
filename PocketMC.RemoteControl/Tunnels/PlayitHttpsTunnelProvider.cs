@@ -48,8 +48,8 @@ public class PlayitHttpsTunnelProvider : IRemoteTunnelProvider
         {
             FileName = binPath,
             Arguments = $"--secret-path \"{secretPath}\" --socket-path \"{socketPath}\"",
-            RedirectStandardOutput = false,
-            RedirectStandardError = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };

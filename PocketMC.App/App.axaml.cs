@@ -21,6 +21,17 @@ namespace PocketMC.App
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+
+                try
+                {
+                    var playitClient = Services.GetRequiredService<PocketMC.RemoteControl.Tunnels.PlayitApiClient>();
+                    var tunnelManager = Services.GetRequiredService<PocketMC.RemoteControl.Tunnels.RemoteTunnelManager>();
+                    if (playitClient.HasPartnerConnection())
+                    {
+                        _ = tunnelManager.StartTunnelAsync("playit-https");
+                    }
+                }
+                catch { }
             }
 
             base.OnFrameworkInitializationCompleted();

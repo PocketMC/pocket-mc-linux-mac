@@ -105,12 +105,27 @@ public partial class TunnelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task LinkAccountAsync()
+    {
+        var wizard = new PocketMC.App.Views.PlayitSetupWizardWindow
+        {
+            DataContext = new PlayitSetupWizardViewModel()
+        };
+
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            await wizard.ShowDialog(desktop.MainWindow);
+            await RefreshAllAsync();
+        }
+    }
+
+    [RelayCommand]
     private async Task StartAgentAsync()
     {
         if (!IsLinked)
         {
-            ErrorMessage = "Please link your Playit account first.";
-            return;
+            await LinkAccountAsync();
+            if (!IsLinked) return;
         }
 
         await _tunnelManager.StartTunnelAsync("playit-https");
@@ -127,6 +142,17 @@ public partial class TunnelViewModel : ObservableObject
     [RelayCommand]
     private async Task CreateTunnelAsync()
     {
+        if (!IsLinked)
+        {
+            await LinkAccountAsync();
+            if (!IsLinked) return;
+        }
+
+        if (!IsAgentRunning)
+        {
+            await StartAgentAsync();
+        }
+
         if (string.IsNullOrWhiteSpace(NewTunnelName))
         {
             ErrorMessage = "Tunnel Name is required.";
@@ -169,6 +195,16 @@ public partial class TunnelViewModel : ObservableObject
     private async Task DeleteTunnelAsync(string tunnelId)
     {
         if (string.IsNullOrEmpty(tunnelId)) return;
+
+        var tunnel = Tunnels.FirstOrDefault(t => t.Id == tunnelId);
+        string name = tunnel?.Name ?? tunnelId;
+
+        bool confirmed = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+            "Delete Tunnel",
+            $"Are you sure you want to delete Playit tunnel '{name}'?",
+            "Delete Tunnel");
+
+        if (!confirmed) return;
 
         var result = await _playitApiClient.DeleteTunnelAsync(tunnelId);
         if (result.Success)

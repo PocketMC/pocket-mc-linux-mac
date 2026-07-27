@@ -117,7 +117,7 @@ namespace PocketMC.App
                     // ViewModels & Views
                     services.AddSingleton<MainWindowViewModel>();
                     services.AddTransient<MainWindow>();
-                    services.AddTransient<DashboardViewModel>();
+                    services.AddSingleton<DashboardViewModel>();
                     services.AddTransient<DashboardView>();
                     services.AddTransient<NewInstanceViewModel>();
                     services.AddTransient<NewInstancePage>();
@@ -137,6 +137,10 @@ namespace PocketMC.App
                     services.AddTransient<PocketMC.App.Views.RemoteControlPage>();
                     services.AddTransient<PocketMC.App.ViewModels.TunnelViewModel>();
                     services.AddTransient<PocketMC.App.Views.TunnelPage>();
+                    services.AddTransient<JavaManagementViewModel>();
+                    services.AddTransient<JavaManagementPage>();
+                    services.AddTransient<AboutViewModel>();
+                    services.AddTransient<AboutPage>();
                 });
     }
 }

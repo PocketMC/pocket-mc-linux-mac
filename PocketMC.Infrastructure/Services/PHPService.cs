@@ -95,6 +95,17 @@ namespace PocketMC.Infrastructure.Services
 
         public async Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null)
         {
+            var runtimes = _settingsService.Settings.DownloadedRuntimes;
+            if (runtimes.TryGetValue("php", out var phpVersions) && phpVersions.TryGetValue(version, out var existingPath))
+            {
+                var execPath = GetExecutableFromRoot(existingPath);
+                if (await ValidatePHPRuntimeAsync(execPath, version))
+                {
+                    progress?.Report(1.0);
+                    return;
+                }
+            }
+
             string os;
             string arch;
 

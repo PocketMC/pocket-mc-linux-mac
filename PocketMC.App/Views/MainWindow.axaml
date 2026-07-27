@@ -25,8 +25,6 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" Margin="12,0">
                     <Image Source="avares://PocketMC.App/Assets/icon.png" Width="16" Height="16" VerticalAlignment="Center"/>
                     <TextBlock Text="PocketMC" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="|" Foreground="{DynamicResource CardBorderBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="Dashboard" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>

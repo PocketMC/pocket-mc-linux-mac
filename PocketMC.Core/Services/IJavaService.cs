@@ -8,5 +8,8 @@ namespace PocketMC.Core.Services
         Task<string> GetJavaExecutablePathAsync(string version);
         Task<bool> ValidateJavaRuntimeAsync(string executablePath, string expectedVersion);
         Task ProvisionJavaRuntimeAsync(string version, IProgress<double>? progress = null);
+        Task<bool> IsJavaRuntimeInstalledAsync(string version);
+        Task DeleteJavaRuntimeAsync(string version);
+        Task RegisterCustomJavaRuntimeAsync(string version, string path);
     }
 }

@@ -293,6 +293,14 @@ namespace PocketMC.App.ViewModels
                 return;
             }
 
+            var target = SelectedBackup;
+            bool confirmed = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+                "Delete Backup Archive",
+                $"Are you sure you want to delete backup '{target.Label}' ({target.FileName})?",
+                "Delete Backup");
+
+            if (!confirmed) return;
+
             try
             {
                 string backupDir = string.IsNullOrWhiteSpace(Instance.CustomBackupDirectory)

@@ -14,7 +14,7 @@
         <!-- Error Step 0 -->
         <Grid IsVisible="{Binding IsStep0}" RowDefinitions="*,Auto">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
-                <TextBlock Text="❌ Setup Failed" FontSize="20" FontWeight="Bold" Foreground="#ef4444" HorizontalAlignment="Center"/>
+                <TextBlock Text="Setup Failed" FontSize="20" FontWeight="Bold" Foreground="#ef4444" HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
             </StackPanel>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
@@ -22,7 +22,7 @@
                 <Button Content="Retry" Command="{Binding RetryCommand}" Classes="accent"/>
             </StackPanel>
         </Grid>
- 
+
         <!-- Step 1: Open Setup Page -->
         <Grid IsVisible="{Binding IsStep1}" RowDefinitions="*,Auto">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
@@ -34,7 +34,7 @@
             </StackPanel>
             <Button Grid.Row="1" Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Right"/>
         </Grid>
- 
+
         <!-- Step 2: Paste Code & Connect -->
         <Grid IsVisible="{Binding IsStep2}" RowDefinitions="*,Auto">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
@@ -54,11 +54,11 @@
             
             <Button Grid.Row="1" Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Right" IsEnabled="{Binding !IsConnecting}"/>
         </Grid>
- 
+
         <!-- Success Step 3 -->
         <Grid IsVisible="{Binding IsStep3}" RowDefinitions="*,Auto">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Spacing="16">
-                <TextBlock Text="✅ Account Linked" FontSize="24" FontWeight="Bold" Foreground="#10b981" HorizontalAlignment="Center"/>
+                <TextBlock Text="Account Linked" FontSize="24" FontWeight="Bold" Foreground="#10b981" HorizontalAlignment="Center"/>
                 <TextBlock Text="Your agent has been successfully provisioned!" TextAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
                 
                 <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="16" Margin="0,8">

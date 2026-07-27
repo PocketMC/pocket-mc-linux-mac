@@ -4,30 +4,30 @@
              xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.ServerBackupsPage"
              x:DataType="vm:ServerBackupsViewModel"
-             Background="#141419">
+             Background="{DynamicResource WindowBackgroundBrush}">
 
   <Grid RowDefinitions="Auto, *">
     
     <!-- HEADER BAR -->
-    <Border Grid.Row="0" Background="#1e1e24" Padding="16,12" BorderBrush="#2c2c35" BorderThickness="0,0,0,1">
+    <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" Padding="16,12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto, *, Auto">
         <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
                 Background="Transparent" BorderThickness="0" Padding="8">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="White"/>
-            <TextBlock Text="Back to Dashboard" VerticalAlignment="Center" Foreground="White" FontWeight="Medium"/>
+            <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Back to Dashboard" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Medium"/>
           </StackPanel>
         </Button>
         
         <TextBlock Grid.Column="1" Text="Backups &amp; Restore Manager" 
-                   FontSize="18" FontWeight="Bold" Foreground="White" 
+                   FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" 
                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
           <ProgressBar IsIndeterminate="True" Width="100" Height="4" 
                        IsVisible="{Binding IsBusy}" VerticalAlignment="Center"/>
           <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" 
-                     FontSize="12" Foreground="#a0a0a5" Margin="8,0,0,0"/>
+                     FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0"/>
         </StackPanel>
       </Grid>
     </Border>
@@ -38,9 +38,9 @@
       <!-- LEFT SIDE: Backup History & Action buttons -->
       <Grid Grid.Column="0" RowDefinitions="*, Auto" Margin="0,0,16,0" x:Name="LeftGrid">
         <!-- Backups List -->
-        <Border Grid.Row="0" Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="16">
           <Grid RowDefinitions="Auto, *">
-            <TextBlock Grid.Row="0" Text="Backup History" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,12"/>
+            <TextBlock Grid.Row="0" Text="Backup History" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
             
             <ListBox Grid.Row="1" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
                      Background="Transparent" BorderThickness="0" Name="BackupsList">
@@ -48,13 +48,13 @@
                 <DataTemplate>
                   <Grid ColumnDefinitions="*, Auto, Auto" Margin="4,8">
                     <StackPanel Grid.Column="0" Spacing="4">
-                      <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="White" FontSize="14"/>
-                      <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="#808085"/>
+                      <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+                      <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                     
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="16,0" Spacing="2">
-                      <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm} UTC'}" FontSize="12" Foreground="#a0a0a5"/>
-                      <TextBlock Text="{Binding SizeBytes, StringFormat='{}{0:N0} bytes'}" FontSize="11" Foreground="#808085"/>
+                      <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm} UTC'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <TextBlock Text="{Binding SizeBytes, StringFormat='{}{0:N0} bytes'}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
 
                     <lucide:LucideIcon Grid.Column="2" Kind="ShieldCheck" Size="18" Foreground="#2ecc71" 
@@ -103,88 +103,88 @@
         <StackPanel Spacing="16" Margin="0,0,4,0">
           
           <!-- Local Backups Configuration -->
-          <Border Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+          <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="16">
             <StackPanel Spacing="12">
-              <TextBlock Text="Local Storage Settings" FontSize="15" FontWeight="Bold" Foreground="White"/>
+              <TextBlock Text="Local Storage Settings" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
               
               <StackPanel Spacing="4">
-                <TextBlock Text="Max Backups to Keep" FontSize="11" Foreground="#a0a0a5"/>
-                <NumericUpDown Value="{Binding MaxBackupsToKeep}" Minimum="1" Maximum="100" Background="#2c2c35" Foreground="White"/>
+                <TextBlock Text="Max Backups to Keep" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <NumericUpDown Value="{Binding MaxBackupsToKeep}" Minimum="1" Maximum="100" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
               </StackPanel>
 
               <StackPanel Spacing="4">
-                <TextBlock Text="Custom Backup Folder (Optional)" FontSize="11" Foreground="#a0a0a5"/>
-                <TextBox Text="{Binding CustomBackupDirectory}" Watermark="e.g. /path/to/backups" Background="#2c2c35" Foreground="White" BorderBrush="#3c3c45"/>
+                <TextBlock Text="Custom Backup Folder (Optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding CustomBackupDirectory}" Watermark="e.g. /path/to/backups" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
               </StackPanel>
 
               <StackPanel Spacing="4">
-                <TextBlock Text="External Replication Directory" FontSize="11" Foreground="#a0a0a5"/>
-                <TextBox Text="{Binding ExternalBackupDirectory}" Watermark="e.g. USB or NAS mount path" Background="#2c2c35" Foreground="White" BorderBrush="#3c3c45"/>
+                <TextBlock Text="External Replication Directory" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding ExternalBackupDirectory}" Watermark="e.g. USB or NAS mount path" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
               </StackPanel>
             </StackPanel>
           </Border>
 
           <!-- Cloud Backups Configuration -->
-          <Border Background="#1e1e24" CornerRadius="12" BorderBrush="#2c2c35" BorderThickness="1" Padding="16">
+          <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="16">
             <StackPanel Spacing="12">
-              <TextBlock Text="Cloud Storage Integration" FontSize="15" FontWeight="Bold" Foreground="White"/>
+              <TextBlock Text="Cloud Storage Integration" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
               
-              <ToggleSwitch IsChecked="{Binding EnableCloudBackups}" Content="Enable Cloud Backups" Foreground="White"/>
+              <ToggleSwitch IsChecked="{Binding EnableCloudBackups}" Content="Enable Cloud Backups" Foreground="{DynamicResource TextPrimaryBrush}"/>
               
               <StackPanel Spacing="6" IsEnabled="{Binding EnableCloudBackups}">
-                <CheckBox IsChecked="{Binding UploadOnManualBackup}" Content="Upload Manual Backups" Foreground="White" FontSize="12"/>
-                <CheckBox IsChecked="{Binding UploadOnScheduledBackup}" Content="Upload Scheduled Backups" Foreground="White" FontSize="12"/>
+                <CheckBox IsChecked="{Binding UploadOnManualBackup}" Content="Upload Manual Backups" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
+                <CheckBox IsChecked="{Binding UploadOnScheduledBackup}" Content="Upload Scheduled Backups" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
                 
                 <!-- Google Drive Provider -->
-                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
                   <Grid RowDefinitions="Auto, Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
-                      <CheckBox Grid.Column="0" IsChecked="{Binding IsGoogleDriveEnabled}" Content="Google Drive" Foreground="White"/>
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsGoogleDriveEnabled}" Content="Google Drive" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="{Binding GoogleDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <TextBlock Text="{Binding GoogleDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectGoogleDrive}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsGoogleDriveConnected}"/>
                       </StackPanel>
                     </Grid>
                     <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsGoogleDriveEnabled}">
-                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
-                      <NumericUpDown Value="{Binding GoogleDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <NumericUpDown Value="{Binding GoogleDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
                   </Grid>
                 </Border>
 
                 <!-- OneDrive Provider -->
-                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
                   <Grid RowDefinitions="Auto, Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
-                      <CheckBox Grid.Column="0" IsChecked="{Binding IsOneDriveEnabled}" Content="Microsoft OneDrive" Foreground="White"/>
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsOneDriveEnabled}" Content="Microsoft OneDrive" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="{Binding OneDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <TextBlock Text="{Binding OneDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectOneDrive}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsOneDriveConnected}"/>
                       </StackPanel>
                     </Grid>
                     <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsOneDriveEnabled}">
-                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
-                      <NumericUpDown Value="{Binding OneDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <NumericUpDown Value="{Binding OneDriveRetention}" Minimum="1" Maximum="50" Height="24" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
                   </Grid>
                 </Border>
 
                 <!-- Dropbox Provider -->
-                <Border BorderBrush="#2c2c35" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
+                <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,8,0,0">
                   <Grid RowDefinitions="Auto, Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
-                      <CheckBox Grid.Column="0" IsChecked="{Binding IsDropboxEnabled}" Content="Dropbox" Foreground="White"/>
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsDropboxEnabled}" Content="Dropbox" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="{Binding DropboxStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="#808085"/>
+                        <TextBlock Text="{Binding DropboxStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectDropbox}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsDropboxConnected}"/>
                       </StackPanel>
                     </Grid>
                     <StackPanel Grid.Row="1" Spacing="4" Margin="16,4,0,0" IsVisible="{Binding IsDropboxEnabled}">
-                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="#a0a0a5"/>
-                      <NumericUpDown Value="{Binding DropboxRetention}" Minimum="1" Maximum="50" Height="24" Background="#2c2c35" Foreground="White"/>
+                      <TextBlock Text="Max Cloud Retained Backups" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <NumericUpDown Value="{Binding DropboxRetention}" Minimum="1" Maximum="50" Height="24" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
                   </Grid>
                 </Border>

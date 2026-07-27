@@ -1,0 +1,108 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             xmlns:converters="using:PocketMC.App.Converters"
+             x:Class="PocketMC.App.Views.JavaManagementPage"
+             x:DataType="vm:JavaManagementViewModel"
+             x:CompileBindings="True"
+             Margin="24">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto">
+        <!-- HEADER BAR -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,20">
+            <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
+                    Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="6" VerticalAlignment="Center">
+                <lucide:LucideIcon Kind="ArrowLeft" Size="20" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Button>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Java Runtimes" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Managed JDK/JRE runtimes for Minecraft servers. Missing runtimes are automatically downloaded from Eclipse Adoptium." 
+                           FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ACTION BAR -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,16">
+            <Button Command="{Binding DownloadMissingCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="14,8">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <lucide:LucideIcon Kind="Download" Size="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="Download Missing" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding AddCustomRuntimeCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <lucide:LucideIcon Kind="FolderPlus" Size="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="Add Custom Runtime" FontWeight="Medium" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <lucide:LucideIcon Kind="RefreshCw" Size="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="Refresh" FontWeight="Medium" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- RUNTIME CARDS LIST -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Runtimes}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:JavaRuntimeItemViewModel">
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="16,14"
+                                Margin="0,0,0,10">
+                            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                <!-- Tile Badge -->
+                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="10" Background="#1E90FF" Margin="0,0,14,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding VersionLabel}" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Text info -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <!-- Status Badge -->
+                                        <Border Background="#201E90FF" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#1E90FF"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding DetailText}" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                    <!-- Download Progress bar -->
+                                    <ProgressBar IsVisible="{Binding IsDownloading}" Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Margin="0,4,16,0" CornerRadius="2"/>
+                                </StackPanel>
+
+                                <!-- Action Delete -->
+                                <Button Grid.Column="2" 
+                                        Command="{Binding $parent[UserControl].((vm:JavaManagementViewModel)DataContext).DeleteRuntimeCommand}"
+                                        CommandParameter="{Binding}"
+                                        IsVisible="{Binding IsInstalled}"
+                                        Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="6" ToolTip.Tip="Delete Runtime" Margin="0,0,8,0">
+                                    <lucide:LucideIcon Kind="Trash2" Size="18" Foreground="#FF4D4D"/>
+                                </Button>
+
+                                <!-- Action Download -->
+                                <Button Grid.Column="3" 
+                                        Command="{Binding $parent[UserControl].((vm:JavaManagementViewModel)DataContext).DownloadRuntimeCommand}"
+                                        CommandParameter="{Binding}"
+                                        IsVisible="{Binding !IsInstalled}"
+                                        Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="10,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <lucide:LucideIcon Kind="Download" Size="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Download" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- STATUS FOOTER -->
+        <TextBlock Grid.Row="3" Text="{Binding GlobalStatus}" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,12,0,0"/>
+    </Grid>
+</UserControl>

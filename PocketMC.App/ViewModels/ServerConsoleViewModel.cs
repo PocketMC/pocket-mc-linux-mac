@@ -243,6 +243,14 @@ namespace PocketMC.App.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void SendQuickCommand(string? cmd)
+        {
+            if (string.IsNullOrWhiteSpace(cmd)) return;
+            CommandInput = cmd;
+            _ = SendCommandAsync();
+        }
+
         public string CycleHistory(bool up)
         {
             if (!_commandHistory.Any()) return CommandInput;

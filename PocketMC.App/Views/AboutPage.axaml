@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.AboutPage"
+             x:DataType="vm:AboutViewModel"
+             x:CompileBindings="True"
+             Margin="24">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- HEADER BAR -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,20">
+            <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
+                    Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="6" VerticalAlignment="Center">
+                <lucide:LucideIcon Kind="ArrowLeft" Size="20" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Button>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="About PocketMC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding AppVersion}" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- MAIN SCROLL CONTENT -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <!-- HERO CARD -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="24">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="100" Height="100" CornerRadius="16" Margin="0,0,24,0" VerticalAlignment="Center" ClipToBounds="True" Background="#1E90FF">
+                            <Image Source="avares://PocketMC.App/Assets/icon.png" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="PocketMC Desktop" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="A modern native desktop application for managing Minecraft Java, Bedrock Dedicated Server, and PocketMine (PHP) servers with unified process monitoring and playit.gg cross-platform network tunnels." 
+                                       TextWrapping="Wrap" Opacity="0.8" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
+                                <Button Command="{Binding OpenGitHubCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:LucideIcon Kind="Github" Size="16" VerticalAlignment="Center"/>
+                                        <TextBlock Text="GitHub Repo" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- COMMUNITY SECTION CARD -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="20">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <lucide:LucideIcon Kind="Users" Size="20" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                            <TextBlock Text="Community &amp; Socials" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Join our community to ask questions, share server configurations, and connect with other PocketMC server admins." 
+                                   FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                        
+                        <WrapPanel Orientation="Horizontal">
+                            <Button Command="{Binding OpenDiscordCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <lucide:LucideIcon Kind="MessageSquare" Size="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Join Discord" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding CopyDiscordInviteCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Copy Invite" FontSize="12" FontWeight="Medium"/>
+                            </Button>
+                            <Button Command="{Binding OpenInstagramCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Instagram" FontSize="12" FontWeight="Medium"/>
+                            </Button>
+                            <Button Command="{Binding OpenYouTubeCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="YouTube" FontSize="12" FontWeight="Medium"/>
+                            </Button>
+                            <Button Command="{Binding OpenRedditCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Reddit" FontSize="12" FontWeight="Medium"/>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- FEEDBACK SECTION CARD -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="20">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <lucide:LucideIcon Kind="Bug" Size="20" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                            <TextBlock Text="Feedback &amp; Support" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Report bugs, submit feature requests, or browse existing troubleshooting discussions." 
+                                   FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Command="{Binding OpenFeedbackCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <lucide:LucideIcon Kind="ExternalLink" Size="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Submit Feedback / Issue" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- SUPPORT & DONATION CARD -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="20">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <lucide:LucideIcon Kind="Heart" Size="20" Foreground="#FF4D4D" VerticalAlignment="Center"/>
+                            <TextBlock Text="Support &amp; Donation" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="PocketMC is free and open-source. If you enjoy using PocketMC to host your servers, consider supporting ongoing development!" 
+                                   FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Command="{Binding OpenDonationCommand}" Background="#FF4D4D" Foreground="White" CornerRadius="8" Padding="14,6">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <lucide:LucideIcon Kind="Coffee" Size="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Buy Me a Coffee" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -39,8 +39,10 @@ namespace PocketMC.Tests
             finally
             {
                 client.Close();
+                client.Dispose();
             }
 
+            System.Threading.Thread.Sleep(50);
             Assert.False(PortProber.IsPortListening(port, true), "UDP port should not be listening after close");
         }
     }

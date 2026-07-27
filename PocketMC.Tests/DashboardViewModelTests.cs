@@ -83,7 +83,8 @@ namespace PocketMC.Tests
             var playitClient = new PlayitApiClient(settingsService);
             var localNetworkAddressService = new LocalNetworkAddressService();
 
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService);
+            var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -108,7 +109,8 @@ namespace PocketMC.Tests
             var playitClient = new PlayitApiClient(settingsService);
             var localNetworkAddressService = new LocalNetworkAddressService();
 
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService);
+            var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();

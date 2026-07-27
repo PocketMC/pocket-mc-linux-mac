@@ -121,8 +121,8 @@
                                        TextWrapping="Wrap" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
                             
                             <!-- QR Code card border -->
-                            <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Background="White" Margin="0,8">
-                                <Image Source="{Binding PairingQrCode}" Width="220" Height="220" />
+                            <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Background="White" HorizontalAlignment="Center" Margin="0,8">
+                                <Image Source="{Binding PairingQrCode}" Width="200" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
                             <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>

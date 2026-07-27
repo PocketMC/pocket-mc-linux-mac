@@ -37,6 +37,9 @@ namespace PocketMC.App.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsSelected))]
+        [NotifyPropertyChangedFor(nameof(SelectedInstanceName))]
+        [NotifyPropertyChangedFor(nameof(SelectedInstanceEngineType))]
+        [NotifyPropertyChangedFor(nameof(SelectedInstanceEngineVersion))]
         private ServerInstance? _selectedInstance;
 
         [ObservableProperty]
@@ -77,14 +80,11 @@ namespace PocketMC.App.ViewModels
         [ObservableProperty]
         private string _themeOverride = "System";
 
-        [ObservableProperty]
-        private string _selectedInstanceName = string.Empty;
+        public string SelectedInstanceName => SelectedInstance?.Name ?? string.Empty;
 
-        [ObservableProperty]
-        private string _selectedInstanceEngineType = string.Empty;
+        public string SelectedInstanceEngineType => SelectedInstance?.EngineType.ToString() ?? string.Empty;
 
-        [ObservableProperty]
-        private string _selectedInstanceEngineVersion = string.Empty;
+        public string SelectedInstanceEngineVersion => SelectedInstance?.EngineVersion ?? string.Empty;
 
         [ObservableProperty]
         private bool _hasPlayitTunnels;
@@ -102,6 +102,15 @@ namespace PocketMC.App.ViewModels
         private bool _showBedrockTunnel;
 
         [ObservableProperty]
+        private string? _voiceChatTunnelAddress;
+
+        [ObservableProperty]
+        private bool _showVoiceChatTunnel;
+
+        [ObservableProperty]
+        private bool _isCreatingTunnels;
+
+        [ObservableProperty]
         private string? _lanAddressDisplayText;
 
         [ObservableProperty]
@@ -111,6 +120,9 @@ namespace PocketMC.App.ViewModels
         private bool _showBedrockIp;
 
         private readonly ISettingsService _settingsService;
+        private readonly RemoteTunnelManager _tunnelManager;
+        private List<PocketMC.RemoteControl.Tunnels.TunnelData> _cachedActiveTunnels = new();
+        private int _pollCount = 0;
 
         public bool IsSelected => SelectedInstance != null;
 
@@ -122,7 +134,8 @@ namespace PocketMC.App.ViewModels
             ThemeManager themeManager,
             PlayitApiClient playitClient,
             LocalNetworkAddressService localNetworkAddressService,
-            ISettingsService settingsService)
+            ISettingsService settingsService,
+            RemoteTunnelManager tunnelManager)
         {
             _instanceService = instanceService;
             _processRunner = processRunner;
@@ -132,6 +145,7 @@ namespace PocketMC.App.ViewModels
             _playitClient = playitClient;
             _localNetworkAddressService = localNetworkAddressService;
             _settingsService = settingsService;
+            _tunnelManager = tunnelManager;
 
             _processRunner.StateChanged += OnProcessStateChanged;
 
@@ -168,8 +182,10 @@ namespace PocketMC.App.ViewModels
         public async Task LoadInstancesAsync()
         {
             var list = await _instanceService.ListInstancesAsync();
-            Dispatcher.UIThread.Post(() =>
+            Action updateAction = () =>
             {
+                var currentSlug = SelectedInstance?.Slug ?? _settingsService.Settings.LastSelectedInstanceSlug;
+
                 Instances.Clear();
                 foreach (var inst in list)
                 {
@@ -177,27 +193,37 @@ namespace PocketMC.App.ViewModels
                 }
                 HasInstances = Instances.Count > 0;
 
-                // Restore last selected instance slug from settings
-                var lastSlug = _settingsService.Settings.LastSelectedInstanceSlug;
-                if (!string.IsNullOrEmpty(lastSlug))
+                ServerInstance? target = null;
+                if (!string.IsNullOrEmpty(currentSlug))
                 {
-                    var found = Instances.FirstOrDefault(i => i.Slug == lastSlug);
-                    if (found != null)
-                    {
-                        SelectedInstance = found;
-                    }
+                    target = Instances.FirstOrDefault(i => i.Slug == currentSlug);
                 }
 
-                if (SelectedInstance == null && HasInstances)
+                if (target == null && HasInstances)
                 {
-                    SelectedInstance = Instances[0];
+                    target = Instances[0];
                 }
-                
+
+                SelectedInstance = target;
+                OnPropertyChanged(nameof(SelectedInstanceName));
+                OnPropertyChanged(nameof(SelectedInstanceEngineType));
+                OnPropertyChanged(nameof(SelectedInstanceEngineVersion));
+                OnPropertyChanged(nameof(IsSelected));
+
                 if (!_timer.Enabled)
                 {
                     _timer.Start();
                 }
-            });
+            };
+
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                updateAction();
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(updateAction);
+            }
         }
 
         partial void OnSelectedInstanceChanged(ServerInstance? value)
@@ -206,16 +232,10 @@ namespace PocketMC.App.ViewModels
             {
                 _settingsService.Settings.LastSelectedInstanceSlug = value.Slug;
                 _settingsService.Save();
-                SelectedInstanceName = value.Name;
-                SelectedInstanceEngineType = value.EngineType.ToString();
-                SelectedInstanceEngineVersion = value.EngineVersion;
             }
 
             if (value == null)
             {
-                SelectedInstanceName = string.Empty;
-                SelectedInstanceEngineType = string.Empty;
-                SelectedInstanceEngineVersion = string.Empty;
                 ServerState = "Stopped";
                 CpuUsagePercent = 0;
                 RamUsageFormatted = "0 MB";
@@ -340,21 +360,22 @@ namespace PocketMC.App.ViewModels
                 }
             }
 
-            // Sync Tunnels data
+            // Sync Tunnels data (throttled to avoid HTTP 429 rate limits)
+            _pollCount++;
             string? playitSecret = _settingsService.Settings.PlayitPartnerConnection?.SecretKey;
-            List<PocketMC.RemoteControl.Tunnels.TunnelData> activeTunnels = new();
-            if (!string.IsNullOrEmpty(playitSecret))
+            if (!string.IsNullOrEmpty(playitSecret) && (_cachedActiveTunnels == null || _cachedActiveTunnels.Count == 0 || _pollCount % 15 == 1))
             {
                 try
                 {
                     var response = await _playitClient.GetTunnelsAsync();
-                    if (response?.Tunnels != null)
+                    if (response != null && response.Success && response.Tunnels != null)
                     {
-                        activeTunnels = response.Tunnels.Where(t => t.IsEnabled).ToList();
+                        _cachedActiveTunnels = response.Tunnels.Where(t => t.IsEnabled).ToList();
                     }
                 }
                 catch { /* Ignore API errors during polling */ }
             }
+            List<PocketMC.RemoteControl.Tunnels.TunnelData> activeTunnels = _cachedActiveTunnels ?? new();
 
             // Update Histories
             var cpuBuf = GetOrCreateHistory(_cpuHistories, selected.Slug);
@@ -426,12 +447,24 @@ namespace PocketMC.App.ViewModels
                         {
                             ShowBedrockTunnel = false;
                         }
+
+                        var voiceTunnel = activeTunnels.FirstOrDefault(t => t.TunnelType == "mc-simple-voice-chat" || (t.TunnelType != null && t.TunnelType.Contains("voice")));
+                        if (voiceTunnel != null)
+                        {
+                            VoiceChatTunnelAddress = voiceTunnel.PublicAddress;
+                            ShowVoiceChatTunnel = true;
+                        }
+                        else
+                        {
+                            ShowVoiceChatTunnel = false;
+                        }
                     }
                     else
                     {
                         HasPlayitTunnels = false;
                         ShowJavaTunnel = false;
                         ShowBedrockTunnel = false;
+                        ShowVoiceChatTunnel = false;
                     }
                     
                     // Lan IP
@@ -493,6 +526,36 @@ namespace PocketMC.App.ViewModels
             if (SelectedInstance != null)
             {
                 await _processRunner.StartAsync(SelectedInstance);
+
+                // Auto create / verify Playit tunnels on server start
+                if (_playitClient.HasPartnerConnection())
+                {
+                    _ = CreateOrToggleTunnelsAsync();
+                }
+                else
+                {
+                    bool promptConnect = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+                        "Playit.gg Remote Tunnel",
+                        "Would you like to connect your Playit.gg account to automatically expose this server to the internet?",
+                        "Connect Account");
+
+                    if (promptConnect)
+                    {
+                        var wizard = new PocketMC.App.Views.PlayitSetupWizardWindow
+                        {
+                            DataContext = new PlayitSetupWizardViewModel()
+                        };
+
+                        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+                        {
+                            await wizard.ShowDialog(desktop.MainWindow);
+                            if (_playitClient.HasPartnerConnection())
+                            {
+                                _ = CreateOrToggleTunnelsAsync();
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -514,7 +577,15 @@ namespace PocketMC.App.ViewModels
         {
             if (SelectedInstance != null)
             {
-                await _instanceService.DeleteInstanceAsync(SelectedInstance.Slug);
+                var target = SelectedInstance;
+                bool confirmed = await PocketMC.App.Views.ConfirmationDialogWindow.ShowAsync(
+                    "Delete Server Instance",
+                    $"Are you sure you want to delete server instance '{target.Name}'?\nAll world data, configs, and installed plugins will be deleted permanently.",
+                    "Delete Server");
+
+                if (!confirmed) return;
+
+                await _instanceService.DeleteInstanceAsync(target.Slug);
                 SelectedInstance = null;
                 await LoadInstancesAsync();
             }
@@ -637,6 +708,157 @@ namespace PocketMC.App.ViewModels
             if (mainVM != null)
             {
                 mainVM.CurrentViewModel = App.Services.GetRequiredService<RemoteControlViewModel>();
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToJavaManagement()
+        {
+            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            if (mainVM != null)
+            {
+                mainVM.CurrentViewModel = App.Services.GetRequiredService<JavaManagementViewModel>();
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToAbout()
+        {
+            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            if (mainVM != null)
+            {
+                mainVM.CurrentViewModel = App.Services.GetRequiredService<AboutViewModel>();
+            }
+        }
+
+        [RelayCommand]
+        private async Task CopyAddressAsync(string? address)
+        {
+            if (string.IsNullOrWhiteSpace(address)) return;
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(desktop.MainWindow);
+                if (topLevel?.Clipboard != null)
+                {
+                    await topLevel.Clipboard.SetTextAsync(address);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void OpenFolder(ServerInstance? instance)
+        {
+            var target = instance ?? SelectedInstance;
+            if (target != null && Directory.Exists(target.Path))
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = OperatingSystem.IsMacOS() ? "open" : "xdg-open",
+                        Arguments = target.Path,
+                        UseShellExecute = true
+                    });
+                }
+                catch
+                {
+                    try
+                    {
+                        Process.Start(OperatingSystem.IsMacOS() ? "open" : "xdg-open", target.Path);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task CreateOrToggleTunnelsAsync()
+        {
+            if (SelectedInstance == null) return;
+            var selected = SelectedInstance;
+
+            bool isLinked = _playitClient.HasPartnerConnection();
+            if (!isLinked)
+            {
+                var wizard = new PocketMC.App.Views.PlayitSetupWizardWindow
+                {
+                    DataContext = new PlayitSetupWizardViewModel()
+                };
+
+                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+                {
+                    await wizard.ShowDialog(desktop.MainWindow);
+                    isLinked = _playitClient.HasPartnerConnection();
+                }
+
+                if (!isLinked) return;
+            }
+
+            IsCreatingTunnels = true;
+            try
+            {
+                await _tunnelManager.StartTunnelAsync("playit-https");
+                await _playitClient.EnsureAgentIdAsync();
+
+                // Fetch existing tunnels to prevent duplicates
+                var listResponse = await _playitClient.GetTunnelsAsync();
+                var existingTunnels = listResponse?.Tunnels ?? new List<PocketMC.RemoteControl.Tunnels.TunnelData>();
+
+                int port = GetServerPort(selected);
+                bool isJava = selected.EngineType != EngineType.Bedrock && selected.EngineType != EngineType.PocketMine;
+
+                bool HasTunnel(string type, int p)
+                {
+                    return existingTunnels.Any(t =>
+                        string.Equals(t.TunnelType, type, StringComparison.OrdinalIgnoreCase) &&
+                        (t.Port == p || t.Name?.Equals($"{selected.Name}-{(type.Contains("java") ? "java" : "bedrock")}", StringComparison.OrdinalIgnoreCase) == true));
+                }
+
+                // 1. Create Java or Bedrock tunnel if not present
+                if (isJava)
+                {
+                    if (!HasTunnel("minecraft-java", port))
+                    {
+                        await _playitClient.CreateTunnelAsync($"{selected.Name}-java", "minecraft-java", port);
+                    }
+                }
+                else
+                {
+                    if (!HasTunnel("minecraft-bedrock", port))
+                    {
+                        await _playitClient.CreateTunnelAsync($"{selected.Name}-bedrock", "minecraft-bedrock", port);
+                    }
+                }
+
+                // 2. Check for Geyser if Java server
+                if (isJava)
+                {
+                    string pluginsDir = Path.Combine(selected.Path, "plugins");
+                    string modsDir = Path.Combine(selected.Path, "mods");
+                    bool hasGeyser = (Directory.Exists(pluginsDir) && Directory.GetFiles(pluginsDir, "*Geyser*.jar", SearchOption.TopDirectoryOnly).Any()) ||
+                                     (Directory.Exists(modsDir) && Directory.GetFiles(modsDir, "*Geyser*.jar", SearchOption.TopDirectoryOnly).Any());
+                    if (hasGeyser && !HasTunnel("minecraft-bedrock", 19132))
+                    {
+                        await _playitClient.CreateTunnelAsync($"{selected.Name}-bedrock", "minecraft-bedrock", 19132);
+                    }
+
+                    // 3. Check for Simple Voice Chat
+                    bool hasVoiceChat = (Directory.Exists(pluginsDir) && Directory.GetFiles(pluginsDir, "*voice*chat*.jar", SearchOption.AllDirectories).Any()) ||
+                                         (Directory.Exists(modsDir) && Directory.GetFiles(modsDir, "*voice*chat*.jar", SearchOption.AllDirectories).Any());
+                    if (hasVoiceChat && !HasTunnel("mc-simple-voice-chat", 24454))
+                    {
+                        await _playitClient.CreateTunnelAsync($"{selected.Name}-voicechat", "mc-simple-voice-chat", 24454);
+                    }
+                }
+
+                _cachedActiveTunnels.Clear();
+                _pollCount = 0;
+                await PollMetricsAsync();
+            }
+            catch { }
+            finally
+            {
+                IsCreatingTunnels = false;
             }
         }
 

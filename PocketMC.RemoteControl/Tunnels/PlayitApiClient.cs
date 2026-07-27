@@ -271,6 +271,15 @@ public class PlayitApiClient
                 };
             }
 
+            if (response.StatusCode == HttpStatusCode.TooManyRequests || (int)response.StatusCode == 429)
+            {
+                return new TunnelListResult
+                {
+                    Success = false,
+                    ErrorMessage = "Playit API rate limit reached (HTTP 429). Please wait a few seconds before retrying."
+                };
+            }
+
             response.EnsureSuccessStatusCode();
             PlayitApiEnvelope<PlayitApiTunnelListV1>? apiResponse =
                 JsonSerializer.Deserialize<PlayitApiEnvelope<PlayitApiTunnelListV1>>(await response.Content.ReadAsStringAsync());
@@ -306,15 +315,6 @@ public class PlayitApiClient
 
     public async Task<TunnelCreateResult> CreateTunnelAsync(string tunnelName, string tunnelType, int localPort)
     {
-        var payload = new
-        {
-            name = tunnelName,
-            protocol = new { type = "tunnel-type", details = tunnelType },
-            origin = BuildAgentOrigin(localPort, tunnelType),
-            endpoint = new { type = "region", details = new { region = "global", port = (int?)null } },
-            enabled = true
-        };
-
         string? secretKey = GetSecretKey();
         if (string.IsNullOrWhiteSpace(secretKey))
         {
@@ -325,6 +325,17 @@ public class PlayitApiClient
                 RequiresClaim = true
             };
         }
+
+        await EnsureAgentIdAsync();
+
+        var payload = new
+        {
+            name = tunnelName,
+            protocol = new { type = "tunnel-type", details = tunnelType },
+            origin = BuildAgentOrigin(localPort, tunnelType),
+            endpoint = new { type = "region", details = new { region = "global", port = (int?)null } },
+            enabled = true
+        };
 
         try
         {
@@ -450,6 +461,11 @@ public class PlayitApiClient
                 return TunnelActionResult.Fail("The saved Playit credentials were rejected.");
             }
 
+            if (response.StatusCode == HttpStatusCode.TooManyRequests || (int)response.StatusCode == 429)
+            {
+                return TunnelActionResult.Fail("Playit API rate limit reached (HTTP 429). Please wait a few seconds before retrying.");
+            }
+
             string body = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
@@ -483,14 +499,57 @@ public class PlayitApiClient
         }
     }
 
+    public async Task<string?> EnsureAgentIdAsync()
+    {
+        string? existing = GetAgentId();
+        if (!string.IsNullOrWhiteSpace(existing)) return existing;
+
+        string? secretKey = GetSecretKey();
+        if (string.IsNullOrWhiteSpace(secretKey)) return null;
+
+        try
+        {
+            var listRes = await GetTunnelsAsync();
+            if (listRes.Success && listRes.Tunnels.Any(t => !string.IsNullOrWhiteSpace(t.AgentId)))
+            {
+                var id = listRes.Tunnels.First(t => !string.IsNullOrWhiteSpace(t.AgentId)).AgentId;
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    SaveAgentId(id);
+                    return id;
+                }
+            }
+
+            using HttpRequestMessage request = BuildAuthorizedRequest(HttpMethod.Post, "/v1/agents/routing", secretKey, new { });
+            using HttpResponseMessage response = await _httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                string body = await response.Content.ReadAsStringAsync();
+                using JsonDocument doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("data", out var dataEl) && dataEl.TryGetProperty("agent_id", out var idEl))
+                {
+                    string? agentId = idEl.GetString();
+                    if (!string.IsNullOrWhiteSpace(agentId))
+                    {
+                        SaveAgentId(agentId);
+                        return agentId;
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return GetAgentId();
+    }
+
     public Task<TunnelActionResult> DeleteTunnelAsync(string tunnelId)
-        => PostActionAsync("/v1/tunnels/delete", new { tunnel_id = tunnelId });
+        => PostActionAsync("/tunnels/delete", new { tunnel_id = tunnelId });
 
     public Task<TunnelActionResult> EnableTunnelAsync(string tunnelId, bool enabled)
-        => PostActionAsync("/v1/tunnels/enable", new { tunnel_id = tunnelId, enabled });
+        => PostActionAsync("/tunnels/enable", new { tunnel_id = tunnelId, enabled });
 
     public Task<TunnelActionResult> UpdateTunnelAsync(string tunnelId, string localIp, int? localPort, string? agentId, bool enabled)
-        => PostActionAsync("/v1/tunnels/update", new { tunnel_id = tunnelId, local_ip = localIp, local_port = localPort, agent_id = agentId, enabled });
+        => PostActionAsync("/tunnels/update", new { tunnel_id = tunnelId, local_ip = localIp, local_port = localPort, agent_id = agentId, enabled });
 
     private static TunnelData? NormalizeTunnel(PlayitAccountTunnelV1 tunnel)
     {
