@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=PocketMC
+Comment=Local-first Minecraft server manager
+Exec=PocketMC.App
+Icon=io.github.pocketmc.app
+Terminal=false
+Type=Application
+Categories=Game;Utility;
+X-Flatpak=io.github.pocketmc.app
