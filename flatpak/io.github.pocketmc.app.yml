@@ -2,8 +2,6 @@ app-id: io.github.pocketmc.app
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
-sdk-extensions:
-  - org.freedesktop.Sdk.Extension.dotnet8
 command: PocketMC.App
 finish-args:
   - --socket=x11
@@ -18,8 +16,9 @@ modules:
   - name: pocketmc
     buildsystem: simple
     build-commands:
-      - dotnet publish PocketMC.App/PocketMC.App.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o /app/bin
-      - install -Dm755 /app/bin/PocketMC.App /app/bin/PocketMC.App
+      - mkdir -p /app/bin
+      - cp -r publish/linux-x64/* /app/bin/
+      - chmod +x /app/bin/PocketMC.App
       - install -Dm644 PocketMC.App/Assets/icon.png /app/share/icons/hicolor/256x256/apps/io.github.pocketmc.app.png
       - install -Dm644 flatpak/io.github.pocketmc.app.desktop /app/share/applications/io.github.pocketmc.app.desktop
       - install -Dm644 flatpak/io.github.pocketmc.app.appdata.xml /app/share/metainfo/io.github.pocketmc.app.appdata.xml
