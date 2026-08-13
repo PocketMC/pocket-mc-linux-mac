@@ -22,7 +22,8 @@ jobs:
         id: config
         shell: bash
         run: |
-          version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          raw_version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          version=$(echo "${raw_version}" | sed 's/^v//')
           echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-dotnet@v4

@@ -15,7 +15,8 @@ dotnet publish PocketMC.App/PocketMC.App.csproj \
     -p:PublishReadyToRun=true \
     -o "${ROOT_DIR}/publish/linux-x64"
 
-VERSION=$(grep '^version:' "${ROOT_DIR}/pocketmc.yml" | cut -d':' -f2 | xargs)
+RAW_VERSION=$(grep '^version:' "${ROOT_DIR}/pocketmc.yml" | cut -d':' -f2 | xargs)
+VERSION=$(echo "${RAW_VERSION}" | sed 's/^v//')
 VERSION="${VERSION:-1.0.0.0}"
 
 APPDIR="${ROOT_DIR}/PocketMC.AppDir"
