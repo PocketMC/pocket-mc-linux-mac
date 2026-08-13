@@ -29,7 +29,7 @@ cp -r "${ROOT_DIR}/publish/linux-x64/"* "${APPDIR}/usr/bin/"
 cp "${ROOT_DIR}/PocketMC.App/Assets/icon.png" "${APPDIR}/pocketmc.png"
 cp "${ROOT_DIR}/PocketMC.App/Assets/icon.png" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/pocketmc.png"
 
-cat << EOF > "${APPDIR}/pocketmc.desktop"
+cat << EOF > "${APPDIR}/io.github.pocketmc.app.desktop"
 [Desktop Entry]
 Name=PocketMC
 Comment=Local-first Minecraft server manager
@@ -42,10 +42,12 @@ X-AppImage-Version=${VERSION}
 X-AppImage-UpdateInformation=gh-releases-zsync|PocketMC|pocket-mc-linux-mac|latest|PocketMC-*-x86_64.AppImage.zsync
 EOF
 
-cat << EOF > "${APPDIR}/usr/share/metainfo/pocketmc.appdata.xml"
+cp "${APPDIR}/io.github.pocketmc.app.desktop" "${APPDIR}/pocketmc.desktop"
+
+cat << EOF > "${APPDIR}/usr/share/metainfo/io.github.pocketmc.app.appdata.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>pocketmc.desktop</id>
+  <id>io.github.pocketmc.app</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>PocketMC</name>
@@ -53,7 +55,10 @@ cat << EOF > "${APPDIR}/usr/share/metainfo/pocketmc.appdata.xml"
   <description>
     <p>Create, run, update, monitor, back up, and share Minecraft Java, Bedrock, and PocketMine servers from one native desktop app.</p>
   </description>
-  <launchable type="desktop-id">pocketmc.desktop</launchable>
+  <url type="homepage">https://github.com/PocketMC/pocket-mc-linux-mac</url>
+  <developer_name>PocketMC</developer_name>
+  <content_rating type="oars-1.1"/>
+  <launchable type="desktop-id">io.github.pocketmc.app.desktop</launchable>
   <releases>
     <release version="${VERSION}" date="$(date +%Y-%m-%d)"/>
   </releases>
