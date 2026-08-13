@@ -88,12 +88,24 @@ jobs:
           cd publish
           zip -r ../PocketMC-${{ matrix.rid }}.zip .
 
+      - name: Build AppImage (Linux)
+        if: steps.check_channel.outputs.skip == 'false' && matrix.rid == 'linux-x64'
+        run: |
+          chmod +x scripts/build-appimage.sh
+          ./scripts/build-appimage.sh
+          mv PocketMC-x86_64.AppImage PocketMC-linux-x64.AppImage
+          if [ -f PocketMC-x86_64.AppImage.zsync ]; then
+            mv PocketMC-x86_64.AppImage.zsync PocketMC-linux-x64.AppImage.zsync
+          fi
+
       - name: Upload Build Artifacts
         if: steps.check_channel.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: PocketMC-${{ matrix.rid }}-${{ steps.config.outputs.version }}
-          path: PocketMC-${{ matrix.rid }}.${{ matrix.archive_ext }}
+          path: |
+            PocketMC-${{ matrix.rid }}.${{ matrix.archive_ext }}
+            PocketMC-*.AppImage*
 
   create-release:
     needs: release-build
@@ -140,6 +152,8 @@ jobs:
           body: "Official cross-platform production release of PocketMC for Linux and macOS."
           files: |
             artifacts/PocketMC-linux-x64.tar.gz
+            artifacts/PocketMC-linux-x64.AppImage
+            artifacts/PocketMC-linux-x64.AppImage.zsync
             artifacts/PocketMC-osx-x64.zip
             artifacts/PocketMC-osx-arm64.zip
           draft: false
