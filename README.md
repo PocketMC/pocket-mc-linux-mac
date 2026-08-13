@@ -92,7 +92,7 @@ Download prebuilt binaries directly from [GitHub Releases](https://github.com/Po
 * **Standalone Binary Archive (`.tar.gz`)**:
   ```bash
   tar -xzf PocketMC-linux-x64.tar.gz
-  ./publish/PocketMC.App
+  ./publish/PocketMC.App 
   ```
 
 ---
