@@ -12,13 +12,16 @@ if ! command -v flatpak-builder &> /dev/null; then
     exit 1
 fi
 
+echo "==> Ensuring Flathub remote and runtime dependencies..."
+flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+
 echo "==> Building Flatpak bundle for io.github.pocketmc.app..."
 BUILD_DIR="${ROOT_DIR}/_flatpak_build"
 REPO_DIR="${ROOT_DIR}/_flatpak_repo"
 
 rm -rf "${BUILD_DIR}" "${REPO_DIR}"
 
-flatpak-builder --force-clean --repo="${REPO_DIR}" "${BUILD_DIR}" flatpak/io.github.pocketmc.app.yml
+flatpak-builder --user --install-deps-from=flathub --force-clean --repo="${REPO_DIR}" "${BUILD_DIR}" flatpak/io.github.pocketmc.app.yml
 flatpak build-bundle "${REPO_DIR}" "${ROOT_DIR}/PocketMC-x86_64.flatpak" io.github.pocketmc.app
 
 echo "==> Flatpak bundle created successfully at ${ROOT_DIR}/PocketMC-x86_64.flatpak"
