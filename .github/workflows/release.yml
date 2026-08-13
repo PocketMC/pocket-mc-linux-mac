@@ -44,14 +44,25 @@ jobs:
           echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
           echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
 
-      - name: Ensure Release Channel
+      - name: Ensure Release Channel & Check Version Tag
         id: check_channel
         shell: bash
         run: |
           if [ "${{ steps.config.outputs.channel }}" != "release" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "Channel is not release. Exiting gracefully..."
+            exit 0
+          fi
+
+          version="${{ steps.config.outputs.version }}"
+          tag_name="v${version}"
+
+          git fetch --tags origin || true
+          if git rev-parse "refs/tags/${tag_name}" >/dev/null 2>&1 || git ls-remote --tags origin "refs/tags/${tag_name}" | grep -q "${tag_name}"; then
+            echo "Release tag ${tag_name} already exists on remote. Skipping release build..."
+            echo "skip=true" >> $GITHUB_OUTPUT
           else
+            echo "New release version ${tag_name} detected. Proceeding with release..."
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
@@ -126,11 +137,21 @@ jobs:
           echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
           echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
 
-      - name: Ensure Release Channel
+      - name: Ensure Release Channel & Check Version Tag
         id: check_channel
         shell: bash
         run: |
           if [ "${{ steps.config.outputs.channel }}" != "release" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          version="${{ steps.config.outputs.version }}"
+          tag_name="v${version}"
+
+          git fetch --tags origin || true
+          if git rev-parse "refs/tags/${tag_name}" >/dev/null 2>&1 || git ls-remote --tags origin "refs/tags/${tag_name}" | grep -q "${tag_name}"; then
+            echo "Release tag ${tag_name} already exists on remote. Skipping release creation..."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
