@@ -50,13 +50,14 @@ APPIMAGETOOL="${ROOT_DIR}/tools/appimagetool-x86_64.AppImage"
 mkdir -p "${ROOT_DIR}/tools"
 
 if [ ! -f "${APPIMAGETOOL}" ]; then
-    curl -sSL -o "${APPIMAGETOOL}" "https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage"
+    curl -sSfL -o "${APPIMAGETOOL}" "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
     chmod +x "${APPIMAGETOOL}"
 fi
 
 echo "==> Packaging AppImage..."
 export ARCH=x86_64
 "${APPIMAGETOOL}" \
+    --appimage-extract-and-run \
     -u "gh-releases-zsync|PocketMC|pocket-mc-linux-mac|latest|PocketMC-*-x86_64.AppImage.zsync" \
     "${APPDIR}" \
     "${ROOT_DIR}/PocketMC-x86_64.AppImage"
