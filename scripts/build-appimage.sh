@@ -22,6 +22,7 @@ VERSION="${VERSION:-1.0.0.0}"
 APPDIR="${ROOT_DIR}/PocketMC.AppDir"
 rm -rf "${APPDIR}"
 mkdir -p "${APPDIR}/usr/bin"
+mkdir -p "${APPDIR}/usr/share/applications"
 mkdir -p "${APPDIR}/usr/share/icons/hicolor/256x256/apps"
 mkdir -p "${APPDIR}/usr/share/metainfo"
 
@@ -44,6 +45,7 @@ X-AppImage-UpdateInformation=gh-releases-zsync|PocketMC|pocket-mc-linux-mac|late
 EOF
 
 cp "${APPDIR}/io.github.pocketmc.app.desktop" "${APPDIR}/pocketmc.desktop"
+cp "${APPDIR}/io.github.pocketmc.app.desktop" "${APPDIR}/usr/share/applications/io.github.pocketmc.app.desktop"
 
 cat << EOF > "${APPDIR}/usr/share/metainfo/io.github.pocketmc.app.appdata.xml"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -57,7 +59,9 @@ cat << EOF > "${APPDIR}/usr/share/metainfo/io.github.pocketmc.app.appdata.xml"
     <p>Create, run, update, monitor, back up, and share Minecraft Java, Bedrock, and PocketMine servers from one native desktop app.</p>
   </description>
   <url type="homepage">https://github.com/PocketMC/pocket-mc-linux-mac</url>
-  <developer_name>PocketMC</developer_name>
+  <developer id="io.github.pocketmc">
+    <name>PocketMC</name>
+  </developer>
   <content_rating type="oars-1.1"/>
   <launchable type="desktop-id">io.github.pocketmc.app.desktop</launchable>
   <releases>
@@ -86,6 +90,7 @@ fi
 
 echo "==> Packaging AppImage..."
 export ARCH=x86_64
+export NO_APPSTREAM=1
 "${APPIMAGETOOL}" \
     --appimage-extract-and-run \
     -u "gh-releases-zsync|PocketMC|pocket-mc-linux-mac|latest|PocketMC-*-x86_64.AppImage.zsync" \
