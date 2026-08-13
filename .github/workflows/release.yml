@@ -62,7 +62,7 @@ jobs:
 
       - name: Restore
         if: steps.check_channel.outputs.skip == 'false'
-        run: dotnet restore PocketMC.App/PocketMC.App.csproj -r ${{ matrix.rid }}
+        run: dotnet restore PocketMC.App/PocketMC.App.csproj -r ${{ matrix.rid }} -p:PublishReadyToRun=true
 
       - name: Publish Standalone Binary
         if: steps.check_channel.outputs.skip == 'false'
