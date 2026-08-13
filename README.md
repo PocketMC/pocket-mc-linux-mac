@@ -68,6 +68,45 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
 
 <br>
 
+## Installation & Running
+
+### 🐧 Linux (AppImage / Flatpak / Standalone)
+
+Download prebuilt binaries directly from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
+
+* **AppImage (1-Click Portable & Delta Updates)**:
+  Download `PocketMC-linux-x64.AppImage`, make it executable, and run:
+  ```bash
+  chmod +x PocketMC-linux-x64.AppImage
+  ./PocketMC-linux-x64.AppImage
+  ```
+  *Supports 1-click zsync delta updates and full metadata integration with AppImage managers (Shelly, Gearlever, AppImageLauncher).*
+
+* **Flatpak**:
+  Build or install using the provided manifest:
+  ```bash
+  ./scripts/build-flatpak.sh
+  flatpak install --user PocketMC-x86_64.flatpak
+  ```
+
+* **Standalone Binary Archive (`.tar.gz`)**:
+  ```bash
+  tar -xzf PocketMC-linux-x64.tar.gz
+  ./publish/PocketMC.App
+  ```
+
+---
+
+### 🍎 macOS (Apple Silicon M1-M4 & Intel)
+
+Download prebuilt packages for your Mac architecture from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
+* **Apple Silicon (M1/M2/M3/M4)**: `PocketMC-osx-arm64.zip`
+* **Intel Macs**: `PocketMC-osx-x64.zip`
+
+Unzip the package, move `PocketMC` into `/Applications`, and launch.
+
+<br>
+
 ## Core Features
 
 ### Instance Lifecycle
@@ -96,9 +135,9 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
 - Search and download mods, plugins, and resource packs from CurseForge and Modrinth APIs.
 - Auto-routing of downloaded dependencies to target instance folder structure.
 
-### Remote Control Web Dashboard
+### Remote Control Web Dashboard & Auto-Updates
 - Password-authenticated web companion panel hosted on user-configurable ports.
-- Paired mobile experience initialized via QR code scanner or manual URL clipboard link.
+- Automatic GitHub Releases update checker service notifying users of new releases.
 - Multi-client websocket console logs streaming and remote server lifecycle execution.
 
 <br>
@@ -106,37 +145,33 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
 ## Architecture
 
 The project follows a layered service-oriented architecture:
-- **PocketMC.Core:** Domain models, service interfaces, configuration specs.
+- **PocketMC.Core:** Domain models, service interfaces, update checker specs.
 - **PocketMC.Platform:** Native system integration, credential managers (Linux dbus / macOS Security framework).
-- **PocketMC.Infrastructure:** Implementations of file operations, process monitoring, rcon client, cloud sync providers, backup schedules.
+- **PocketMC.Infrastructure:** Implementations of file operations, process monitoring, rcon client, cloud sync providers, backup schedules, update service.
 - **PocketMC.RemoteControl:** Hosted web server, websocket pipelines, proxy process group executors (playit/cloudflared).
 - **PocketMC.App:** Desktop presentation layer using Avalonia UI and MVVM Toolkit.
 
 <br>
 
-## Build & Run
+## Build & Packaging Scripts
 
 ### Prerequisites
 - .NET 8.0 SDK
-- For Linux/macOS dependencies, a custom Nix development shell environment is provided.
+- For Linux/macOS dependencies, a custom Nix development shell environment is provided (`nix-shell`).
 
-### Setup and Running locally
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/PocketMC/pocket-mc-linux-mac.git
-   cd pocket-mc-linux-mac
-   ```
-2. Enter the development shell (if using Nix):
-   ```bash
-   nix-shell
-   ```
-3. Run the application:
-   ```bash
-   dotnet run --project PocketMC.App/PocketMC.App.csproj
-   ```
+### Running Locally
+```bash
+git clone https://github.com/PocketMC/pocket-mc-linux-mac.git
+cd pocket-mc-linux-mac
+dotnet run --project PocketMC.App/PocketMC.App.csproj
+```
+
+### Packaging AppImage & Flatpak
+- **AppImage**: `./scripts/build-appimage.sh` (produces `PocketMC-x86_64.AppImage` & `.zsync`)
+- **Flatpak**: `./scripts/build-flatpak.sh` (produces `PocketMC-x86_64.flatpak`)
 
 ### Running Tests
-To run the full test suite verifying infrastructure, process runners, and local network providers:
+To run the full test suite verifying infrastructure, process runners, and update services:
 ```bash
 dotnet test
 ```
@@ -146,3 +181,4 @@ dotnet test
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
