@@ -18,22 +18,20 @@
   </tr>
 </table>
 
-<br>
-
 </div>
 
 ---
 
-PocketMC is a native, cross-platform desktop application built using Avalonia UI and .NET 8 for Linux and macOS. It handles software downloads, isolated instances, managed Java and PHP runtimes, startup and shutdown lifecycle monitoring, real-time performance graphs, player lists, automated backups, external cloud replication (Dropbox, Google Drive, OneDrive), curseforge/modrinth addon integration, Playit.gg/Cloudflared tunnel provisioning, and a paired remote web dashboard.
+PocketMC is a native, cross-platform desktop application built using Avalonia UI and .NET 8 for Linux and macOS. It handles software downloads, isolated instances, managed Java and PHP runtimes, startup and shutdown lifecycle monitoring, real-time performance graphs, player lists, automated backups, external cloud replication (Dropbox, Google Drive, OneDrive), CurseForge/Modrinth addon integration, Playit.gg/Cloudflared tunnel provisioning, and a paired remote web dashboard.
 
 Your servers run locally on your hardware. PocketMC is not a cloud hosting service, not a Minecraft launcher, and does not require Docker or system-level virtualization.
 
-<br>
+---
 
 ## Comparative Workflow
 
 | Before PocketMC | With PocketMC |
-|-----------------|---------------|
+| :--- | :--- |
 | Manually find, download, and configure server executables and jars. | Server binaries and matching runtime components are fully managed. |
 | Fragmented terminal processes and config files scattered across disks. | Isolated instances maintained under a single structured root. |
 | Complex configuration of local reverse proxies and port-forwarding. | Built-in provisioning of Playit.gg and Cloudflared tunnels. |
@@ -41,19 +39,19 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
 | Vulnerability to orphaned processes and terminal lockups on close. | Automated background process tree cleanup on application exit. |
 | Accessing server controls is restricted to the host machine. | Secure web dashboard pairing via QR code or clipboard URL. |
 
-<br>
+---
 
-## Supported Server Software
+## Supported Server Engines
 
 <table border="0" align="center" cellpadding="8">
   <tr align="center">
-    <td><img src="docs/assets/icons/vanilla.png" alt="Vanilla Java" height="60" /></td>
-    <td><img src="docs/assets/icons/papermc.png" alt="Paper" height="60" /></td>
-    <td><img src="docs/assets/icons/fabric.png" alt="Fabric" height="60" /></td>
-    <td><img src="docs/assets/icons/forge.png" alt="Forge" height="60" /></td>
-    <td><img src="docs/assets/icons/neoforge.png" alt="NeoForge" height="60" /></td>
-    <td><img src="docs/assets/icons/bds.png" alt="Bedrock Dedicated Server" height="60" /></td>
-    <td><img src="docs/assets/icons/pocketmine-mp.png" alt="PocketMine-MP" height="60" /></td>
+    <td><img src="docs/assets/icons/vanilla.png" alt="Vanilla Java" height="50" /></td>
+    <td><img src="docs/assets/icons/papermc.png" alt="Paper" height="50" /></td>
+    <td><img src="docs/assets/icons/fabric.png" alt="Fabric" height="50" /></td>
+    <td><img src="docs/assets/icons/forge.png" alt="Forge" height="50" /></td>
+    <td><img src="docs/assets/icons/neoforge.png" alt="NeoForge" height="50" /></td>
+    <td><img src="docs/assets/icons/bds.png" alt="Bedrock Dedicated Server" height="50" /></td>
+    <td><img src="docs/assets/icons/pocketmine-mp.png" alt="PocketMine-MP" height="50" /></td>
   </tr>
   <tr align="center" valign="top">
     <td><sub><b>Vanilla Java</b></sub></td>
@@ -66,116 +64,110 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
   </tr>
 </table>
 
-<br>
+---
 
-## Installation & Running
+## Installation & Setup
 
-### ⚡ Quick One-Line Installer (Linux & macOS)
+### Universal Installer (Linux & macOS)
 
-Install PocketMC on any Linux distribution or macOS with a single command:
+Install or update PocketMC on Linux or macOS using a single command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/PocketMC/pocket-mc-linux-mac/main/install.sh | bash
 ```
 
-* **Linux**: Installs to `~/.local/share/pocketmc`, creates a symlink in `~/.local/bin/pocketmc`, and registers a desktop application shortcut (`pocketmc.desktop`).
-* **macOS**: Automatically detects architecture (Apple Silicon `arm64` or Intel `x64`), unpacks `PocketMC.app` into `/Applications`, clears Gatekeeper quarantine attributes, and sets up terminal symlinks.
+- **Linux**: Installs to `~/.local/share/pocketmc`, adds `pocketmc` to `~/.local/bin`, and creates `pocketmc.desktop` in application menus.
+- **macOS**: Automatically detects target architecture (`arm64` / `x64`), unpacks `PocketMC.app` to `/Applications`, strips Gatekeeper quarantine attributes, and symlinks CLI helpers.
 
 To uninstall:
 ```bash
 ./install.sh --uninstall
 ```
 
----
+### Manual Archive Installation
 
-### 📦 Manual Archive Installation
+Prebuilt archives are available directly on [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
 
-Download prebuilt archives directly from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
-
-* **Linux (`.tar.gz`)**:
+- **Linux (`.tar.gz`)**:
   ```bash
   tar -xzf PocketMC-linux-x64.tar.gz
   ./publish/PocketMC.App
   ```
 
-* **macOS (`.zip`)**:
-  * **Apple Silicon (M1-M4)**: `PocketMC-osx-arm64.zip`
-  * **Intel Macs**: `PocketMC-osx-x64.zip`
-  Unzip the package, move `PocketMC.app` into `/Applications`, and launch.
+- **macOS (`.zip`)**:
+  - Apple Silicon (M1-M4): `PocketMC-osx-arm64.zip`
+  - Intel Macs: `PocketMC-osx-x64.zip`
+  Extract the archive and move `PocketMC.app` to `/Applications`.
 
-<br>
+---
 
-## Core Features
+## Core Capabilities
 
-### Instance Lifecycle
-- Creation and deletion of isolated server directories from the desktop interface.
-- Graceful shutdown orchestration using RCON commands with standard stream input fallback.
-- Active port conflict detection before launching any instance.
-- Automatic process tree supervision preventing orphaned background server processes on crash or exit.
-- Customizable JVM arguments and startup policies.
+### Instance Lifecycle Management
+- Creation and deletion of isolated server instance directories.
+- Graceful shutdown orchestration via RCON with stdin stream fallback.
+- Pre-launch port conflict validation.
+- Process supervision preventing orphaned background server processes on crash or close.
+- Custom JVM arguments and startup options.
 
 ### Managed Runtimes
-- Automatic fetching and installation of corresponding Java runtimes based on server engine version requirements.
+- Automatic detection and retrieval of matching Java runtimes based on server engine version.
 - Standardized PHP execution bundles for PocketMine-MP instances.
-- Zero manual environment variable setups or system-wide path modifications.
+- Zero manual environment variable or system PATH modifications.
 
-### Integrated Reverse Proxy Tunnels
-- Quick provisioning of Playit.gg agent tunnels to instantly share servers without exposing public IPs.
-- Cloudflared tunnel creation with continuous stream consumption to avoid pipe buffer deadlocks.
-- Storing agent credentials securely using native platform storage (macOS Keychain / Linux Secret Service) with fallback AES encryption.
+### Integrated Proxy Tunnels
+- Instant Playit.gg agent tunnel provisioning.
+- Cloudflared tunnel creation with continuous stream consumption.
+- System keychain storage (macOS Keychain / Linux Secret Service) with AES fallback.
 
-### Backups & Cloud Sync
-- Local zip-archived instance packaging with customizable retention limits.
-- Automated scheduler for background backups.
-- Native integration with Dropbox, Google Drive, and OneDrive storage providers.
+### Backups & Synchronization
+- Local zip-archived instance packaging with configurable retention limits.
+- Automated backup scheduling engine.
+- Direct synchronization with Dropbox, Google Drive, and OneDrive.
 
 ### Addons Marketplace
-- Search and download mods, plugins, and resource packs from CurseForge and Modrinth APIs.
-- Auto-routing of downloaded dependencies to target instance folder structure.
+- Search and install mods, plugins, and resource packs from CurseForge and Modrinth APIs.
+- Automatic file routing to target instance directory structures.
 
-### Remote Control Web Dashboard & Auto-Updates
-- Password-authenticated web companion panel hosted on user-configurable ports.
-- Automatic GitHub Releases update checker service notifying users of new releases.
-- Multi-client websocket console logs streaming and remote server lifecycle execution.
+### Remote Control Web Dashboard
+- Password-authenticated web companion panel.
+- Live websocket console output streaming and remote execution controls.
+- Update notifications powered by GitHub Releases API.
 
-<br>
+---
 
-## Architecture
+## System Architecture
 
-The project follows a layered service-oriented architecture:
-- **PocketMC.Core:** Domain models, service interfaces, update checker specs.
-- **PocketMC.Platform:** Native system integration, credential managers (Linux dbus / macOS Security framework).
-- **PocketMC.Infrastructure:** Implementations of file operations, process monitoring, rcon client, cloud sync providers, backup schedules, update service.
-- **PocketMC.RemoteControl:** Hosted web server, websocket pipelines, proxy process group executors (playit/cloudflared).
-- **PocketMC.App:** Desktop presentation layer using Avalonia UI and MVVM Toolkit.
+PocketMC is structured using a service-oriented, layered architecture:
 
-<br>
+- **PocketMC.Core:** Domain models, service interfaces, update specifications.
+- **PocketMC.Platform:** Native system integration, credential store wrappers.
+- **PocketMC.Infrastructure:** Process supervisors, file services, RCON client, backup scheduler, cloud sync.
+- **PocketMC.RemoteControl:** Embedded web server, websocket pipelines, tunnel executors.
+- **PocketMC.App:** Desktop presentation layer built with Avalonia UI and MVVM.
 
-## Build & Packaging Scripts
+---
+
+## Development & Building
 
 ### Prerequisites
 - .NET 8.0 SDK
-- For Linux/macOS dependencies, a custom Nix development shell environment is provided (`nix-shell`).
+- Nix development shell available via `nix-shell` (optional).
 
-### Running Locally
+### Run from Source
 ```bash
 git clone https://github.com/PocketMC/pocket-mc-linux-mac.git
 cd pocket-mc-linux-mac
 dotnet run --project PocketMC.App/PocketMC.App.csproj
 ```
 
-### Installation Script
-- **Universal Installer**: `./install.sh` (installs prebuilt release for current OS & architecture)
-
-### Running Tests
-To run the full test suite verifying infrastructure, process runners, and update services:
+### Local Test Execution
 ```bash
 dotnet test
 ```
 
-<br>
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for full details.
