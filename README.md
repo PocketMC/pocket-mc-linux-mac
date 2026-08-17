@@ -89,17 +89,22 @@ Or from a local clone:
 ./uninstall.sh
 ```
 
-### Manual Archive Installation
+### Prebuilt Downloads & Manual Installation
 
-Prebuilt archives are available directly on [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
+Prebuilt installers and standalone archives are available on [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
 
-- **Linux (`.tar.gz`)**:
+- **macOS Disk Image (`.dmg` Drag-and-Drop)**:
+  - Apple Silicon (M1-M4): `PocketMC-osx-arm64.dmg`
+  - Intel Macs: `PocketMC-osx-x64.dmg`
+  Open the downloaded `.dmg` and drag `PocketMC.app` into your `Applications` folder.
+
+- **Linux Archive (`.tar.gz`)**:
   ```bash
   tar -xzf PocketMC-linux-x64.tar.gz
   ./publish/PocketMC.App
   ```
 
-- **macOS (`.zip`)**:
+- **macOS Archive (`.zip`)**:
   - Apple Silicon (M1-M4): `PocketMC-osx-arm64.zip`
   - Intel Macs: `PocketMC-osx-x64.zip`
   Extract the archive and move `PocketMC.app` to `/Applications`.

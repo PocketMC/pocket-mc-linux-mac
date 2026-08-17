@@ -100,6 +100,12 @@ jobs:
           cd publish
           zip -r ../PocketMC-${{ matrix.rid }}.zip .
 
+      - name: Package macOS Disk Image (DMG)
+        if: steps.check_channel.outputs.skip == 'false' && matrix.os == 'macos-latest'
+        run: |
+          chmod +x scripts/build-dmg.sh
+          ./scripts/build-dmg.sh ${{ matrix.rid }} ${{ steps.config.outputs.version }} publish
+
       - name: Upload Build Artifacts
         if: steps.check_channel.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
@@ -107,6 +113,7 @@ jobs:
           name: PocketMC-${{ matrix.rid }}-${{ steps.config.outputs.version }}
           path: |
             PocketMC-${{ matrix.rid }}.${{ matrix.archive_ext }}
+            PocketMC-*.dmg
 
   create-release:
     needs: release-build
@@ -166,6 +173,8 @@ jobs:
             artifacts/PocketMC-linux-x64.tar.gz
             artifacts/PocketMC-osx-x64.zip
             artifacts/PocketMC-osx-arm64.zip
+            artifacts/PocketMC-osx-x64.dmg
+            artifacts/PocketMC-osx-arm64.dmg
           draft: false
           prerelease: false
         env:

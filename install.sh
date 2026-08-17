@@ -88,8 +88,8 @@ case "$OS" in
     ;;
   Darwin)
     case "$ARCH" in
-      x86_64) TARGET="osx-x64"; EXT="zip" ;;
-      arm64)  TARGET="osx-arm64"; EXT="zip" ;;
+      x86_64) TARGET="osx-x64"; EXT="dmg" ;;
+      arm64)  TARGET="osx-arm64"; EXT="dmg" ;;
       *) echo -e "${RED}[ERROR] Unsupported macOS architecture: $ARCH${NC}"; exit 1 ;;
     esac
     ;;
@@ -104,6 +104,8 @@ echo -e "[OK] Operating System: ${BOLD}$OS${NC} | Architecture: ${BOLD}$ARCH${NC
 # Ensure extraction tool is available
 if [ "$EXT" = "tar.gz" ]; then
   command -v tar >/dev/null 2>&1 || { echo -e "${RED}[ERROR] 'tar' utility is required but not installed.${NC}"; exit 1; }
+elif [ "$EXT" = "dmg" ]; then
+  command -v hdiutil >/dev/null 2>&1 || { echo -e "${RED}[ERROR] 'hdiutil' utility is required on macOS.${NC}"; exit 1; }
 elif [ "$EXT" = "zip" ]; then
   command -v unzip >/dev/null 2>&1 || { echo -e "${RED}[ERROR] 'unzip' utility is required but not installed.${NC}"; exit 1; }
 fi
@@ -224,8 +226,18 @@ elif [ "$OS" = "Darwin" ]; then
     mkdir -p "$TARGET_APP_DIR"
   fi
 
-  echo -e "==> Extracting PocketMC.app to ${BOLD}$TARGET_APP_DIR${NC}..."
-  unzip -q -o "$TMP_DIR/$ASSET_NAME" -d "$TARGET_APP_DIR"
+  if [ "$EXT" = "dmg" ]; then
+    echo -e "==> Mounting DMG and installing PocketMC.app to ${BOLD}$TARGET_APP_DIR${NC}..."
+    MOUNT_DIR=$(mktemp -d /tmp/pocketmc-mount.XXXXXX)
+    hdiutil attach "$TMP_DIR/$ASSET_NAME" -nobrowse -mountpoint "$MOUNT_DIR" -quiet
+    rm -rf "$TARGET_APP_DIR/PocketMC.app"
+    cp -R "$MOUNT_DIR/PocketMC.app" "$TARGET_APP_DIR/"
+    hdiutil detach "$MOUNT_DIR" -quiet 2>/dev/null || true
+    rm -rf "$MOUNT_DIR"
+  else
+    echo -e "==> Extracting PocketMC.app to ${BOLD}$TARGET_APP_DIR${NC}..."
+    unzip -q -o "$TMP_DIR/$ASSET_NAME" -d "$TARGET_APP_DIR"
+  fi
 
   # Strip macOS Gatekeeper quarantine attribute
   if command -v xattr >/dev/null 2>&1; then
