@@ -70,40 +70,38 @@ Your servers run locally on your hardware. PocketMC is not a cloud hosting servi
 
 ## Installation & Running
 
-### 🐧 Linux (AppImage / Flatpak / Standalone)
+### ⚡ Quick One-Line Installer (Linux & macOS)
 
-Download prebuilt binaries directly from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
+Install PocketMC on any Linux distribution or macOS with a single command:
 
-* **AppImage (1-Click Portable & Delta Updates)**:
-  Download `PocketMC-linux-x64.AppImage`, make it executable, and run:
-  ```bash
-  chmod +x PocketMC-linux-x64.AppImage
-  ./PocketMC-linux-x64.AppImage
-  ```
-  *Supports 1-click zsync delta updates and full metadata integration with AppImage managers (Shelly, Gearlever, AppImageLauncher).*
+```bash
+curl -fsSL https://raw.githubusercontent.com/PocketMC/pocket-mc-linux-mac/main/install.sh | bash
+```
 
-* **Flatpak**:
-  Build or install using the provided manifest:
-  ```bash
-  ./scripts/build-flatpak.sh
-  flatpak install --user PocketMC-x86_64.flatpak
-  ```
+* **Linux**: Installs to `~/.local/share/pocketmc`, creates a symlink in `~/.local/bin/pocketmc`, and registers a desktop application shortcut (`pocketmc.desktop`).
+* **macOS**: Automatically detects architecture (Apple Silicon `arm64` or Intel `x64`), unpacks `PocketMC.app` into `/Applications`, clears Gatekeeper quarantine attributes, and sets up terminal symlinks.
 
-* **Standalone Binary Archive (`.tar.gz`)**:
-  ```bash
-  tar -xzf PocketMC-linux-x64.tar.gz
-  ./publish/PocketMC.App 
-  ```
+To uninstall:
+```bash
+./install.sh --uninstall
+```
 
 ---
 
-### 🍎 macOS (Apple Silicon M1-M4 & Intel)
+### 📦 Manual Archive Installation
 
-Download prebuilt packages for your Mac architecture from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
-* **Apple Silicon (M1/M2/M3/M4)**: `PocketMC-osx-arm64.zip`
-* **Intel Macs**: `PocketMC-osx-x64.zip`
+Download prebuilt archives directly from [GitHub Releases](https://github.com/PocketMC/pocket-mc-linux-mac/releases):
 
-Unzip the package, move `PocketMC` into `/Applications`, and launch.
+* **Linux (`.tar.gz`)**:
+  ```bash
+  tar -xzf PocketMC-linux-x64.tar.gz
+  ./publish/PocketMC.App
+  ```
+
+* **macOS (`.zip`)**:
+  * **Apple Silicon (M1-M4)**: `PocketMC-osx-arm64.zip`
+  * **Intel Macs**: `PocketMC-osx-x64.zip`
+  Unzip the package, move `PocketMC.app` into `/Applications`, and launch.
 
 <br>
 
@@ -166,9 +164,8 @@ cd pocket-mc-linux-mac
 dotnet run --project PocketMC.App/PocketMC.App.csproj
 ```
 
-### Packaging AppImage & Flatpak
-- **AppImage**: `./scripts/build-appimage.sh` (produces `PocketMC-x86_64.AppImage` & `.zsync`)
-- **Flatpak**: `./scripts/build-flatpak.sh` (produces `PocketMC-x86_64.flatpak`)
+### Installation Script
+- **Universal Installer**: `./install.sh` (installs prebuilt release for current OS & architecture)
 
 ### Running Tests
 To run the full test suite verifying infrastructure, process runners, and update services:

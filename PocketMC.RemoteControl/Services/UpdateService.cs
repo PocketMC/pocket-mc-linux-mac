@@ -58,8 +58,8 @@ public class UpdateService
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            // Linux: AppImageUpdate zsync (Mocked download progress)
-            Console.WriteLine("Starting AppImageUpdate zsync...");
+            // Linux: Standalone binary update (Mocked download progress)
+            Console.WriteLine("Starting Linux update via install script...");
             for (int i = 0; i <= 100; i += 10)
             {
                 progressCallback(i);
