@@ -8,6 +8,9 @@ namespace PocketMC.Core.Services
         void Load();
         void Save();
         string GetSettingsDirectory();
+        string GetDataRoot();
+        string GetDefaultDataRoot();
+        void SetDataRoot(string path);
         string GetInstancesDirectory();
         string GetBackupsDirectory();
         string GetDownloadsDirectory();

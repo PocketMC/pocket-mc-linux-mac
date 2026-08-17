@@ -6,6 +6,7 @@ namespace PocketMC.Core.Models
     public class Settings
     {
         public int Version { get; set; } = 1;
+        public bool HasCompletedInitialSetup { get; set; } = false;
         public string? CustomDataRoot { get; set; }
         public Dictionary<string, Dictionary<string, string>> DownloadedRuntimes { get; set; } = new Dictionary<string, Dictionary<string, string>>();
         public string? LastSelectedInstanceSlug { get; set; }

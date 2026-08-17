@@ -36,13 +36,40 @@ namespace PocketMC.Infrastructure.Services
 
         public string GetSettingsDirectory() => _configDirectory;
 
-        private string GetDataRoot()
+        public string GetDefaultDataRoot()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "PocketMC");
+            }
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".pocketmc");
+        }
+
+        public string GetDataRoot()
         {
             if (!string.IsNullOrWhiteSpace(_settings.CustomDataRoot))
             {
                 return _settings.CustomDataRoot;
             }
             return _configDirectory;
+        }
+
+        public void SetDataRoot(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                path = GetDefaultDataRoot();
+            }
+
+            _settings.CustomDataRoot = path;
+            _settings.HasCompletedInitialSetup = true;
+            Save();
+
+            Directory.CreateDirectory(GetInstancesDirectory());
+            Directory.CreateDirectory(GetBackupsDirectory());
+            Directory.CreateDirectory(GetDownloadsDirectory());
+            Directory.CreateDirectory(GetCacheDirectory());
+            Directory.CreateDirectory(GetLogsDirectory());
         }
 
         public string GetInstancesDirectory() => GetOrCreateSubdir("Instances");

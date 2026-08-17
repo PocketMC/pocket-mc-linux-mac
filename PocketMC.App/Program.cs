@@ -141,6 +141,8 @@ namespace PocketMC.App
                     services.AddTransient<JavaManagementPage>();
                     services.AddTransient<AboutViewModel>();
                     services.AddTransient<AboutPage>();
+                    services.AddTransient<RootDirectorySetupViewModel>();
+                    services.AddTransient<RootDirectorySetupWindow>();
                 });
     }
 }

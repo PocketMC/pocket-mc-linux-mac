@@ -20,7 +20,27 @@ namespace PocketMC.App
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+                var settingsService = Services.GetRequiredService<PocketMC.Core.Services.ISettingsService>();
+
+                if (!settingsService.Settings.HasCompletedInitialSetup)
+                {
+                    var setupWindow = Services.GetRequiredService<RootDirectorySetupWindow>();
+                    var setupVm = Services.GetRequiredService<PocketMC.App.ViewModels.RootDirectorySetupViewModel>();
+                    setupWindow.DataContext = setupVm;
+                    desktop.MainWindow = setupWindow;
+
+                    setupVm.SetupCompleted += () =>
+                    {
+                        var mainWindow = Services.GetRequiredService<MainWindow>();
+                        desktop.MainWindow = mainWindow;
+                        mainWindow.Show();
+                        setupWindow.Close();
+                    };
+                }
+                else
+                {
+                    desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+                }
 
                 try
                 {

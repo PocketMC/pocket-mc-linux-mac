@@ -12,11 +12,18 @@ namespace PocketMC.Tests
     {
         public Settings Settings { get; set; } = new Settings();
         public string GetSettingsDirectory() => Path.GetTempPath();
-        public string GetInstancesDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Instances");
-        public string GetBackupsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Backups");
-        public string GetDownloadsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Downloads");
-        public string GetCacheDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Cache");
-        public string GetLogsDirectory() => Path.Combine(Path.GetTempPath(), "PocketMC_Logs");
+        public string GetDataRoot() => Settings.CustomDataRoot ?? GetDefaultDataRoot();
+        public string GetDefaultDataRoot() => Path.Combine(Path.GetTempPath(), ".pocketmc");
+        public void SetDataRoot(string path)
+        {
+            Settings.CustomDataRoot = path;
+            Settings.HasCompletedInitialSetup = true;
+        }
+        public string GetInstancesDirectory() => Path.Combine(GetDataRoot(), "Instances");
+        public string GetBackupsDirectory() => Path.Combine(GetDataRoot(), "Backups");
+        public string GetDownloadsDirectory() => Path.Combine(GetDataRoot(), "Downloads");
+        public string GetCacheDirectory() => Path.Combine(GetDataRoot(), "Cache");
+        public string GetLogsDirectory() => Path.Combine(GetDataRoot(), "Logs");
         public void Load() { }
         public void Save() { }
     }

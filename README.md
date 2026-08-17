@@ -98,6 +98,12 @@ Prebuilt installers and standalone archives are available on [GitHub Releases](h
   - Intel Macs: `PocketMC-osx-x64.dmg`
   Open the downloaded `.dmg` and drag `PocketMC.app` into your `Applications` folder.
 
+  *Note on macOS Gatekeeper*: If macOS displays an unverified developer or damaged warning on first open, run this one-time command in Terminal to clear the browser quarantine flag:
+  ```bash
+  xattr -cr /Applications/PocketMC.app
+  ```
+  *(The universal `install.sh` script automatically handles this during installation).*
+
 - **Linux Archive (`.tar.gz`)**:
   ```bash
   tar -xzf PocketMC-linux-x64.tar.gz

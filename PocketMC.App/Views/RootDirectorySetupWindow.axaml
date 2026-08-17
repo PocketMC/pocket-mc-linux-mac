@@ -1,0 +1,107 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PocketMC.App.ViewModels"
+        xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.RootDirectorySetupWindow"
+        x:DataType="vm:RootDirectorySetupViewModel"
+        x:CompileBindings="True"
+        Title="Welcome to PocketMC - Initial Setup"
+        Width="580" Height="460"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Border Padding="28">
+        <Grid RowDefinitions="Auto, *, Auto">
+            <!-- Header Section -->
+            <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Border Width="40" Height="40" CornerRadius="10" Background="#1E90FF" ClipToBounds="True">
+                        <Image Source="avares://PocketMC.App/Assets/icon.png" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Welcome to PocketMC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Select your primary storage root directory" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Main Content Area -->
+            <Border Grid.Row="1" 
+                    Background="{DynamicResource CardBackgroundBrush}" 
+                    BorderBrush="{DynamicResource CardBorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="12" 
+                    Padding="20">
+                <StackPanel Spacing="16" VerticalAlignment="Center">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="PocketMC will store your Minecraft instances, downloaded runtimes (Java/PHP), world backups, downloads, and log files in this location." 
+                                   FontSize="12" TextWrapping="Wrap" Opacity="0.8" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Path Picker Input -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Storage Root Path" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Grid ColumnDefinitions="*, 8, Auto">
+                            <TextBox Grid.Column="0" 
+                                     Text="{Binding SelectedPath}" 
+                                     Watermark="/path/to/PocketMC"
+                                     CornerRadius="8"
+                                     VerticalAlignment="Center"/>
+                            
+                            <Button Grid.Column="2" 
+                                    Command="{Binding BrowseFolderCommand}"
+                                    Background="{DynamicResource CardBorderBrush}"
+                                    CornerRadius="8"
+                                    Padding="12,8">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <lucide:LucideIcon Kind="FolderOpen" Size="16" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Browse" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Default reset option -->
+                    <Button Command="{Binding UseDefaultCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            HorizontalAlignment="Left">
+                        <TextBlock Text="Reset to Default Location" FontSize="11" Foreground="#1E90FF" TextDecorations="Underline"/>
+                    </Button>
+
+                    <!-- Error message if any -->
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               FontSize="12" 
+                               Foreground="#FF4D4D" 
+                               IsVisible="{Binding IsError}" 
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Footer Section -->
+            <Grid Grid.Row="2" Margin="0,20,0,0" ColumnDefinitions="*, Auto">
+                <TextBlock Grid.Column="0" 
+                           Text="You can customize or change this location at any time in Settings." 
+                           FontSize="11" 
+                           Opacity="0.6" 
+                           Foreground="{DynamicResource TextPrimaryBrush}" 
+                           VerticalAlignment="Center" 
+                           TextWrapping="Wrap"/>
+
+                <Button Grid.Column="1" 
+                        Command="{Binding ConfirmCommand}"
+                        Background="#1E90FF" 
+                        Foreground="White" 
+                        CornerRadius="8" 
+                        Padding="18,9">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Confirm &amp; Continue" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <lucide:LucideIcon Kind="ArrowRight" Size="16" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

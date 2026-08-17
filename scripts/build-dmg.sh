@@ -66,6 +66,12 @@ if [ -f "docs/assets/branding/logo.png" ]; then
   cp "docs/assets/branding/logo.png" "${APP_DIR}/Contents/Resources/pocketmc.png"
 fi
 
+# Sign the application bundle with ad-hoc signature
+if command -v codesign >/dev/null 2>&1; then
+  echo "==> Applying ad-hoc codesign to PocketMC.app..."
+  codesign --force --deep --sign - "${APP_DIR}"
+fi
+
 # Prepare DMG volume staging with drag-and-drop /Applications shortcut
 DMG_STAGING="${TMP_BUILD_DIR}/dmg_staging"
 mkdir -p "${DMG_STAGING}"
