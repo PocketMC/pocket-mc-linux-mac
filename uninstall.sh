@@ -26,16 +26,12 @@ fi
 
 if [ "$AUTO_CONFIRM" = false ]; then
   echo -e "${YELLOW}This action will remove the PocketMC application, binary symlinks, desktop shortcuts, and icons.${NC}"
+  printf "${BOLD}Are you sure you want to proceed with uninstallation? (y/N): ${NC}"
   CONFIRM=""
   if [ -c /dev/tty ]; then
-    read -p "Are you sure you want to proceed with uninstallation? (y/N): " CONFIRM </dev/tty 2>/dev/null || true
-  fi
-
-  if [ -z "$CONFIRM" ] && [ ! -t 0 ]; then
-    # Default to proceed if running non-interactively via pipe
-    CONFIRM="y"
-  elif [ -z "$CONFIRM" ]; then
-    read -p "Are you sure you want to proceed with uninstallation? (y/N): " CONFIRM || true
+    read -r CONFIRM </dev/tty 2>/dev/null || true
+  else
+    read -r CONFIRM || true
   fi
 
   case "$CONFIRM" in
