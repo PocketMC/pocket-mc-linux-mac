@@ -76,12 +76,17 @@ Install or update PocketMC on Linux or macOS using a single command:
 curl -fsSL https://raw.githubusercontent.com/PocketMC/pocket-mc-linux-mac/main/install.sh | bash
 ```
 
-- **Linux**: Installs to `~/.local/share/pocketmc`, adds `pocketmc` to `~/.local/bin`, and creates `pocketmc.desktop` in application menus.
-- **macOS**: Automatically detects target architecture (`arm64` / `x64`), unpacks `PocketMC.app` to `/Applications`, strips Gatekeeper quarantine attributes, and symlinks CLI helpers.
+### Uninstallation
 
-To uninstall:
+Uninstall PocketMC anytime using the standalone uninstaller script:
+
 ```bash
-./install.sh --uninstall
+curl -fsSL https://raw.githubusercontent.com/PocketMC/pocket-mc-linux-mac/main/uninstall.sh | bash
+```
+
+Or from a local clone:
+```bash
+./uninstall.sh
 ```
 
 ### Manual Archive Installation

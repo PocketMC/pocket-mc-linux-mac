@@ -20,21 +20,26 @@ echo -e "${BOLD}${BLUE}===========================================${NC}"
 echo -e "${BOLD}${BLUE}       PocketMC Universal Installer        ${NC}"
 echo -e "${BOLD}${BLUE}===========================================${NC}"
 
-# Handle uninstall command
+# Handle uninstall command by delegating to uninstall.sh script
 if [ "$1" = "uninstall" ] || [ "$1" = "--uninstall" ]; then
-  echo -e "${BOLD}Uninstalling PocketMC...${NC}"
-  if [ "$OS" = "Linux" ]; then
-    rm -rf "/opt/pocketmc" "$HOME/.local/share/pocketmc"
-    rm -f "/usr/local/bin/pocketmc" "$HOME/.local/bin/pocketmc"
-    rm -f "/usr/share/applications/pocketmc.desktop" "$HOME/.local/share/applications/pocketmc.desktop"
-    rm -f "/usr/share/pixmaps/pocketmc.png" "$HOME/.local/share/icons/pocketmc.png"
-    echo -e "${GREEN}[OK] PocketMC successfully uninstalled from Linux.${NC}"
-  elif [ "$OS" = "Darwin" ]; then
-    rm -rf "/Applications/PocketMC.app" "$HOME/Applications/PocketMC.app"
-    rm -f "/usr/local/bin/pocketmc" "$HOME/.local/bin/pocketmc"
-    echo -e "${GREEN}[OK] PocketMC successfully uninstalled from macOS.${NC}"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+  if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+    exec "$SCRIPT_DIR/uninstall.sh" "${@:2}"
+  else
+    # Fallback inline uninstaller if downloaded via curl piped script
+    if [ "$OS" = "Linux" ]; then
+      rm -rf "/opt/pocketmc" "$HOME/.local/share/pocketmc"
+      rm -f "/usr/local/bin/pocketmc" "$HOME/.local/bin/pocketmc"
+      rm -f "/usr/share/applications/pocketmc.desktop" "$HOME/.local/share/applications/pocketmc.desktop"
+      rm -f "/usr/share/pixmaps/pocketmc.png" "$HOME/.local/share/icons/pocketmc.png"
+      echo -e "${GREEN}[OK] PocketMC uninstalled from Linux.${NC}"
+    elif [ "$OS" = "Darwin" ]; then
+      rm -rf "/Applications/PocketMC.app" "$HOME/Applications/PocketMC.app"
+      rm -f "/usr/local/bin/pocketmc" "$HOME/.local/bin/pocketmc"
+      echo -e "${GREEN}[OK] PocketMC uninstalled from macOS.${NC}"
+    fi
+    exit 0
   fi
-  exit 0
 fi
 
 # Robust downloader function supporting curl & wget with retries and timeout
@@ -130,7 +135,7 @@ fi
 if [ "$OS" = "Linux" ]; then
   # Determine installation scope (Root / System-wide vs User-level)
   if [ "$EUID" -eq 0 ]; then
-    echo -e "${BLUE}[INFO] Running with root privileges. Installing system-wide to /opt/pocketmc...${NC}"
+    echo -e "${BLUE}[INFO] Running with root privileges. Installing system-wide...${NC}"
     INSTALL_DIR="/opt/pocketmc"
     BIN_DIR="/usr/local/bin"
     DESKTOP_DIR="/usr/share/applications"
@@ -195,9 +200,15 @@ EOF
   fi
 
   echo -e ""
-  echo -e "${GREEN}${BOLD}[SUCCESS] PocketMC successfully installed on Linux.${NC}"
-  echo -e "  - Binary Location: ${BOLD}$BIN_DIR/pocketmc${NC}"
-  echo -e "  - Application Launcher: Registered (${BOLD}pocketmc.desktop${NC})"
+  echo -e "${GREEN}${BOLD}[SUCCESS] PocketMC successfully installed on Linux!${NC}"
+  echo -e ""
+  echo -e "${BOLD}Installation Directory Overview:${NC}"
+  echo -e "  - App Binaries:     ${BOLD}$INSTALL_DIR${NC}"
+  echo -e "  - Terminal Command: ${BOLD}$BIN_DIR/pocketmc${NC}"
+  echo -e "  - Desktop Shortcut: ${BOLD}$DESKTOP_DIR/pocketmc.desktop${NC}"
+  echo -e "  - Launcher Icon:    ${BOLD}$ICON_DIR/pocketmc.png${NC}"
+  echo -e "  - Instance Data:    ${BOLD}$HOME/.pocketmc${NC} (created on first run)"
+  echo -e "  - User Configs:     ${BOLD}$HOME/.config/pocketmc${NC} (created on first run)"
 
   if [ "$EUID" -ne 0 ] && [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
     echo -e ""
@@ -234,7 +245,12 @@ elif [ "$OS" = "Darwin" ]; then
   fi
 
   echo -e ""
-  echo -e "${GREEN}${BOLD}[SUCCESS] PocketMC successfully installed on macOS.${NC}"
+  echo -e "${GREEN}${BOLD}[SUCCESS] PocketMC successfully installed on macOS!${NC}"
+  echo -e ""
+  echo -e "${BOLD}Installation Directory Overview:${NC}"
   echo -e "  - Application Bundle: ${BOLD}$TARGET_APP_DIR/PocketMC.app${NC}"
+  echo -e "  - Terminal Command:   ${BOLD}$BIN_DIR/pocketmc${NC}"
+  echo -e "  - Instance Data:      ${BOLD}$HOME/.pocketmc${NC} (created on first run)"
+  echo -e "  - Application Config: ${BOLD}$HOME/Library/Application Support/pocketmc${NC}"
   echo -e "  - Launch directly via Spotlight or Launchpad."
 fi
