@@ -20,6 +20,7 @@ namespace PocketMC.App.ViewModels
         private readonly IInstanceUpdateService? _updateService;
         private readonly IGeyserDetector _geyserDetector;
         private readonly GeyserProvisioningService? _geyserProvisioningService;
+        private readonly IRebootScheduleService? _rebootScheduleService;
 
         private Dictionary<string, string> _originalProps = new();
         private string _originalJvmArgs = string.Empty;
@@ -86,6 +87,38 @@ namespace PocketMC.App.ViewModels
         [ObservableProperty] private int _rconPort = 25575;
         [ObservableProperty] private string _resourcePack = string.Empty;
 
+        // Scheduled Maintenance
+        [ObservableProperty] private bool _enableScheduledReboot;
+        [ObservableProperty] private string _scheduledRebootMode = "Daily";
+        [ObservableProperty] private string _scheduledRebootTime = "04:00";
+        [ObservableProperty] private int _scheduledRebootIntervalHours = 24;
+        [ObservableProperty] private bool _scheduledRebootWarning = true;
+        [ObservableProperty] private int _scheduledRebootWarningSeconds = 60;
+
+        public bool IsDailyMode => string.Equals(ScheduledRebootMode, "Daily", StringComparison.OrdinalIgnoreCase);
+        public bool IsIntervalMode => string.Equals(ScheduledRebootMode, "Interval", StringComparison.OrdinalIgnoreCase);
+        public bool IsWarningSettingsEnabled => EnableScheduledReboot && ScheduledRebootWarning;
+
+        public List<string> RebootModes { get; } = new() { "Daily", "Interval" };
+
+        partial void OnEnableScheduledRebootChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsDailyMode));
+            OnPropertyChanged(nameof(IsIntervalMode));
+            OnPropertyChanged(nameof(IsWarningSettingsEnabled));
+        }
+
+        partial void OnScheduledRebootModeChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsDailyMode));
+            OnPropertyChanged(nameof(IsIntervalMode));
+        }
+
+        partial void OnScheduledRebootWarningChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsWarningSettingsEnabled));
+        }
+
         // Raw Properties
         [ObservableProperty] private string _rawPropertiesText = string.Empty;
 
@@ -106,13 +139,15 @@ namespace PocketMC.App.ViewModels
             ISettingsService settingsService,
             IInstanceUpdateService? updateService = null,
             IGeyserDetector? geyserDetector = null,
-            GeyserProvisioningService? geyserProvisioningService = null)
+            GeyserProvisioningService? geyserProvisioningService = null,
+            IRebootScheduleService? rebootScheduleService = null)
         {
             _instanceService = instanceService;
             _settingsService = settingsService;
             _updateService = updateService;
             _geyserDetector = geyserDetector ?? new GeyserDetector(new AddonManifestService());
             _geyserProvisioningService = geyserProvisioningService;
+            _rebootScheduleService = rebootScheduleService;
 
             SaveCommand = new AsyncRelayCommand(SaveSettingsAsync);
             CancelCommand = new RelayCommand(CancelEdits);
@@ -306,6 +341,27 @@ namespace PocketMC.App.ViewModels
             RconPort = GetPropInt("rcon.port", 25575);
             ResourcePack = GetPropValue("resource-pack", "");
 
+            // Scheduled Maintenance
+            var schedule = _rebootScheduleService?.GetSchedule(SelectedInstance.Slug) ?? SelectedInstance.RebootSchedule;
+            if (schedule != null)
+            {
+                EnableScheduledReboot = schedule.Enabled;
+                ScheduledRebootMode = string.IsNullOrEmpty(schedule.Mode) ? "Daily" : schedule.Mode;
+                ScheduledRebootTime = string.IsNullOrEmpty(schedule.Time) ? "04:00" : schedule.Time;
+                ScheduledRebootIntervalHours = schedule.IntervalHours > 0 ? schedule.IntervalHours : 24;
+                ScheduledRebootWarning = schedule.WarningEnabled;
+                ScheduledRebootWarningSeconds = schedule.WarningSeconds > 0 ? schedule.WarningSeconds : 60;
+            }
+            else
+            {
+                EnableScheduledReboot = false;
+                ScheduledRebootMode = "Daily";
+                ScheduledRebootTime = "04:00";
+                ScheduledRebootIntervalHours = 24;
+                ScheduledRebootWarning = true;
+                ScheduledRebootWarningSeconds = 60;
+            }
+
             HasUnsavedChanges = false;
         }
 
@@ -422,6 +478,27 @@ namespace PocketMC.App.ViewModels
             // Save RAM changes to JVM args in metadata
             SelectedInstance.JvmArgs = SetMaxRam(_originalJvmArgs, MaxRamGb);
 
+            // Scheduled Maintenance
+            var schedule = new RebootScheduleSettings
+            {
+                Enabled = EnableScheduledReboot,
+                Mode = ScheduledRebootMode,
+                Time = ScheduledRebootTime,
+                IntervalHours = ScheduledRebootIntervalHours,
+                WarningEnabled = ScheduledRebootWarning,
+                WarningSeconds = ScheduledRebootWarningSeconds
+            };
+
+            if (_rebootScheduleService != null)
+            {
+                try
+                {
+                    await _rebootScheduleService.SaveScheduleAsync(SelectedInstance.Slug, schedule);
+                }
+                catch { }
+            }
+            SelectedInstance.RebootSchedule = schedule;
+
             // Write local instance.json metadata file
             var metaPath = Path.Combine(SelectedInstance.Path, "instance.json");
             var json = JsonSerializer.Serialize(SelectedInstance, new JsonSerializerOptions { WriteIndented = true });
@@ -471,7 +548,10 @@ namespace PocketMC.App.ViewModels
                 e.PropertyName != nameof(UpdateErrorText) &&
                 e.PropertyName != nameof(HasUpdateError) &&
                 e.PropertyName != nameof(IsUpdateSuccess) &&
-                e.PropertyName != nameof(UpdateRuntimeChangeText))
+                e.PropertyName != nameof(UpdateRuntimeChangeText) &&
+                e.PropertyName != nameof(IsDailyMode) &&
+                e.PropertyName != nameof(IsIntervalMode) &&
+                e.PropertyName != nameof(IsWarningSettingsEnabled))
             {
                 HasUnsavedChanges = true;
             }

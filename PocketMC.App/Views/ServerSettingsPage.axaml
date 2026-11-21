@@ -401,6 +401,60 @@
                             </Grid>
                         </Border>
 
+                        <!-- SECTION: SCHEDULED MAINTENANCE -->
+                        <TextBlock Text="Scheduled Maintenance" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
+
+                        <!-- SCHEDULED REBOOT TOGGLE -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Scheduled Server Reboot" Classes="setting-title" />
+                                    <TextBlock Text="Periodically reboot the server to clear memory leaks and maintain peak responsiveness." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableScheduledReboot, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- REBOOT FREQUENCY -->
+                        <Border Classes="setting-card" IsEnabled="{Binding EnableScheduledReboot}">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Reboot Frequency" Classes="setting-title" />
+                                    <TextBlock Text="Configure whether the server reboots at a fixed daily time (24h format) or after a recurring interval." Classes="setting-description" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <ComboBox ItemsSource="{Binding RebootModes}" SelectedItem="{Binding ScheduledRebootMode, Mode=TwoWay}" Width="110" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding ScheduledRebootTime, Mode=TwoWay}" IsVisible="{Binding IsDailyMode}" Width="100" Watermark="04:00" CornerRadius="8" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsIntervalMode}" VerticalAlignment="Center">
+                                        <TextBlock Text="Every (Hours):" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <TextBox Text="{Binding ScheduledRebootIntervalHours, Mode=TwoWay}" Width="70" Watermark="24" CornerRadius="8" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- IN-GAME WARNING -->
+                        <Border Classes="setting-card" IsEnabled="{Binding EnableScheduledReboot}">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="In-Game Warning Countdown" Classes="setting-title" />
+                                    <TextBlock Text="Broadcast countdown notifications in Minecraft server chat before restarting." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ScheduledRebootWarning, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- WARNING DURATION -->
+                        <Border Classes="setting-card" IsEnabled="{Binding IsWarningSettingsEnabled}">
+                            <Grid ColumnDefinitions="*, 120">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Warning Duration (Seconds)" Classes="setting-title" />
+                                    <TextBlock Text="Seconds before reboot to initiate broadcast warnings (1-3600)." Classes="setting-description" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding ScheduledRebootWarningSeconds, Mode=TwoWay}" Width="100" Watermark="60" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

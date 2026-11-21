@@ -32,6 +32,7 @@ namespace PocketMC.Infrastructure.Services
         private readonly CloudBackupService _cloudBackupService;
         private readonly IConsoleLogService _logService;
         private readonly ILogger<BackupService> _logger;
+        private readonly InstanceOperationCoordinator _coordinator;
 
         private static readonly HashSet<string> SkipFiles = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -43,13 +44,15 @@ namespace PocketMC.Infrastructure.Services
             ISettingsService settingsService,
             CloudBackupService cloudBackupService,
             IConsoleLogService logService,
-            ILogger<BackupService> logger)
+            ILogger<BackupService> logger,
+            InstanceOperationCoordinator? coordinator = null)
         {
             _processRunner = processRunner;
             _settingsService = settingsService;
             _cloudBackupService = cloudBackupService;
             _logService = logService;
             _logger = logger;
+            _coordinator = coordinator ?? new InstanceOperationCoordinator();
         }
 
         public async Task<BackupMetadataEntry> CreateBackupAsync(
@@ -60,6 +63,7 @@ namespace PocketMC.Infrastructure.Services
             Action<string>? onProgress = null,
             IProgress<double>? progress = null)
         {
+            using var operation = await _coordinator.AcquireAsync(instance.Path, requiresStopped: false);
             var localResult = await CreateLocalBackupInternalAsync(instance, onProgress, progress);
 
             if (!localResult.Success || string.IsNullOrEmpty(localResult.ZipPath))
@@ -519,6 +523,7 @@ namespace PocketMC.Infrastructure.Services
             Action<string>? onProgress = null,
             IProgress<double>? progress = null)
         {
+            using var operation = await _coordinator.AcquireAsync(instance.Path, requiresStopped: true);
             string worldDir = ResolveWorldDirectory(instance);
 
             if (string.IsNullOrWhiteSpace(backupZipPath) || !File.Exists(backupZipPath))

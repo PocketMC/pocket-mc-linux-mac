@@ -28,6 +28,7 @@ namespace PocketMC.Infrastructure.Services
         private readonly IJavaService _javaService;
         private readonly IPHPService _phpService;
         private readonly IConsoleLogService _logService;
+        private readonly InstanceOperationCoordinator _coordinator;
         private readonly ConcurrentDictionary<string, RunningInstanceInfo> _runningInstances = new();
         private readonly ConcurrentDictionary<string, (int Count, DateTime LastAttempt)> _autoRestartStats = new();
         private readonly ConcurrentDictionary<string, string> _states = new();
@@ -39,11 +40,13 @@ namespace PocketMC.Infrastructure.Services
         public ProcessRunner(
             IJavaService javaService,
             IPHPService phpService,
-            IConsoleLogService logService)
+            IConsoleLogService logService,
+            InstanceOperationCoordinator? coordinator = null)
         {
             _javaService = javaService;
             _phpService = phpService;
             _logService = logService;
+            _coordinator = coordinator ?? new InstanceOperationCoordinator();
         }
 
         private class RunningInstanceInfo
@@ -72,19 +75,7 @@ namespace PocketMC.Infrastructure.Services
 
             try
             {
-                // Clean up stale session.lock files left by previous crashes or orphaned processes
-                try
-                {
-                    if (Directory.Exists(instance.Path))
-                    {
-                        var lockFiles = Directory.GetFiles(instance.Path, "session.lock", SearchOption.AllDirectories);
-                        foreach (var lockFile in lockFiles)
-                        {
-                            try { File.Delete(lockFile); } catch { }
-                        }
-                    }
-                }
-                catch { }
+                InspectSessionLock(instance);
 
                 string execPath = "";
                 string arguments = "";
@@ -234,12 +225,14 @@ namespace PocketMC.Infrastructure.Services
                 }
 
                 TransitionState(instance.Slug, "Running");
+                _coordinator.SetRunning(instance.Path, true);
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
             }
             catch (Exception ex)
             {
                 _runningInstances.TryRemove(instance.Slug, out _);
+                _coordinator.SetRunning(instance.Path, false);
                 _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Failed to start server process: {ex.Message}");
                 TransitionState(instance.Slug, "Crashed");
             }
@@ -375,6 +368,7 @@ namespace PocketMC.Infrastructure.Services
         private void HandleProcessExit(ServerInstance instance, RunningInstanceInfo info)
         {
             _runningInstances.TryRemove(instance.Slug, out _);
+            _coordinator.SetRunning(instance.Path, false);
 
             int exitCode = 0;
             try
@@ -456,26 +450,75 @@ namespace PocketMC.Infrastructure.Services
 
             if (!exited)
             {
-                _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Sending SIGKILL to process group...");
-                try
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Sending SIGTERM to process group...");
+                    try
                     {
-                        UnixNative.kill(-info.Pgid, UnixNative.SIGKILL);
+                        UnixNative.kill(-info.Pgid, UnixNative.SIGTERM);
                     }
-                    else
+                    catch (Exception ex)
+                    {
+                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error sending SIGTERM: {ex.Message}");
+                    }
+
+                    try
+                    {
+                        using var termCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        await info.Process.WaitForExitAsync(termCts.Token);
+                        exited = true;
+                    }
+                    catch (OperationCanceledException) { }
+
+                    if (!exited)
+                    {
+                        _logService.WriteLog(instance.Slug, "[PocketMC Engine] Process did not terminate after SIGTERM. Escalating to SIGKILL...");
+                        try
+                        {
+                            UnixNative.kill(-info.Pgid, UnixNative.SIGKILL);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error sending SIGKILL: {ex.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Terminating process tree...");
+                    try
                     {
                         info.Process.Kill(true);
                     }
-                }
-                catch (Exception ex)
-                {
-                    _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error sending SIGKILL: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error terminating process: {ex.Message}");
+                    }
                 }
             }
 
             TransitionState(instance.Slug, "Stopped");
             _runningInstances.TryRemove(instance.Slug, out _);
+            _coordinator.SetRunning(instance.Path, false);
+        }
+
+        private void InspectSessionLock(ServerInstance instance)
+        {
+            try
+            {
+                if (Directory.Exists(instance.Path))
+                {
+                    var lockFile = Directory.GetFiles(instance.Path, "session.lock", SearchOption.AllDirectories).FirstOrDefault();
+                    if (lockFile != null)
+                    {
+                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Warning: {Path.GetRelativePath(instance.Path, lockFile)} already exists. PocketMC will not delete it automatically to prevent world corruption. If startup fails, ensure no other process is using this world.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Warn: Failed to inspect session.lock: {ex.Message}");
+            }
         }
 
         public System.Collections.Generic.IReadOnlyList<string> GetRunningSlugs()
@@ -553,6 +596,15 @@ namespace PocketMC.Infrastructure.Services
             state = lastState ?? "Stopped";
             pgid = 0;
             return false;
+        }
+
+        public DateTime? GetSessionStartTime(string slug)
+        {
+            if (_runningInstances.TryGetValue(slug, out var info))
+            {
+                return info.LastStartAttempt;
+            }
+            return null;
         }
 
         private void TransitionState(string slug, string state)

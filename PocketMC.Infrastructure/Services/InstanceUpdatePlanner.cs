@@ -93,6 +93,8 @@ namespace PocketMC.Infrastructure.Services
             {
                 EngineType.PocketMine => "PocketMine-MP.phar",
                 EngineType.Bedrock => "bedrock-server.zip",
+                EngineType.Forge => "installer.jar",
+                EngineType.NeoForge => "installer.jar",
                 _ => "server.jar"
             };
         }

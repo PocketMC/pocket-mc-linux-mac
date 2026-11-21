@@ -52,6 +52,8 @@ namespace PocketMC.Tests
             return false;
         }
 
+        public DateTime? GetSessionStartTime(string slug) => null;
+
         public void TriggerStateChange(string slug, string state)
         {
             StateChanged?.Invoke(slug, state);

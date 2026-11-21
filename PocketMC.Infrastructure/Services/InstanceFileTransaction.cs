@@ -78,11 +78,11 @@ namespace PocketMC.Infrastructure.Services
             return true;
         }
 
-        public static void Commit(string serverDir, IReadOnlyList<Replacement> replacements, CancellationToken cancellationToken = default)
+        public static void PrepareAndApply(string serverDir, IReadOnlyList<Replacement> replacements, CancellationToken cancellationToken = default)
         {
             Recover(serverDir);
             string rollback = $".pocketmc-rollback-{Guid.NewGuid():N}";
-            var journal = new Journal(new List<Entry>());
+            var journal = new Journal(new List<Entry>(), Committed: false);
             string journalPath = Path.Combine(serverDir, JournalName);
 
             try
@@ -117,16 +117,45 @@ namespace PocketMC.Infrastructure.Services
                     }
                 }
 
-                FileUtils.AtomicWriteAllText(journalPath, JsonSerializer.Serialize(journal with { Committed = true }, new JsonSerializerOptions { WriteIndented = true }));
+                // Persist journal in uncommitted state with all entries recorded
+                FileUtils.AtomicWriteAllText(journalPath, JsonSerializer.Serialize(journal, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch
             {
                 Recover(serverDir);
                 throw;
             }
+        }
 
-            // Cleanup committed rollback artifacts
+        public static void Complete(string serverDir)
+        {
+            string journalPath = Path.Combine(serverDir, JournalName);
+            if (!File.Exists(journalPath)) return;
+
+            try
+            {
+                var content = File.ReadAllText(journalPath);
+                var journal = JsonSerializer.Deserialize<Journal>(content);
+                if (journal != null)
+                {
+                    FileUtils.AtomicWriteAllText(journalPath, JsonSerializer.Serialize(journal with { Committed = true }, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+            catch { }
+
+            // Cleans up committed journal and rollback backups
             Recover(serverDir);
+        }
+
+        public static bool Rollback(string serverDir)
+        {
+            return Recover(serverDir);
+        }
+
+        public static void Commit(string serverDir, IReadOnlyList<Replacement> replacements, CancellationToken cancellationToken = default)
+        {
+            PrepareAndApply(serverDir, replacements, cancellationToken);
+            Complete(serverDir);
         }
 
         private static bool Exists(string path) => File.Exists(path) || Directory.Exists(path);

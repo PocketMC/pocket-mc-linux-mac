@@ -61,6 +61,9 @@ namespace PocketMC.App
 
                 try
                 {
+                    var rebootScheduler = Services.GetService<PocketMC.Infrastructure.Services.ServerRebootSchedulerService>();
+                    rebootScheduler?.Start();
+
                     var playitClient = Services.GetRequiredService<PocketMC.RemoteControl.Tunnels.PlayitApiClient>();
                     var tunnelManager = Services.GetRequiredService<PocketMC.RemoteControl.Tunnels.RemoteTunnelManager>();
                     if (playitClient.HasPartnerConnection())
@@ -74,6 +77,9 @@ namespace PocketMC.App
                 {
                     try
                     {
+                        var rebootScheduler = Services.GetService<PocketMC.Infrastructure.Services.ServerRebootSchedulerService>();
+                        rebootScheduler?.Stop();
+
                         var procRunner = Services.GetService<PocketMC.Core.Services.IProcessRunner>();
                         if (procRunner != null)
                         {

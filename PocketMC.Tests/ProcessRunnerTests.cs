@@ -107,6 +107,31 @@ namespace PocketMC.Tests
 
         [Fact]
         [Trait("Category", "Unit")]
+        public async Task StartAsync_DoesNotDeleteSessionLockFile()
+        {
+            var instance = new ServerInstance
+            {
+                Id = Guid.NewGuid(),
+                Name = "Lock Server",
+                Slug = "lock-server",
+                Path = _testTempDir,
+                EngineType = EngineType.VanillaJava,
+                EngineVersion = "mock:nonexistent-command-that-fails-fast"
+            };
+
+            string worldDir = Path.Combine(_testTempDir, "world");
+            Directory.CreateDirectory(worldDir);
+            string lockPath = Path.Combine(worldDir, "session.lock");
+            File.WriteAllText(lockPath, "ACTIVE_WORLD_LOCK");
+
+            await _runner.StartAsync(instance);
+
+            Assert.True(File.Exists(lockPath), "session.lock file should NEVER be blindly deleted by PocketMC.");
+            Assert.Equal("ACTIVE_WORLD_LOCK", File.ReadAllText(lockPath));
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
         public async Task StopAllAsync_WhenNoInstancesRunning_CompletesCleanly()
         {
             await _runner.StopAllAsync();

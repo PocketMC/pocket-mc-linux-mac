@@ -72,7 +72,10 @@ namespace PocketMC.App
                     services.AddSingleton<IPHPService, PHPService>();
                     services.AddSingleton<IPreLaunchVerifier, PreLaunchVerifier>();
                     services.AddSingleton<IInstanceService, InstanceService>();
+                    services.AddSingleton<IRebootScheduleService, RebootScheduleService>();
+                    services.AddSingleton<ServerRebootSchedulerService>();
                     services.AddSingleton<IConsoleLogService, ConsoleLogService>();
+                    services.AddSingleton<InstanceOperationCoordinator>();
                     services.AddSingleton<IProcessRunner, ProcessRunner>();
                     services.AddSingleton<IPlayerService, PlayerService>();
 
@@ -108,7 +111,6 @@ namespace PocketMC.App
                     services.AddSingleton<IAiDiagnosticService, AiDiagnosticService>();
 
                     // Server Version Updates (Transactional Upgrades & Rollbacks)
-                    services.AddSingleton<InstanceOperationCoordinator>();
                     services.AddSingleton<InstanceVersionTargetService>();
                     services.AddSingleton<InstanceUpdatePlanner>();
                     services.AddSingleton<InstanceArtifactStager>();

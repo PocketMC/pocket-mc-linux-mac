@@ -28,5 +28,9 @@ namespace PocketMC.Core.Models
         public DateTime? LastBackupTime { get; set; }
         public int MaxBackupsToKeep { get; set; } = 5;
         public string? CustomBackupDirectory { get; set; }
+
+        // Scheduled Maintenance
+        public RebootScheduleSettings? RebootSchedule { get; set; }
+        public DateTime? LastScheduledRebootTime { get; set; }
     }
 }

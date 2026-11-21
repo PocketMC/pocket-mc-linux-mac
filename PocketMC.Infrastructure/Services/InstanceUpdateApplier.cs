@@ -117,6 +117,27 @@ namespace PocketMC.Infrastructure.Services
                 {
                     // Java / PocketMine replacement
                     replacements.Add(new InstanceFileTransaction.Replacement(stagedArtifacts.ServerArtifactPath, plan.ServerArtifactFileName));
+
+                    if (plan.TargetEngineType == EngineType.Forge || plan.TargetEngineType == EngineType.NeoForge)
+                    {
+                        foreach (string name in new[] { "libraries", "win_args.txt", "unix_args.txt", "user_jvm_args.txt", "run.bat", "run.sh" })
+                        {
+                            if (File.Exists(Path.Combine(instance.Path, name)) || Directory.Exists(Path.Combine(instance.Path, name)))
+                            {
+                                replacements.Add(new InstanceFileTransaction.Replacement(null, name));
+                            }
+                        }
+
+                        foreach (string jar in Directory.EnumerateFiles(instance.Path, "*.jar"))
+                        {
+                            string fileName = Path.GetFileName(jar);
+                            if (!fileName.Equals("installer.jar", StringComparison.OrdinalIgnoreCase) &&
+                                (fileName.Contains("forge", StringComparison.OrdinalIgnoreCase) || fileName.Contains("neoforge", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                replacements.Add(new InstanceFileTransaction.Replacement(null, fileName));
+                            }
+                        }
+                    }
                 }
 
                 // Stage updated instance.json metadata
@@ -140,14 +161,17 @@ namespace PocketMC.Infrastructure.Services
                 FileUtils.AtomicWriteAllText(stagedMetaPath, metaJson);
                 replacements.Add(new InstanceFileTransaction.Replacement(stagedMetaPath, "instance.json"));
 
-                // 6. Commit transaction atomically
+                // 6. Apply replacements transactionally (retains rollback backups in uncommitted journal)
                 onStatus?.Invoke("Applying verified update artifacts transactionally...");
-                InstanceFileTransaction.Commit(instance.Path, replacements, ct);
+                InstanceFileTransaction.PrepareAndApply(instance.Path, replacements, ct);
 
                 // 7. Update in-memory and registry metadata
                 await _instanceService.SaveInstanceAsync(updatedInstance);
 
-                // 8. Clean up staging directory
+                // 8. Registry persistence succeeded; complete transaction and remove rollback backups
+                InstanceFileTransaction.Complete(instance.Path);
+
+                // 9. Clean up staging directory
                 try
                 {
                     if (Directory.Exists(stagedArtifacts.StagingDirectory))

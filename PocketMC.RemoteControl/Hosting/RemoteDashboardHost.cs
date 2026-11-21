@@ -41,6 +41,7 @@ public sealed class RemoteDashboardHost : IHostedService
     private readonly RemotePlayerActionService _playerActionService;
     private readonly IConsoleLogService? _consoleLogService;
     private readonly IBackupService? _backupService;
+    private readonly IRebootScheduleService? _rebootScheduleService;
     private readonly ILogger<RemoteDashboardHost> _logger;
 
     private readonly InstanceOperationCoordinator _operations = new();
@@ -65,6 +66,7 @@ public sealed class RemoteDashboardHost : IHostedService
         RemotePlayerActionService playerActionService,
         IConsoleLogService? consoleLogService = null,
         IBackupService? backupService = null,
+        IRebootScheduleService? rebootScheduleService = null,
         ILogger<RemoteDashboardHost>? logger = null)
     {
         _settingsService = settingsService;
@@ -81,6 +83,7 @@ public sealed class RemoteDashboardHost : IHostedService
         _playerActionService = playerActionService;
         _consoleLogService = consoleLogService;
         _backupService = backupService;
+        _rebootScheduleService = rebootScheduleService;
         _logger = logger ?? NullLogger<RemoteDashboardHost>.Instance;
     }
 
@@ -449,9 +452,10 @@ public sealed class RemoteDashboardHost : IHostedService
             var instance = await ResolveInstanceAsync(instanceId);
             if (instance == null) return Results.NotFound();
 
+            var schedule = _rebootScheduleService?.GetSchedule(instance.Slug) ?? instance.RebootSchedule;
             return Results.Ok(new
             {
-                schedule = new { Enabled = false, CronExpression = "", WarningMinutes = 5 },
+                schedule = schedule,
                 hostTimeZone = TimeZoneInfo.Local.DisplayName
             });
         });
@@ -462,6 +466,27 @@ public sealed class RemoteDashboardHost : IHostedService
             var instance = await ResolveInstanceAsync(instanceId);
             if (instance == null) return Results.NotFound();
 
+            var schedule = await ReadJsonAsync<RebootScheduleSettings>(context);
+            if (schedule == null) return Results.BadRequest(new { error = "Schedule settings are required." });
+
+            if (_rebootScheduleService != null)
+            {
+                try
+                {
+                    await _rebootScheduleService.SaveScheduleAsync(instance.Slug, schedule, context.RequestAborted);
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new { error = ex.Message });
+                }
+            }
+            else
+            {
+                instance.RebootSchedule = schedule;
+                await _instanceService.SaveInstanceAsync(instance);
+            }
+
+            _auditLogService.Log(context.Connection.RemoteIpAddress?.ToString(), "instance.reboot_schedule_update", instance.Id);
             return Results.Ok(new { success = true });
         });
 
