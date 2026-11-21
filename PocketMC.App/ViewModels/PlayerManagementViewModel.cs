@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Services;
 
 namespace PocketMC.App.ViewModels
 {
@@ -18,6 +19,8 @@ namespace PocketMC.App.ViewModels
         private readonly IInstanceService _instanceService;
         private readonly IPlayerService _playerService;
         private readonly IProcessRunner _processRunner;
+        private readonly BanSidecarService _banSidecarService;
+        private readonly SemaphoreSlim _fileLock = new(1, 1);
 
         private FileSystemWatcher? _watcher;
 
@@ -45,11 +48,13 @@ namespace PocketMC.App.ViewModels
         public PlayerManagementViewModel(
             IInstanceService instanceService,
             IPlayerService playerService,
-            IProcessRunner processRunner)
+            IProcessRunner processRunner,
+            BanSidecarService? banSidecarService = null)
         {
             _instanceService = instanceService;
             _playerService = playerService;
             _processRunner = processRunner;
+            _banSidecarService = banSidecarService ?? new BanSidecarService();
 
             KickPlayerCommand = new AsyncRelayCommand<string>(KickPlayerAsync);
             BanPlayerCommand = new AsyncRelayCommand<string>(BanPlayerAsync);
@@ -132,46 +137,70 @@ namespace PocketMC.App.ViewModels
             var banned = new List<string>();
             if (SelectedInstance == null) return banned;
 
-            var jsonPath = Path.Combine(SelectedInstance.Path, "banned-players.json");
-            if (File.Exists(jsonPath))
+            _fileLock.Wait();
+            try
             {
-                try
+                var jsonPath = Path.Combine(SelectedInstance.Path, "banned-players.json");
+                if (File.Exists(jsonPath))
                 {
-                    var content = File.ReadAllText(jsonPath);
-                    using var doc = JsonDocument.Parse(content);
-                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                    try
                     {
-                        foreach (var el in doc.RootElement.EnumerateArray())
+                        var content = File.ReadAllText(jsonPath);
+                        using var doc = JsonDocument.Parse(content);
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
                         {
-                            if (el.TryGetProperty("name", out var nameProp))
+                            foreach (var el in doc.RootElement.EnumerateArray())
                             {
-                                banned.Add(nameProp.GetString() ?? "");
+                                if (el.TryGetProperty("name", out var nameProp))
+                                {
+                                    banned.Add(nameProp.GetString() ?? "");
+                                }
                             }
                         }
                     }
+                    catch { }
                 }
-                catch { }
-            }
 
-            var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
-            if (File.Exists(txtPath))
-            {
-                try
+                var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
+                if (File.Exists(txtPath))
                 {
-                    var lines = File.ReadAllLines(txtPath);
-                    foreach (var line in lines)
+                    try
                     {
-                        var trimmed = line.Trim();
-                        if (!string.IsNullOrEmpty(trimmed) && !trimmed.StartsWith("#"))
+                        var lines = File.ReadAllLines(txtPath);
+                        foreach (var line in lines)
                         {
-                            banned.Add(trimmed);
+                            var trimmed = line.Trim();
+                            if (!string.IsNullOrEmpty(trimmed) && !trimmed.StartsWith("#"))
+                            {
+                                banned.Add(trimmed);
+                            }
                         }
                     }
+                    catch { }
                 }
-                catch { }
-            }
 
-            return banned.Where(n => !string.IsNullOrEmpty(n)).Distinct().ToList();
+                if (SelectedInstance.EngineType == EngineType.Bedrock)
+                {
+                    try
+                    {
+                        var sidecarBans = _banSidecarService.GetBannedPlayersAsync(SelectedInstance.Path).GetAwaiter().GetResult();
+                        foreach (var b in sidecarBans)
+                        {
+                            if (!string.IsNullOrWhiteSpace(b.Name))
+                            {
+                                banned.Add(b.Name);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                return banned.Where(n => !string.IsNullOrEmpty(n)).Distinct().ToList();
+            }
+            finally
+            {
+                _fileLock.Release();
+            }
         }
 
         private void SetupWatcher()
@@ -231,11 +260,26 @@ namespace PocketMC.App.ViewModels
             
             if (SelectedInstance != null)
             {
-                bool isRunning = _processRunner.TryGetRunningInfo(SelectedInstance.Slug, out _, out string state);
-                if (!isRunning || state != "Running")
+                if (SelectedInstance.EngineType == EngineType.Bedrock)
                 {
-                    var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
-                    await File.AppendAllTextAsync(txtPath, target + Environment.NewLine);
+                    await _banSidecarService.AddBanAsync(SelectedInstance.Path, target, "Banned by administrator");
+                }
+                else
+                {
+                    bool isRunning = _processRunner.TryGetRunningInfo(SelectedInstance.Slug, out _, out string state);
+                    if (!isRunning || state != "Running")
+                    {
+                        await _fileLock.WaitAsync();
+                        try
+                        {
+                            var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
+                            await File.AppendAllTextAsync(txtPath, target + Environment.NewLine);
+                        }
+                        finally
+                        {
+                            _fileLock.Release();
+                        }
+                    }
                 }
             }
 
@@ -250,14 +294,31 @@ namespace PocketMC.App.ViewModels
 
             if (SelectedInstance != null)
             {
-                bool isRunning = _processRunner.TryGetRunningInfo(SelectedInstance.Slug, out _, out string state);
-                if (!isRunning || state != "Running")
+                if (SelectedInstance.EngineType == EngineType.Bedrock)
                 {
-                    var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
-                    if (File.Exists(txtPath))
+                    await _banSidecarService.RemoveBanAsync(SelectedInstance.Path, username);
+                }
+                else
+                {
+                    bool isRunning = _processRunner.TryGetRunningInfo(SelectedInstance.Slug, out _, out string state);
+                    if (!isRunning || state != "Running")
                     {
-                        var lines = File.ReadAllLines(txtPath).Where(l => !l.Trim().Equals(username, StringComparison.OrdinalIgnoreCase));
-                        File.WriteAllLines(txtPath, lines);
+                        await _fileLock.WaitAsync();
+                        try
+                        {
+                            var txtPath = Path.Combine(SelectedInstance.Path, "banned-players.txt");
+                            if (File.Exists(txtPath))
+                            {
+                                var lines = File.ReadAllLines(txtPath)
+                                    .Where(l => !l.Trim().Equals(username, StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
+                                File.WriteAllLines(txtPath, lines);
+                            }
+                        }
+                        finally
+                        {
+                            _fileLock.Release();
+                        }
                     }
                 }
             }

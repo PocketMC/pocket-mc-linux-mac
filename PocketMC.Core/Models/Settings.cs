@@ -39,6 +39,7 @@ namespace PocketMC.Core.Models
         public string UpdateChannel { get; set; } = "Stable";
         public bool EnableAutoUpdates { get; set; } = true;
         public string? SkipUpdateVersion { get; set; }
+        public string? LastSeenChangelogVersion { get; set; }
     }
 
     public class PlayitPartnerConnection

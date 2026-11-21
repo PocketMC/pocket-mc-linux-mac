@@ -186,6 +186,8 @@ namespace PocketMC.Tests
             var importedFile = Path.Combine(imported.Path, "server.properties");
             Assert.True(File.Exists(importedFile));
             Assert.Equal("difficulty=hard", await File.ReadAllTextAsync(importedFile));
+            Assert.Equal(original.EngineType, imported.EngineType);
+            Assert.Equal(original.EngineVersion, imported.EngineVersion);
         }
     }
 }

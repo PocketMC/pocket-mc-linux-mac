@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Services;
 
 namespace PocketMC.App.ViewModels
 {
@@ -16,12 +17,33 @@ namespace PocketMC.App.ViewModels
     {
         private readonly IInstanceService _instanceService;
         private readonly ISettingsService _settingsService;
+        private readonly IInstanceUpdateService? _updateService;
+        private readonly IGeyserDetector _geyserDetector;
+        private readonly GeyserProvisioningService? _geyserProvisioningService;
 
         private Dictionary<string, string> _originalProps = new();
         private string _originalJvmArgs = string.Empty;
 
         [ObservableProperty]
         private ServerInstance? _selectedInstance;
+
+        [ObservableProperty]
+        private bool _hasGeyser;
+
+        [ObservableProperty]
+        private int _geyserBedrockPort = 19132;
+
+        // Version Updates
+        public System.Collections.ObjectModel.ObservableCollection<UpdateTargetVersionInfo> AvailableTargetVersions { get; } = new();
+        [ObservableProperty] private UpdateTargetVersionInfo? _selectedTargetVersion;
+        [ObservableProperty] private bool _isLoadingTargetVersions;
+        [ObservableProperty] private bool _isUpdating;
+        [ObservableProperty] private double _updateProgress;
+        [ObservableProperty] private string _updateStatusText = string.Empty;
+        [ObservableProperty] private string _updateErrorText = string.Empty;
+        [ObservableProperty] private bool _hasUpdateError;
+        [ObservableProperty] private bool _isUpdateSuccess;
+        [ObservableProperty] private string _updateRuntimeChangeText = string.Empty;
 
         // General settings
         [ObservableProperty] private string _motd = string.Empty;
@@ -76,23 +98,142 @@ namespace PocketMC.App.ViewModels
         public IAsyncRelayCommand SaveCommand { get; }
         public IRelayCommand CancelCommand { get; }
         public IRelayCommand GoBackCommand { get; }
+        public IAsyncRelayCommand LoadTargetVersionsCommand { get; }
+        public IAsyncRelayCommand ApplyUpdateCommand { get; }
 
         public ServerSettingsViewModel(
             IInstanceService instanceService,
-            ISettingsService settingsService)
+            ISettingsService settingsService,
+            IInstanceUpdateService? updateService = null,
+            IGeyserDetector? geyserDetector = null,
+            GeyserProvisioningService? geyserProvisioningService = null)
         {
             _instanceService = instanceService;
             _settingsService = settingsService;
+            _updateService = updateService;
+            _geyserDetector = geyserDetector ?? new GeyserDetector(new AddonManifestService());
+            _geyserProvisioningService = geyserProvisioningService;
 
             SaveCommand = new AsyncRelayCommand(SaveSettingsAsync);
             CancelCommand = new RelayCommand(CancelEdits);
             GoBackCommand = new RelayCommand(GoBack);
+            LoadTargetVersionsCommand = new AsyncRelayCommand(LoadTargetVersionsAsync);
+            ApplyUpdateCommand = new AsyncRelayCommand(ApplyUpdateAsync);
         }
 
         public void Initialize(ServerInstance instance)
         {
             SelectedInstance = instance;
             LoadSettings();
+            _ = LoadTargetVersionsAsync();
+        }
+
+        partial void OnSelectedTargetVersionChanged(UpdateTargetVersionInfo? value)
+        {
+            if (value != null && SelectedInstance != null)
+            {
+                if (SelectedInstance.EngineType == EngineType.PocketMine)
+                {
+                    UpdateRuntimeChangeText = "PHP 8.2+ managed runtime";
+                }
+                else if (SelectedInstance.EngineType == EngineType.Bedrock)
+                {
+                    UpdateRuntimeChangeText = "Native Bedrock Dedicated Server binary";
+                }
+                else
+                {
+                    int currJava = PocketMC.Infrastructure.Services.InstanceUpdatePlanner.MapMinecraftVersionToJavaVersion(SelectedInstance.EngineVersion);
+                    int targetJava = PocketMC.Infrastructure.Services.InstanceUpdatePlanner.MapMinecraftVersionToJavaVersion(value.Id);
+                    UpdateRuntimeChangeText = currJava == targetJava
+                        ? $"Java {targetJava} remains compatible"
+                        : $"Java runtime requirement changes: Java {currJava} -> Java {targetJava}";
+                }
+            }
+            else
+            {
+                UpdateRuntimeChangeText = string.Empty;
+            }
+        }
+
+        public async Task LoadTargetVersionsAsync()
+        {
+            if (SelectedInstance == null || _updateService == null) return;
+
+            IsLoadingTargetVersions = true;
+            AvailableTargetVersions.Clear();
+            SelectedTargetVersion = null;
+            HasUpdateError = false;
+            IsUpdateSuccess = false;
+
+            try
+            {
+                var versions = await _updateService.GetAvailableTargetVersionsAsync(SelectedInstance);
+                foreach (var v in versions)
+                {
+                    AvailableTargetVersions.Add(v);
+                }
+
+                // Default to highest upgrade version if available
+                SelectedTargetVersion = AvailableTargetVersions.FirstOrDefault(v => v.IsUpgrade)
+                    ?? AvailableTargetVersions.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                HasUpdateError = true;
+                UpdateErrorText = $"Failed to check for updates: {ex.Message}";
+            }
+            finally
+            {
+                IsLoadingTargetVersions = false;
+            }
+        }
+
+        public async Task ApplyUpdateAsync()
+        {
+            if (SelectedInstance == null || SelectedTargetVersion == null || _updateService == null || IsUpdating) return;
+
+            IsUpdating = true;
+            HasUpdateError = false;
+            IsUpdateSuccess = false;
+            UpdateProgress = 0;
+            UpdateStatusText = $"Starting update to {SelectedTargetVersion.Id}...";
+
+            var progress = new Progress<double>(val => UpdateProgress = val);
+
+            try
+            {
+                var result = await _updateService.UpdateAsync(
+                    SelectedInstance,
+                    SelectedTargetVersion.Id,
+                    progress,
+                    status => UpdateStatusText = status);
+
+                if (result.Success)
+                {
+                    IsUpdateSuccess = true;
+                    SelectedInstance.EngineVersion = SelectedTargetVersion.Id;
+                    UpdateStatusText = $"Successfully upgraded to {result.TargetVersionApplied}!";
+                    await LoadTargetVersionsAsync();
+                }
+                else
+                {
+                    HasUpdateError = true;
+                    UpdateErrorText = result.ErrorMessage ?? "Unknown update failure occurred.";
+                    UpdateStatusText = result.RestoredFromRollback
+                        ? "Update failed, but original server files were restored safely via rollback journal."
+                        : "Update failed. Please check logs.";
+                }
+            }
+            catch (Exception ex)
+            {
+                HasUpdateError = true;
+                UpdateErrorText = ex.Message;
+                UpdateStatusText = "Update failed due to an unexpected error.";
+            }
+            finally
+            {
+                IsUpdating = false;
+            }
         }
 
         private void LoadSettings()
@@ -124,6 +265,7 @@ namespace PocketMC.App.ViewModels
             }
 
             // General
+            HasGeyser = _geyserDetector.IsGeyserInstalled(SelectedInstance.Path);
             Motd = GetPropValue("motd", "A Minecraft Server");
             ServerPort = GetPropInt("server-port", (SelectedInstance.EngineType == EngineType.PocketMine || SelectedInstance.EngineType == EngineType.Bedrock) ? 19132 : 25565);
             MaxPlayers = GetPropInt("max-players", 20);
@@ -289,6 +431,11 @@ namespace PocketMC.App.ViewModels
             _originalProps = updatedProps;
             _originalJvmArgs = SelectedInstance.JvmArgs;
 
+            if (HasGeyser && _geyserProvisioningService != null)
+            {
+                _geyserProvisioningService.PatchGeyserConfigPort(SelectedInstance.Path, GeyserBedrockPort);
+            }
+
             HasUnsavedChanges = false;
         }
 
@@ -315,7 +462,16 @@ namespace PocketMC.App.ViewModels
             base.OnPropertyChanged(e);
 
             if (e.PropertyName != nameof(HasUnsavedChanges) && 
-                e.PropertyName != nameof(SelectedInstance))
+                e.PropertyName != nameof(SelectedInstance) &&
+                e.PropertyName != nameof(SelectedTargetVersion) &&
+                e.PropertyName != nameof(IsLoadingTargetVersions) &&
+                e.PropertyName != nameof(IsUpdating) &&
+                e.PropertyName != nameof(UpdateProgress) &&
+                e.PropertyName != nameof(UpdateStatusText) &&
+                e.PropertyName != nameof(UpdateErrorText) &&
+                e.PropertyName != nameof(HasUpdateError) &&
+                e.PropertyName != nameof(IsUpdateSuccess) &&
+                e.PropertyName != nameof(UpdateRuntimeChangeText))
             {
                 HasUnsavedChanges = true;
             }

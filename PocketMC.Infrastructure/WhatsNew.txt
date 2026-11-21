@@ -1,0 +1,21 @@
+VERSION=1.0.3
+
+[NEW FEATURES & LINUX/MACOS PARITY]
+Complete Windows experience and functional parity delivered for Linux and macOS.
+Interactive Ports Map visualizing local ports, RCON, Query, Simple Voice Chat UDP, and Playit public endpoints.
+Remote Control REST API and full embedded SPA Web Dashboard host for remote server administration.
+Cross-platform instance export and import with metadata bundle preservation (pocketmc-export.json).
+Automatic Geyser and Floodgate Bedrock crossplay provisioning with dynamic UDP port patching.
+Bedrock dedicated ban sidecar management for atomic pocketmc-bans.json synchronization.
+CurseForge and Modrinth unified marketplace integration with client-only mod filtering.
+
+[IMPROVEMENTS]
+Single-instance process supervision with setpgid process groups and escalation to SIGKILL on timeout.
+Zero-leak circular buffer console log streaming with real-time ANSI terminal escape filtering.
+Native secret storage supporting macOS Keychain and Linux Secret Service with AES-256 fallback.
+Automatic server crash detection and rate-limited auto-restart backoff.
+
+[FIXES & STABILITY]
+Fixed path traversal vulnerability by blocking symlink and reparse point escapes across Unix filesystems.
+Resolved instance slug collision handling by automatically incrementing numeric suffixes.
+Preserved full server.properties comments, ordering, and whitespace on port updates.

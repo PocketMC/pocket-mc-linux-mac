@@ -97,5 +97,19 @@ namespace PocketMC.Infrastructure.Services
                 ? StringComparison.OrdinalIgnoreCase
                 : StringComparison.Ordinal;
         }
+
+        public static bool HasReparsePoint(string path)
+        {
+            try
+            {
+                if (File.Exists(path) || Directory.Exists(path))
+                {
+                    var attr = File.GetAttributes(path);
+                    return (attr & FileAttributes.ReparsePoint) != 0;
+                }
+            }
+            catch { }
+            return false;
+        }
     }
 }

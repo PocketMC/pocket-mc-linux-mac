@@ -95,30 +95,53 @@ namespace PocketMC.Tests
         [Fact]
         public async Task NewInstanceViewModel_CreateCommandExecution()
         {
-            var instService = new FakeInstanceService();
-            var javaService = new FakeJavaService();
-            var phpService = new FakePHPService();
+            var tempDir = Path.Combine(Path.GetTempPath(), "pocketmc_test_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            File.WriteAllText(Path.Combine(tempDir, "server.jar"), "dummy jar");
 
-            var vm = new NewInstanceViewModel(instService, javaService, phpService);
+            try
+            {
+                var instService = new FakeInstanceService();
+                instService.CreateInstanceDelegate = (name, engine, ver) => Task.FromResult(new ServerInstance
+                {
+                    Name = name,
+                    EngineType = engine,
+                    EngineVersion = ver,
+                    Path = tempDir,
+                    Slug = name
+                });
 
-            vm.Name = "valid-server";
-            vm.SelectedEngine = EngineType.VanillaJava;
-            await vm.LoadVersionsAsync();
-            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var javaService = new FakeJavaService();
+                var phpService = new FakePHPService();
 
-            // Cannot create without accepting EULA
-            vm.AcceptEula = false;
-            Assert.False(vm.CreateInstanceCommand.CanExecute(null));
+                var vm = new NewInstanceViewModel(instService, javaService, phpService);
 
-            // Can create after accepting EULA
-            vm.AcceptEula = true;
-            Assert.True(vm.CreateInstanceCommand.CanExecute(null));
+                vm.Name = "valid-server";
+                vm.SelectedEngine = EngineType.VanillaJava;
+                await vm.LoadVersionsAsync();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
-            // Run create
-            await vm.CreateInstanceCommand.ExecuteAsync(null);
+                // Cannot create without accepting EULA
+                vm.AcceptEula = false;
+                Assert.False(vm.CreateInstanceCommand.CanExecute(null));
 
-            // Check if Java service was provisioned
-            Assert.True(javaService.ProvisionCalled);
+                // Can create after accepting EULA
+                vm.AcceptEula = true;
+                Assert.True(vm.CreateInstanceCommand.CanExecute(null));
+
+                // Run create
+                await vm.CreateInstanceCommand.ExecuteAsync(null);
+
+                // Check if Java service was provisioned
+                Assert.True(javaService.ProvisionCalled);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
         }
     }
 }

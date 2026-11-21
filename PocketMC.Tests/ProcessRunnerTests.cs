@@ -107,6 +107,14 @@ namespace PocketMC.Tests
 
         [Fact]
         [Trait("Category", "Unit")]
+        public async Task StopAllAsync_WhenNoInstancesRunning_CompletesCleanly()
+        {
+            await _runner.StopAllAsync();
+            Assert.Empty(_runner.GetRunningSlugs());
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
         public async Task Crash_TriggersAutoRestartLoop()
         {
             if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))

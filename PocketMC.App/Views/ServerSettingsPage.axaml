@@ -76,6 +76,17 @@
                             </Grid>
                         </Border>
 
+                        <!-- GEYSER BEDROCK PORT -->
+                        <Border Classes="setting-card" IsVisible="{Binding HasGeyser}">
+                            <Grid ColumnDefinitions="*, 220">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Bedrock Cross-play Port (UDP)" Classes="setting-title" />
+                                    <TextBlock Text="The UDP port for Bedrock edition players connecting via Geyser (default: 19132)." Classes="setting-description" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding GeyserBedrockPort, Mode=TwoWay}" Minimum="1" Maximum="65535" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
                         <!-- MAX PLAYERS -->
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*, 220">
@@ -400,6 +411,119 @@
                     <TextBlock Grid.Row="0" Text="Inspect the raw server.properties key-value pairs below:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <TextBox Grid.Row="1" Text="{Binding RawPropertiesText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, Monospace" FontSize="12" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14"/>
                 </Grid>
+            </TabItem>
+
+            <!-- SERVER VERSION UPDATES TAB -->
+            <TabItem Header="Version Updates" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
+                        
+                        <!-- CURRENT VERSION STATUS -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="Installed Server Engine" Classes="setting-title" />
+                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <Border Background="#1E90FF" CornerRadius="6" Padding="8,4">
+                                            <TextBlock Text="{Binding SelectedInstance.EngineType}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding SelectedInstance.EngineVersion, StringFormat='{}Version: {0}'}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Transactionally upgrade or switch software versions without manual file replacement." Classes="setting-description" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding LoadTargetVersionsCommand}" Content="Check for Updates"
+                                        Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
+                                        IsEnabled="{Binding !IsUpdating}" Cursor="Hand" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- TARGET VERSION PICKER -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Target Version Upgrade" Classes="setting-title" />
+                                <TextBlock Text="Select a verified upstream version release to install." Classes="setting-description" />
+
+                                <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableTargetVersions}"
+                                              SelectedItem="{Binding SelectedTargetVersion, Mode=TwoWay}"
+                                              IsEnabled="{Binding !IsUpdating}"
+                                              HorizontalAlignment="Stretch" CornerRadius="8">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <TextBlock Text="{Binding Id}" FontWeight="SemiBold"/>
+                                                    <Border Background="#2ECC71" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsUpgrade}">
+                                                        <TextBlock Text="UPGRADE" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                    </Border>
+                                                    <Border Background="#95A5A6" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsCurrent}">
+                                                        <TextBlock Text="CURRENT" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Type}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <Button Grid.Column="1" Command="{Binding ApplyUpdateCommand}" Content="Upgrade Server"
+                                            Background="#2ECC71" Foreground="White" FontWeight="Bold"
+                                            IsEnabled="{Binding !IsUpdating}" CornerRadius="8" Padding="20,10"
+                                            Cursor="Hand" Margin="14,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- RUNTIME REQUIREMENT CHANGE NOTICE -->
+                                <Border Background="#1A1E90FF" CornerRadius="8" Padding="14,10"
+                                        IsVisible="{Binding UpdateRuntimeChangeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <lucide:LucideIcon Kind="Cpu" Size="16" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding UpdateRuntimeChangeText}" Foreground="#1E90FF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- UPDATE IN PROGRESS PANEL -->
+                        <Border Classes="setting-card" IsVisible="{Binding IsUpdating}">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <ProgressBar IsIndeterminate="{Binding UpdateProgress, Converter={x:Static ObjectConverters.IsNull}}"
+                                                 Value="{Binding UpdateProgress}" Minimum="0" Maximum="1" Width="200" Height="8" CornerRadius="4"/>
+                                    <TextBlock Text="{Binding UpdateStatusText}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="The server will be safely stopped before update. World files and server properties are protected by rollback journal." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- UPDATE SUCCESS BANNER -->
+                        <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding IsUpdateSuccess}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <lucide:LucideIcon Kind="Check" Size="18" Foreground="#2ECC71" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding UpdateStatusText}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- UPDATE ERROR BANNER -->
+                        <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding HasUpdateError}">
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <lucide:LucideIcon Kind="Info" Size="18" Foreground="#E74C3C" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Server Upgrade Failed" Foreground="#E74C3C" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding UpdateErrorText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding UpdateStatusText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- TRANSACTION RECOVERY AND INTEGRITY NOTICE -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Atomic Update &amp; Rollback Guarantee" Classes="setting-title" />
+                                <TextBlock Text="PocketMC downloads and verifies update artifacts in an isolated staging workspace before touching server files. If any error or power outage occurs during file replacement, the transaction journal automatically restores your existing server files to prevent world corruption." Classes="setting-description" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

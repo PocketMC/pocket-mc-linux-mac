@@ -10,6 +10,7 @@ namespace PocketMC.Core.Services
         Task DeleteInstanceAsync(string slug);
         Task<ServerInstance> RenameInstanceAsync(string slug, string newName);
         Task<ServerInstance> CloneInstanceAsync(string slug, string newName);
+        Task SaveInstanceAsync(ServerInstance instance);
         Task ExportInstanceAsync(string slug, string targetZipPath);
         Task<ServerInstance> ImportInstanceAsync(string sourceZipPath, string name);
         Task<List<ServerInstance>> ListInstancesAsync();

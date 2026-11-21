@@ -12,6 +12,20 @@
         <FluentTheme />
     </Application.Styles>
 
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/icon.png" ToolTipText="PocketMC Desktop" Clicked="TrayIcon_Clicked">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Open PocketMC" Click="TrayOpen_Clicked"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Quit PocketMC" Click="TrayQuit_Clicked"/>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
+
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>

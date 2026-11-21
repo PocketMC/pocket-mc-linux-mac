@@ -203,12 +203,21 @@ namespace PocketMC.App.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(SearchQuery) || line.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
                 {
-                    Dispatcher.UIThread.Post(() =>
+                    void AddLine()
                     {
                         LogLines.Add(new LogLine(line));
                         LogEntryCount = LogLines.Count;
                         UpdateCrashedState();
-                    });
+                    }
+
+                    if (Dispatcher.UIThread.CheckAccess())
+                    {
+                        AddLine();
+                    }
+                    else
+                    {
+                        Dispatcher.UIThread.Post(AddLine);
+                    }
                 }
             }
         }

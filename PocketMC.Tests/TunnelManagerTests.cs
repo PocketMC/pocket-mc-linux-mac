@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using PocketMC.RemoteControl.Tunnels;
 using Xunit;
 
@@ -9,32 +10,29 @@ public class TunnelManagerTests
     [Fact]
     public void TunnelProcessGroupManager_ShouldSetPgidAndStopGroup()
     {
-        // This is a minimal test demonstrating the PGID API invocation isn't throwing exceptions.
-        // True isolation testing of POSIX signals requires native shell mocks, 
-        // but we verify the manager's state machine works.
-        
+        // This test demonstrates the PGID and process group manager state machine works.
         var manager = new TunnelProcessGroupManager();
         Assert.False(manager.IsRunning);
-        
-        // Use a benign command for the test
+
+        bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         var startInfo = new ProcessStartInfo
         {
-            FileName = "sleep",
-            Arguments = "10",
+            FileName = isWindows ? "cmd.exe" : "sleep",
+            Arguments = isWindows ? "/c ping 127.0.0.1 -n 10" : "10",
             CreateNoWindow = true,
             UseShellExecute = false
         };
-        
+
         manager.StartProcess(startInfo);
-        
+
         Assert.True(manager.IsRunning);
         Assert.True(manager.Pgid > 0);
-        
+
         manager.StopProcessGroup();
-        
-        // Give it a moment to die
+
+        // Give it a moment to exit
         System.Threading.Thread.Sleep(500);
-        
+
         Assert.False(manager.IsRunning);
     }
 }

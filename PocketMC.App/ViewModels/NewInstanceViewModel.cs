@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Services;
 using PocketMC.App.Views;
 
 namespace PocketMC.App.ViewModels
@@ -22,6 +23,7 @@ namespace PocketMC.App.ViewModels
         private readonly IInstanceService _instanceService;
         private readonly IJavaService _javaService;
         private readonly IPHPService _phpService;
+        private readonly GeyserProvisioningService? _geyserProvisioningService;
 
         private string _name = string.Empty;
 
@@ -152,11 +154,13 @@ namespace PocketMC.App.ViewModels
         public NewInstanceViewModel(
             IInstanceService instanceService,
             IJavaService javaService,
-            IPHPService phpService)
+            IPHPService phpService,
+            GeyserProvisioningService? geyserProvisioningService = null)
         {
             _instanceService = instanceService;
             _javaService = javaService;
             _phpService = phpService;
+            _geyserProvisioningService = geyserProvisioningService;
 
             CreateInstanceCommand = new AsyncRelayCommand(CreateInstanceAsync, CanCreate);
             CancelCommand = new AsyncRelayCommand(CancelAsync);
@@ -646,21 +650,30 @@ namespace PocketMC.App.ViewModels
 
                     if (SelectedEngine == EngineType.VanillaJava)
                     {
-                        ProgressText = $"Resolving Minecraft {SelectedVersion} download url...";
-                        Progress = 0.5;
-                        await DownloadVanillaServerJarAsync(SelectedVersion, jarPath);
+                        if (!File.Exists(jarPath))
+                        {
+                            ProgressText = $"Resolving Minecraft {SelectedVersion} download url...";
+                            Progress = 0.5;
+                            await DownloadVanillaServerJarAsync(SelectedVersion, jarPath);
+                        }
                     }
                     else if (SelectedEngine == EngineType.Fabric)
                     {
-                        ProgressText = $"Downloading Fabric {SelectedVersion} server jar...";
-                        Progress = 0.5;
-                        await DownloadFabricServerJarAsync(SelectedVersion, jarPath);
+                        if (!File.Exists(jarPath))
+                        {
+                            ProgressText = $"Downloading Fabric {SelectedVersion} server jar...";
+                            Progress = 0.5;
+                            await DownloadFabricServerJarAsync(SelectedVersion, jarPath);
+                        }
                     }
                     else if (SelectedEngine == EngineType.Paper)
                     {
-                        ProgressText = $"Downloading Paper {SelectedVersion} server jar...";
-                        Progress = 0.5;
-                        await DownloadPaperServerJarAsync(SelectedVersion, jarPath);
+                        if (!File.Exists(jarPath))
+                        {
+                            ProgressText = $"Downloading Paper {SelectedVersion} server jar...";
+                            Progress = 0.5;
+                            await DownloadPaperServerJarAsync(SelectedVersion, jarPath);
+                        }
                     }
                     else if (SelectedEngine == EngineType.Forge)
                     {
@@ -705,28 +718,25 @@ namespace PocketMC.App.ViewModels
                         try
                         {
                             ProgressText = "Downloading Geyser & Floodgate cross-play plugins...";
-                            using var client = new HttpClient();
-                            client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
-
-                            if (SelectedEngine == EngineType.Fabric)
+                            if (_geyserProvisioningService != null)
                             {
-                                string modsDir = Path.Combine(targetDir, "mods");
-                                Directory.CreateDirectory(modsDir);
-                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/fabric", Path.Combine(modsDir, "Geyser-Fabric.jar"), "Downloading Geyser Fabric mod");
-                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/fabric", Path.Combine(modsDir, "Floodgate-Fabric.jar"), "Downloading Floodgate Fabric mod");
-                            }
-                            else if (SelectedEngine == EngineType.NeoForge || SelectedEngine == EngineType.Forge)
-                            {
-                                string modsDir = Path.Combine(targetDir, "mods");
-                                Directory.CreateDirectory(modsDir);
-                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/neoforge", Path.Combine(modsDir, "Geyser-NeoForge.jar"), "Downloading Geyser NeoForge mod");
+                                await _geyserProvisioningService.EnsureGeyserSetupAsync(
+                                    targetDir,
+                                    SelectedEngine.ToString(),
+                                    SelectedVersion,
+                                    new Progress<PocketMC.Core.Models.DownloadProgress>(p =>
+                                    {
+                                        if (p.TotalBytes > 0)
+                                        {
+                                            Progress = 0.7 + (p.Percentage / 100.0) * 0.1;
+                                        }
+                                    }));
                             }
                             else
                             {
-                                string pluginsDir = Path.Combine(targetDir, "plugins");
-                                Directory.CreateDirectory(pluginsDir);
-                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot", Path.Combine(pluginsDir, "Geyser-Spigot.jar"), "Downloading Geyser plugin");
-                                await DownloadFileWithProgressAsync(client, "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot", Path.Combine(pluginsDir, "Floodgate-Spigot.jar"), "Downloading Floodgate plugin");
+                                var downloader = new DownloaderService(new HttpClient());
+                                var prov = new GeyserProvisioningService(downloader, new ModrinthService(new HttpClient()));
+                                await prov.EnsureGeyserSetupAsync(targetDir, SelectedEngine.ToString(), SelectedVersion);
                             }
                         }
                         catch (Exception ex)
@@ -752,7 +762,10 @@ namespace PocketMC.App.ViewModels
                     ProgressText = $"Downloading PocketMine-MP {SelectedVersion} server file...";
                     Progress = 0.5;
                     string pharPath = Path.Combine(targetDir, "PocketMine-MP.phar");
-                    await DownloadPocketMinePharAsync(SelectedVersion, pharPath);
+                    if (!File.Exists(pharPath))
+                    {
+                        await DownloadPocketMinePharAsync(SelectedVersion, pharPath);
+                    }
                     Progress = 0.8;
                 }
                 else if (SelectedEngine == EngineType.Bedrock)

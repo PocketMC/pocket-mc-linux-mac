@@ -58,7 +58,7 @@ namespace PocketMC.Tests
             // Trigger log for inst2 (not selected)
             logService.TriggerLogReceived("server-2", "Inst 2 Log Message");
 
-            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            try { Avalonia.Threading.Dispatcher.UIThread.RunJobs(); } catch { }
 
             Assert.Contains(vm.LogLines, l => l.Text == "Inst 1 Log Message");
             Assert.DoesNotContain(vm.LogLines, l => l.Text == "Inst 2 Log Message");

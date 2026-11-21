@@ -13,33 +13,55 @@ namespace PocketMC.Tests
         [Fact]
         public async Task TestAesFallbackSecretStoreOperations()
         {
-            var settingsService = new SettingsService();
-            var secretStore = new AesFallbackSecretStore(settingsService);
+            var tempDir = Path.Combine(Path.GetTempPath(), "pocketmc_test_" + Guid.NewGuid());
+            try
+            {
+                var settingsService = new SettingsService(tempDir);
+                var secretStore = new AesFallbackSecretStore(settingsService);
 
-            string key = "test_key_" + Guid.NewGuid();
-            string val = "secret_value_xyz_123";
+                string key = "test_key_" + Guid.NewGuid();
+                string val = "secret_value_xyz_123";
 
-            // Get non-existent
-            var nonExistent = await secretStore.GetAsync(key);
-            Assert.Null(nonExistent);
+                // Get non-existent
+                var nonExistent = await secretStore.GetAsync(key);
+                Assert.Null(nonExistent);
 
-            // Set and Get
-            await secretStore.SetAsync(key, val);
-            var retrieved = await secretStore.GetAsync(key);
-            Assert.Equal(val, retrieved);
+                // Set and Get
+                await secretStore.SetAsync(key, val);
+                var retrieved = await secretStore.GetAsync(key);
+                Assert.Equal(val, retrieved);
 
-            // Delete
-            await secretStore.DeleteAsync(key);
-            var deleted = await secretStore.GetAsync(key);
-            Assert.Null(deleted);
+                // Delete
+                await secretStore.DeleteAsync(key);
+                var deleted = await secretStore.GetAsync(key);
+                Assert.Null(deleted);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
         }
 
         [Fact]
         public void TestSecretStoreFactoryFallback()
         {
-            var settingsService = new SettingsService();
-            var store = SecretStoreFactory.Create(settingsService);
-            Assert.NotNull(store);
+            var tempDir = Path.Combine(Path.GetTempPath(), "pocketmc_test_" + Guid.NewGuid());
+            try
+            {
+                var settingsService = new SettingsService(tempDir);
+                var store = SecretStoreFactory.Create(settingsService);
+                Assert.NotNull(store);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
         }
 
         private class FailingSecretStore : ISecretStore
@@ -52,25 +74,36 @@ namespace PocketMC.Tests
         [Fact]
         public async Task TestSafeSecretStoreFallback()
         {
-            var settingsService = new SettingsService();
-            var fallback = new AesFallbackSecretStore(settingsService);
-            var primary = new FailingSecretStore();
-            var safeStore = new SafeSecretStore(primary, fallback);
+            var tempDir = Path.Combine(Path.GetTempPath(), "pocketmc_test_" + Guid.NewGuid());
+            try
+            {
+                var settingsService = new SettingsService(tempDir);
+                var fallback = new AesFallbackSecretStore(settingsService);
+                var primary = new FailingSecretStore();
+                var safeStore = new SafeSecretStore(primary, fallback);
 
-            string key = "safe_test_key_" + Guid.NewGuid();
-            string val = "safe_secret_value_123";
+                string key = "safe_test_key_" + Guid.NewGuid();
+                string val = "safe_secret_value_123";
 
-            // Verify that calling SetAsync does not throw, but routes to fallback
-            await safeStore.SetAsync(key, val);
+                // Verify that calling SetAsync does not throw, but routes to fallback
+                await safeStore.SetAsync(key, val);
 
-            // Verify that GetAsync reads from fallback correctly
-            var retrieved = await safeStore.GetAsync(key);
-            Assert.Equal(val, retrieved);
+                // Verify that GetAsync reads from fallback correctly
+                var retrieved = await safeStore.GetAsync(key);
+                Assert.Equal(val, retrieved);
 
-            // Clean up
-            await safeStore.DeleteAsync(key);
-            var deleted = await safeStore.GetAsync(key);
-            Assert.Null(deleted);
+                // Clean up
+                await safeStore.DeleteAsync(key);
+                var deleted = await safeStore.GetAsync(key);
+                Assert.Null(deleted);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
         }
     }
 }

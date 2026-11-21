@@ -259,6 +259,17 @@ public partial class TunnelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenPortsMap()
+    {
+        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+        var portsMapVM = App.Services.GetService(typeof(PortsMapViewModel)) as PortsMapViewModel;
+        if (mainVM != null && portsMapVM != null)
+        {
+            mainVM.CurrentViewModel = portsMapVM;
+        }
+    }
+
+    [RelayCommand]
     private void GoBack()
     {
         var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;

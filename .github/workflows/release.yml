@@ -20,6 +20,9 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             archive_ext: tar.gz
+          - os: ubuntu-latest
+            rid: linux-arm64
+            archive_ext: tar.gz
           - os: macos-latest
             rid: osx-x64
             archive_ext: zip
@@ -171,6 +174,7 @@ jobs:
           body: "Official cross-platform production release of PocketMC for Linux and macOS."
           files: |
             artifacts/PocketMC-linux-x64.tar.gz
+            artifacts/PocketMC-linux-arm64.tar.gz
             artifacts/PocketMC-osx-x64.zip
             artifacts/PocketMC-osx-arm64.zip
             artifacts/PocketMC-osx-x64.dmg

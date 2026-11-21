@@ -290,7 +290,58 @@ namespace PocketMC.Infrastructure.Services
                 File.Delete(targetZipPath);
             }
 
-            ZipFile.CreateFromDirectory(instance.Path, targetZipPath);
+            var manifest = new InstanceExportManifest
+            {
+                ExportVersion = "1.0",
+                Origin = new InstanceExportOrigin
+                {
+                    PocketMcVersion = "1.0.3",
+                    Timestamp = DateTimeOffset.UtcNow
+                },
+                ServerMeta = new InstanceExportServerMeta
+                {
+                    Name = instance.Name
+                },
+                Software = new InstanceExportSoftware
+                {
+                    Type = instance.EngineType.ToString(),
+                    MinecraftVersion = instance.EngineVersion
+                },
+                Runtime = new InstanceExportRuntime
+                {
+                    Type = (instance.EngineType == EngineType.Bedrock || instance.EngineType == EngineType.PocketMine) ? "Native" : "Java"
+                }
+            };
+
+            using (var archive = ZipFile.Open(targetZipPath, ZipArchiveMode.Create))
+            {
+                // Write manifest
+                var manifestEntry = archive.CreateEntry(InstanceExportManifest.ManifestFileName);
+                using (var writer = new StreamWriter(manifestEntry.Open()))
+                {
+                    writer.Write(JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true }));
+                }
+
+                // Add all files except excluded ones
+                var instanceDir = new DirectoryInfo(instance.Path);
+                foreach (var file in instanceDir.EnumerateFiles("*", SearchOption.AllDirectories))
+                {
+                    string relPath = Path.GetRelativePath(instance.Path, file.FullName).Replace('\\', '/');
+
+                    // Filter out locks, temporary directories and bridge files
+                    if (relPath.Equals("session.lock", StringComparison.OrdinalIgnoreCase) ||
+                        relPath.EndsWith("/session.lock", StringComparison.OrdinalIgnoreCase) ||
+                        relPath.StartsWith(".pocketmc-staging", StringComparison.OrdinalIgnoreCase) ||
+                        relPath.StartsWith(".pocketmc-bridge", StringComparison.OrdinalIgnoreCase) ||
+                        relPath.EndsWith(".sock", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    archive.CreateEntryFromFile(file.FullName, relPath);
+                }
+            }
+
             return Task.CompletedTask;
         }
 
@@ -373,6 +424,50 @@ namespace PocketMC.Infrastructure.Services
                     EngineVersion = "latest",
                     CreatedAt = DateTime.UtcNow
                 };
+
+                // Check for standardized cross-platform pocketmc-export.json
+                var exportManifestPath = Path.Combine(targetDir, InstanceExportManifest.ManifestFileName);
+                if (File.Exists(exportManifestPath))
+                {
+                    try
+                    {
+                        var json = File.ReadAllText(exportManifestPath);
+                        var manifest = JsonSerializer.Deserialize<InstanceExportManifest>(json);
+                        if (manifest != null)
+                        {
+                            if (Enum.TryParse<EngineType>(manifest.Software.Type, true, out var parsedEngine))
+                            {
+                                importedInstance.EngineType = parsedEngine;
+                            }
+                            if (!string.IsNullOrWhiteSpace(manifest.Software.MinecraftVersion))
+                            {
+                                importedInstance.EngineVersion = manifest.Software.MinecraftVersion;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                // Fallback auto-detection if manifest wasn't present
+                if (importedInstance.EngineType == EngineType.VanillaJava && importedInstance.EngineVersion == "latest")
+                {
+                    if (File.Exists(Path.Combine(targetDir, "bedrock_server")) || File.Exists(Path.Combine(targetDir, "bedrock_server.exe")))
+                    {
+                        importedInstance.EngineType = EngineType.Bedrock;
+                    }
+                    else if (File.Exists(Path.Combine(targetDir, "PocketMine-MP.phar")))
+                    {
+                        importedInstance.EngineType = EngineType.PocketMine;
+                    }
+                    else if (Directory.GetFiles(targetDir, "paper*.jar").Any())
+                    {
+                        importedInstance.EngineType = EngineType.Paper;
+                    }
+                    else if (Directory.GetFiles(targetDir, "fabric*.jar").Any())
+                    {
+                        importedInstance.EngineType = EngineType.Fabric;
+                    }
+                }
             }
             else
             {
@@ -392,6 +487,25 @@ namespace PocketMC.Infrastructure.Services
             }
 
             return Task.FromResult(importedInstance);
+        }
+
+        public Task SaveInstanceAsync(ServerInstance instance)
+        {
+            ArgumentNullException.ThrowIfNull(instance);
+            WriteLocalMetadata(instance);
+
+            lock (_cache)
+            {
+                var existing = _cache.FirstOrDefault(i => i.Id == instance.Id || i.Slug.Equals(instance.Slug, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    _cache.Remove(existing);
+                }
+                _cache.Add(instance);
+                SaveRegistry();
+            }
+
+            return Task.CompletedTask;
         }
 
         private void WriteLocalMetadata(ServerInstance instance)

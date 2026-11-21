@@ -183,6 +183,12 @@
                             <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
                                 <Image Source="{Binding SelectedInstanceEngineType, Converter={StaticResource EngineIconConverter}}" Width="28" Height="28" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding SelectedInstanceName}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Border Background="#6366F1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding HasGeyser}">
+                                    <TextBlock Text="CROSSPLAY" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                                <Border Background="#10B981" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding HasVoiceChat}">
+                                    <TextBlock Text="VOICE CHAT" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <TextBlock Text="{Binding SelectedInstanceEngineType}" FontSize="12" FontWeight="Medium" Opacity="0.8"/>

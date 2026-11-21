@@ -478,6 +478,26 @@ namespace PocketMC.Infrastructure.Services
             _runningInstances.TryRemove(instance.Slug, out _);
         }
 
+        public System.Collections.Generic.IReadOnlyList<string> GetRunningSlugs()
+        {
+            return _runningInstances.Keys.ToList();
+        }
+
+        public async Task StopAllAsync()
+        {
+            var runningKeys = _runningInstances.Keys.ToList();
+            if (runningKeys.Count == 0) return;
+
+            var tasks = new List<Task>();
+            foreach (var slug in runningKeys)
+            {
+                var dummyInstance = new ServerInstance { Slug = slug };
+                tasks.Add(StopAsync(dummyInstance));
+            }
+
+            await Task.WhenAll(tasks);
+        }
+
         public Task SendCommandAsync(ServerInstance instance, string command)
         {
             if (_runningInstances.TryGetValue(instance.Slug, out var info))

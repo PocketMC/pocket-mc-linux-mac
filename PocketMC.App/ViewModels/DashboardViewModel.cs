@@ -121,6 +121,22 @@ namespace PocketMC.App.ViewModels
 
         private readonly ISettingsService _settingsService;
         private readonly RemoteTunnelManager _tunnelManager;
+        private readonly IGeyserDetector _geyserDetector;
+        private readonly ISimpleVoiceChatDetector _voiceChatDetector;
+
+        private bool _hasGeyser;
+        public bool HasGeyser
+        {
+            get => _hasGeyser;
+            set => SetProperty(ref _hasGeyser, value);
+        }
+
+        private bool _hasVoiceChat;
+        public bool HasVoiceChat
+        {
+            get => _hasVoiceChat;
+            set => SetProperty(ref _hasVoiceChat, value);
+        }
         private List<PocketMC.RemoteControl.Tunnels.TunnelData> _cachedActiveTunnels = new();
         private int _pollCount = 0;
 
@@ -135,7 +151,9 @@ namespace PocketMC.App.ViewModels
             PlayitApiClient playitClient,
             LocalNetworkAddressService localNetworkAddressService,
             ISettingsService settingsService,
-            RemoteTunnelManager tunnelManager)
+            RemoteTunnelManager tunnelManager,
+            IGeyserDetector? geyserDetector = null,
+            ISimpleVoiceChatDetector? voiceChatDetector = null)
         {
             _instanceService = instanceService;
             _processRunner = processRunner;
@@ -146,6 +164,8 @@ namespace PocketMC.App.ViewModels
             _localNetworkAddressService = localNetworkAddressService;
             _settingsService = settingsService;
             _tunnelManager = tunnelManager;
+            _geyserDetector = geyserDetector ?? new GeyserDetector(new AddonManifestService());
+            _voiceChatDetector = voiceChatDetector ?? new SimpleVoiceChatDetector(new AddonManifestService());
 
             _processRunner.StateChanged += OnProcessStateChanged;
 
@@ -314,15 +334,12 @@ namespace PocketMC.App.ViewModels
             bool isUdp = (selected.EngineType == EngineType.PocketMine || selected.EngineType == EngineType.Bedrock);
             
             // Check for geyser presence (Geyser*.jar in plugins or mods)
-            bool hasGeyser = false;
             bool isJava = selected.EngineType != EngineType.Bedrock && selected.EngineType != EngineType.PocketMine;
-            if (isJava)
-            {
-                string pluginsDir = Path.Combine(selected.Path, "plugins");
-                string modsDir = Path.Combine(selected.Path, "mods");
-                hasGeyser = (Directory.Exists(pluginsDir) && Directory.GetFiles(pluginsDir, "Geyser*.jar").Any()) ||
-                            (Directory.Exists(modsDir) && Directory.GetFiles(modsDir, "Geyser*.jar").Any());
-            }
+            bool hasGeyser = isJava && _geyserDetector.IsGeyserInstalled(selected.Path);
+            HasGeyser = hasGeyser;
+
+            var voiceDetection = isJava ? _voiceChatDetector.Detect(selected.Path) : null;
+            HasVoiceChat = voiceDetection?.IsDetected == true;
 
             bool showBedrock = selected.EngineType == EngineType.Bedrock || selected.EngineType == EngineType.PocketMine || hasGeyser;
             bool showJava = isJava;
@@ -833,21 +850,17 @@ namespace PocketMC.App.ViewModels
                 // 2. Check for Geyser if Java server
                 if (isJava)
                 {
-                    string pluginsDir = Path.Combine(selected.Path, "plugins");
-                    string modsDir = Path.Combine(selected.Path, "mods");
-                    bool hasGeyser = (Directory.Exists(pluginsDir) && Directory.GetFiles(pluginsDir, "*Geyser*.jar", SearchOption.TopDirectoryOnly).Any()) ||
-                                     (Directory.Exists(modsDir) && Directory.GetFiles(modsDir, "*Geyser*.jar", SearchOption.TopDirectoryOnly).Any());
+                    bool hasGeyser = _geyserDetector.IsGeyserInstalled(selected.Path);
                     if (hasGeyser && !HasTunnel("minecraft-bedrock", 19132))
                     {
                         await _playitClient.CreateTunnelAsync($"{selected.Name}-bedrock", "minecraft-bedrock", 19132);
                     }
 
                     // 3. Check for Simple Voice Chat
-                    bool hasVoiceChat = (Directory.Exists(pluginsDir) && Directory.GetFiles(pluginsDir, "*voice*chat*.jar", SearchOption.AllDirectories).Any()) ||
-                                         (Directory.Exists(modsDir) && Directory.GetFiles(modsDir, "*voice*chat*.jar", SearchOption.AllDirectories).Any());
-                    if (hasVoiceChat && !HasTunnel("mc-simple-voice-chat", 24454))
+                    var voiceDetection = _voiceChatDetector.Detect(selected.Path);
+                    if (voiceDetection.IsDetected && !HasTunnel("mc-simple-voice-chat", voiceDetection.Port))
                     {
-                        await _playitClient.CreateTunnelAsync($"{selected.Name}-voicechat", "mc-simple-voice-chat", 24454);
+                        await _playitClient.CreateTunnelAsync($"{selected.Name}-voicechat", "mc-simple-voice-chat", voiceDetection.Port);
                     }
                 }
 

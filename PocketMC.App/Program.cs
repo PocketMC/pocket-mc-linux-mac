@@ -82,10 +82,18 @@ namespace PocketMC.App
 
                     // New Phase 4 Infrastructure services (Backups & Marketplace)
                     services.AddSingleton<System.Net.Http.HttpClient>();
+                    services.AddSingleton<DownloaderService>();
+                    services.AddSingleton<IGeyserDetector, GeyserDetector>();
+                    services.AddSingleton<GeyserProvisioningService>();
+                    services.AddSingleton<ISimpleVoiceChatDetector, SimpleVoiceChatDetector>();
+                    services.AddSingleton<BanSidecarService>();
                     services.AddSingleton<ICurseForgeApiKeyDialogService, PocketMC.App.Services.CurseForgeApiKeyDialogService>();
                     services.AddSingleton<CurseForgeService>();
                     services.AddSingleton<ModrinthService>();
                     services.AddSingleton<AddonManifestService>();
+                    services.AddSingleton<MarketplaceFileInstaller>();
+                    services.AddSingleton<ModpackParser>();
+                    services.AddSingleton<AddonUpdateService>();
                     services.AddSingleton<DependencyResolverService>();
                     services.AddSingleton<CloudBackupUploadHistoryStore>();
                     services.AddSingleton<ICloudBackupProvider, GoogleDriveBackupProvider>();
@@ -99,11 +107,23 @@ namespace PocketMC.App
                     services.AddSingleton<LlmProviderFactory>();
                     services.AddSingleton<IAiDiagnosticService, AiDiagnosticService>();
 
+                    // Server Version Updates (Transactional Upgrades & Rollbacks)
+                    services.AddSingleton<InstanceOperationCoordinator>();
+                    services.AddSingleton<InstanceVersionTargetService>();
+                    services.AddSingleton<InstanceUpdatePlanner>();
+                    services.AddSingleton<InstanceArtifactStager>();
+                    services.AddSingleton<InstanceUpdateApplier>();
+                    services.AddSingleton<IInstanceUpdateService, InstanceUpdateService>();
+
                     // Phase 5 Remote Control & Tunnels
                     services.AddSingleton<PocketMC.RemoteControl.Services.RemoteAuthenticationService>();
                     services.AddSingleton<PocketMC.RemoteControl.Services.RemoteRequestLimiter>();
                     services.AddSingleton<PocketMC.RemoteControl.Services.RemoteAuditLogService>(sp => 
                         new PocketMC.RemoteControl.Services.RemoteAuditLogService(sp.GetRequiredService<ISettingsService>().GetLogsDirectory()));
+                    services.AddSingleton<PocketMC.Infrastructure.Services.ProcessMetricsTracker>();
+                    services.AddSingleton<PocketMC.RemoteControl.Services.RemoteStatusService>();
+                    services.AddSingleton<PocketMC.RemoteControl.Services.RemoteInstanceControlService>();
+                    services.AddSingleton<PocketMC.RemoteControl.Services.RemotePlayerActionService>();
                     services.AddSingleton<PocketMC.RemoteControl.Hosting.RemoteConsoleWebSocketHandler>();
                     services.AddSingleton<PocketMC.RemoteControl.Hosting.RemoteDashboardHost>();
                     services.AddHostedService<PocketMC.RemoteControl.Hosting.RemoteDashboardHost>(sp => sp.GetRequiredService<PocketMC.RemoteControl.Hosting.RemoteDashboardHost>());
@@ -137,6 +157,10 @@ namespace PocketMC.App
                     services.AddTransient<PocketMC.App.Views.RemoteControlPage>();
                     services.AddTransient<PocketMC.App.ViewModels.TunnelViewModel>();
                     services.AddTransient<PocketMC.App.Views.TunnelPage>();
+                    services.AddTransient<PocketMC.App.ViewModels.PortsMapViewModel>();
+                    services.AddTransient<PocketMC.App.Views.PortsMapPage>();
+                    services.AddSingleton<PocketMC.Infrastructure.WhatsNew.WhatsNewService>();
+                    services.AddTransient<PocketMC.App.Views.WhatsNewWindow>();
                     services.AddTransient<JavaManagementViewModel>();
                     services.AddTransient<JavaManagementPage>();
                     services.AddTransient<AboutViewModel>();
