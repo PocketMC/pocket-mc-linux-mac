@@ -35,4 +35,38 @@ public class TunnelManagerTests
 
         Assert.False(manager.IsRunning);
     }
+
+    [Fact]
+    public void TunnelProcessGroupManager_CapturesOutputLinesAndFiresEvent()
+    {
+        var manager = new TunnelProcessGroupManager();
+        bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = isWindows ? "cmd.exe" : "echo",
+            Arguments = isWindows ? "/c echo Hello Playit Agent" : "Hello Playit Agent",
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        bool eventFired = false;
+        string? capturedLine = null;
+        manager.OutputLineReceived += line =>
+        {
+            if (line.Contains("Hello Playit Agent"))
+            {
+                eventFired = true;
+                capturedLine = line;
+            }
+        };
+
+        manager.StartProcess(startInfo);
+        System.Threading.Thread.Sleep(500);
+
+        Assert.True(eventFired);
+        Assert.NotNull(capturedLine);
+        Assert.Contains(capturedLine, manager.GetRecentLogs());
+    }
 }

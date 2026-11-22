@@ -23,6 +23,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Lucide.Avalonia" Version="0.1.60" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
   </ItemGroup>
 
   <ItemGroup>

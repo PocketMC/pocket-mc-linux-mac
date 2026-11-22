@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.Settings.ImageCropPage"
+             Margin="24">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Text="Crop Server Icon" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Adjust and crop your image to standard 64x64 Minecraft server icon." FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
+        </StackPanel>
+
+        <!-- Preview & Crop Canvas -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1" CornerRadius="12" ClipToBounds="True"
+                HorizontalAlignment="Center" VerticalAlignment="Center" Padding="16">
+            <Grid Width="256" Height="256">
+                <!-- Source Image Preview -->
+                <Image x:Name="SourceImagePreview" Stretch="UniformToFill" Width="256" Height="256"/>
+
+                <!-- Crop Overlay Mask -->
+                <Border BorderBrush="{DynamicResource AccentPrimaryBrush}"
+                        BorderThickness="2" CornerRadius="4"
+                        Width="128" Height="128"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        BoxShadow="0 0 0 9999px #80000000"/>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Cancel" Click="OnCancelClick"
+                    Background="{DynamicResource ControlFillSecondaryBrush}"
+                    Foreground="{DynamicResource TextPrimaryBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="16,8" Cursor="Hand"/>
+            <Button Content="Apply Icon (64x64)" Click="OnApplyClick"
+                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
+                    CornerRadius="8" Padding="20,8" Cursor="Hand" FontWeight="SemiBold"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

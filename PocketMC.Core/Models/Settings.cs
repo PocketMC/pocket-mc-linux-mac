@@ -12,6 +12,24 @@ namespace PocketMC.Core.Models
         public string? LastSelectedInstanceSlug { get; set; }
         public string Theme { get; set; } = "System";
 
+        // Appearance & Backdrop
+        public string WindowBackdrop { get; set; } = "BlurredWallpaper";
+        public string AccentColorMode { get; set; } = "Custom";
+        public string? CustomAccentColor { get; set; } = "#008B00";
+        public string? CustomBackgroundImagePath { get; set; }
+        public double WallpaperBlurRadius { get; set; } = 80.0;
+        public double WallpaperTintOpacity { get; set; } = 0.72;
+
+        // Window State
+        public double? WindowWidth { get; set; }
+        public double? WindowHeight { get; set; }
+        public bool IsWindowMaximized { get; set; }
+        public bool StartMinimizedToTray { get; set; } = false;
+        public bool MinimizeToTrayOnClose { get; set; } = false;
+
+        // Power Management
+        public bool KeepComputerAwakeWhileServersRunning { get; set; } = true;
+
         // CurseForge
         public string? CurseForgeApiKey { get; set; }
 
@@ -35,6 +53,25 @@ namespace PocketMC.Core.Models
         public RemoteControlSettings RemoteControl { get; set; } = new();
         public PlayitPartnerConnection? PlayitPartnerConnection { get; set; } = new();
 
+        // Discord Rich Presence & Bot Integration
+        public DiscordRpcSettings DiscordRpc { get; set; } = new();
+        public bool EnableDiscordRpc
+        {
+            get => DiscordRpc.Enabled;
+            set => DiscordRpc.Enabled = value;
+        }
+        public string? DiscordUserId { get; set; }
+        public string? DiscordApiUrl { get; set; }
+        public string? DiscordApiKey { get; set; }
+        public bool EnableDiscordNotifications { get; set; } = true;
+        public bool EnableServerOnlineNotifications { get; set; } = true;
+        public bool EnableAgentConnectNotifications { get; set; } = true;
+        public bool EnableRemoteControlNotifications { get; set; } = true;
+        public bool EnableAiSummaryNotifications { get; set; } = true;
+
+        // Console Settings
+        public int ConsoleBufferSize { get; set; } = 5000;
+
         // Updates
         public string UpdateChannel { get; set; } = "Stable";
         public bool EnableAutoUpdates { get; set; } = true;
@@ -48,5 +85,18 @@ namespace PocketMC.Core.Models
         public string? SecretKey { get; set; }
         public bool IsConfirmed { get; set; }
         public string? AgentId { get; set; }
+    }
+
+    public class DiscordRpcSettings
+    {
+        public bool Enabled { get; set; } = true;
+        public bool ShowIdle { get; set; } = true;
+        public bool ShowServerName { get; set; } = false;
+        public bool ShowServerAddress { get; set; } = false;
+        public bool ShowPlayerCount { get; set; } = true;
+        public bool ShowVersionAndEngine { get; set; } = true;
+        public bool ShowUptimeTimer { get; set; } = true;
+        public bool ShowSoftwareIcon { get; set; } = false;
+        public bool ShowDownloadButton { get; set; } = true;
     }
 }

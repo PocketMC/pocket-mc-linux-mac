@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.App.Services.Console;
 
 namespace PocketMC.App.ViewModels
 {
@@ -17,24 +18,13 @@ namespace PocketMC.App.ViewModels
     {
         public string Text { get; }
         public string ColorBrush { get; }
+        public ConsoleLogLevel Level { get; }
 
-        public LogLine(string text)
+        public LogLine(string text, ConsoleLogLevel previousLevel = ConsoleLogLevel.Info)
         {
             Text = text;
-            ColorBrush = Classify(text);
-        }
-
-        private string Classify(string text)
-        {
-            if (text.Contains("[WARN]") || text.Contains("WARN") || text.Contains("Warning"))
-                return "#FFEB3B"; // Yellow
-            if (text.Contains("[ERROR]") || text.Contains("ERROR") || text.Contains("Exception") || text.Contains("Failed"))
-                return "#F44336"; // Red
-            if (text.Contains("[System]") || text.Contains("System"))
-                return "#9C27B0"; // Purple
-            if (text.Contains("joined the game") || text.Contains("left the game") || (text.Contains("<") && text.Contains(">")))
-                return "#8BC34A"; // Green (Chat / Player events)
-            return "#E5E5E5"; // Light Gray / default
+            Level = LogLineClassifier.Classify(text, previousLevel);
+            ColorBrush = LogLineClassifier.GetHexColor(Level);
         }
     }
 
@@ -201,11 +191,12 @@ namespace PocketMC.App.ViewModels
         {
             if (SelectedInstance != null && SelectedInstance.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(SearchQuery) || line.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(SearchQuery) || ConsoleLogFilter.MatchesSearch(line, SearchQuery, false))
                 {
                     void AddLine()
                     {
-                        LogLines.Add(new LogLine(line));
+                        var prevLevel = LogLines.Count > 0 ? LogLines[^1].Level : ConsoleLogLevel.Info;
+                        LogLines.Add(new LogLine(line, prevLevel));
                         LogEntryCount = LogLines.Count;
                         UpdateCrashedState();
                     }

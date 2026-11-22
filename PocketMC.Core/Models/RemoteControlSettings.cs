@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PocketMC.Core.Models;
 
 public class RemoteControlSettings
@@ -17,4 +19,5 @@ public class RemoteControlSettings
     public string? SecurityStamp { get; set; }
     public string? PlayitTunnelId { get; set; }
     public string? TunnelProviderId { get; set; }
+    public List<RemoteControlUser> Users { get; set; } = new();
 }

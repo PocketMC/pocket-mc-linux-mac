@@ -1,0 +1,106 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PocketMC.App.Views.Tunnel.CreateTunnelDialog"
+        Title="Create Tunnel"
+        Width="500"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#18181B">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Create Tunnel"
+                       FontSize="18" FontWeight="Bold"
+                       Foreground="#FFFFFF"/>
+            <TextBlock Text="Configure a new PlayIt.gg tunnel for your Minecraft server."
+                       Foreground="#A1A1AA" FontSize="13"
+                       Margin="0,4,0,0"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Form Fields -->
+        <StackPanel Grid.Row="1" Spacing="16">
+            <!-- Tunnel Name -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="Tunnel Name"
+                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                <TextBox x:Name="TxtTunnelName"
+                         MaxLength="64"
+                         CornerRadius="6"
+                         Padding="10,8"
+                         Background="#27272A"
+                         BorderBrush="#3F3F46"
+                         Foreground="#FFFFFF"
+                         Watermark="e.g. survival-server"/>
+                <TextBlock x:Name="TxtNameError"
+                           Foreground="#EF4444" FontSize="11"
+                           IsVisible="False"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Tunnel Type -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="Tunnel Type"
+                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                <ComboBox x:Name="CmbTunnelType"
+                          SelectedIndex="0"
+                          CornerRadius="6"
+                          Background="#27272A"
+                          BorderBrush="#3F3F46"
+                          Foreground="#FFFFFF"
+                          HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Minecraft Java" Tag="minecraft-java"/>
+                    <ComboBoxItem Content="Minecraft Bedrock" Tag="minecraft-bedrock"/>
+                    <ComboBoxItem Content="Simple Voice Chat" Tag="mc-simple-voice-chat"/>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Local Port -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="Local Port"
+                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                <TextBox x:Name="TxtLocalPort"
+                         Text="25565"
+                         MaxLength="5"
+                         CornerRadius="6"
+                         Padding="10,8"
+                         Background="#27272A"
+                         BorderBrush="#3F3F46"
+                         Foreground="#FFFFFF"/>
+                <TextBlock x:Name="TxtPortError"
+                           Foreground="#EF4444" FontSize="11"
+                           IsVisible="False"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0" Spacing="10">
+            <Button x:Name="BtnCancel"
+                    Content="Cancel"
+                    Background="#27272A"
+                    BorderBrush="#3F3F46"
+                    Foreground="#FFFFFF"
+                    CornerRadius="6"
+                    Padding="16,8"
+                    MinWidth="80"
+                    Cursor="Hand"/>
+            <Button x:Name="BtnCreate"
+                    Content="Create Tunnel"
+                    Background="#3B82F6"
+                    Foreground="#FFFFFF"
+                    CornerRadius="6"
+                    Padding="16,8"
+                    MinWidth="120"
+                    Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

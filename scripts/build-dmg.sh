@@ -57,12 +57,25 @@ cat <<EOF > "${APP_DIR}/Contents/Info.plist"
     <string>10.15</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>io.github.pocketmc.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>pocketmc</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
 EOF
 
 # Copy icon if present
-if [ -f "docs/assets/branding/logo.png" ]; then
+if [ -f "PocketMC.App/Assets/logo_highres.png" ]; then
+  cp "PocketMC.App/Assets/logo_highres.png" "${APP_DIR}/Contents/Resources/pocketmc.png"
+elif [ -f "docs/assets/branding/logo.png" ]; then
   cp "docs/assets/branding/logo.png" "${APP_DIR}/Contents/Resources/pocketmc.png"
 fi
 

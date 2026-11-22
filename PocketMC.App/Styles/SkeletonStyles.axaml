@@ -1,0 +1,43 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Lightweight Pulsing Skeleton Block -->
+  <Style Selector="Border.skeleton-element">
+    <Setter Property="Background" Value="{DynamicResource CardBorderBrush}"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Opacity" Value="0.6"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Style.Animations>
+      <Animation Duration="0:0:0.85" IterationCount="Infinite" PlaybackDirection="Alternate">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0.3"/>
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="0.75"/>
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- Skeleton Card Outer Border -->
+  <Style Selector="Border.skeleton-card">
+    <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="16,14"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+  </Style>
+
+  <!-- Skeleton List Item Border -->
+  <Style Selector="Border.skeleton-list-item">
+    <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Padding" Value="12"/>
+    <Setter Property="Margin" Value="0,0,0,8"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+  </Style>
+
+</Styles>

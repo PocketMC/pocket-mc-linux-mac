@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -19,8 +21,12 @@ public static class UnixNative
 
 public class TunnelProcessGroupManager
 {
+    private const int MaxLogBufferLines = 1000;
+    private readonly ConcurrentQueue<string> _logBuffer = new();
     private Process? _process;
     private int _pgid;
+
+    public event Action<string>? OutputLineReceived;
 
     public int Pgid => _pgid;
     public bool IsRunning
@@ -37,11 +43,25 @@ public class TunnelProcessGroupManager
     {
         if (IsRunning) return;
 
+        startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardError = true;
+
         _process = new Process { StartInfo = startInfo };
+
+        _process.OutputDataReceived += (_, e) => HandleLogLine(e.Data);
+        _process.ErrorDataReceived += (_, e) => HandleLogLine(e.Data);
+
         _process.Start();
 
         _pgid = _process.Id;
-        
+
+        try
+        {
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+        }
+        catch { }
+
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -66,7 +86,7 @@ public class TunnelProcessGroupManager
                 UnixNative.kill(-_pgid, UnixNative.SIGTERM);
                 Task.Delay(500).Wait();
                 try { _process.Refresh(); } catch { }
-                
+
                 if (!_process.HasExited)
                 {
                     UnixNative.kill(-_pgid, UnixNative.SIGKILL);
@@ -89,5 +109,26 @@ public class TunnelProcessGroupManager
             Console.WriteLine($"[TunnelProcessGroupManager] Failed to kill process group: {ex.Message}");
             try { _process.Kill(true); } catch { }
         }
+    }
+
+    public IReadOnlyList<string> GetRecentLogs() => _logBuffer.ToArray();
+
+    public void ClearLogs()
+    {
+        while (_logBuffer.TryDequeue(out _)) { }
+    }
+
+    private void HandleLogLine(string? data)
+    {
+        if (data == null) return;
+
+        _logBuffer.Enqueue(data);
+        while (_logBuffer.Count > MaxLogBufferLines && _logBuffer.TryDequeue(out _)) { }
+
+        try
+        {
+            OutputLineReceived?.Invoke(data);
+        }
+        catch { }
     }
 }

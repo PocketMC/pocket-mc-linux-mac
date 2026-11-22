@@ -1,11 +1,16 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:conv="using:PocketMC.App.Converters"
              xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.ServerSettingsPage"
              x:DataType="vm:ServerSettingsViewModel"
              x:CompileBindings="True"
              Margin="24">
+
+    <UserControl.Resources>
+        <conv:MinecraftMotdConverter x:Key="MotdConverter"/>
+    </UserControl.Resources>
 
     <UserControl.Styles>
         <Style Selector="Border.setting-card">
@@ -47,21 +52,44 @@
             </Border>
         </Grid>
 
-        <!-- Settings Tabs -->
+        <!-- Settings Tabs (9 Modular Categories) -->
         <TabControl Grid.Row="2" Margin="0" Padding="0">
-            <!-- GENERAL TAB -->
+            <!-- 1. GENERAL TAB -->
             <TabItem Header="General" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Spacing="0" HorizontalAlignment="Stretch">
                         
-                        <!-- MOTD -->
+                        <!-- SERVER ICON -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Server Icon" Classes="setting-title" />
+                                    <TextBlock Text="64x64 PNG icon shown in the Minecraft server list." Classes="setting-description" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                                    <Border Width="64" Height="64" CornerRadius="8" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" ClipToBounds="True">
+                                        <Image Source="{Binding General.ServerIcon}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <Button Command="{Binding General.BrowseIconCommand}" Content="Change Icon..."
+                                            Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
+                                            VerticalAlignment="Center" Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- MOTD WITH PREVIEW -->
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*, 360">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center" Margin="0,0,24,0">
                                     <TextBlock Text="Server Message (MOTD)" Classes="setting-title" />
-                                    <TextBlock Text="The description displayed in player server list." Classes="setting-description" />
+                                    <TextBlock Text="Description displayed in player server list. Supports § and &amp; color codes." Classes="setting-description" />
+                                    <!-- MOTD Live Formatted Inlines Preview -->
+                                    <Border Background="#1A000000" CornerRadius="6" Padding="10,6" Margin="0,4,0,0">
+                                        <ContentControl Content="{Binding General.Motd, Converter={StaticResource MotdConverter}}"/>
+                                    </Border>
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding Motd, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
+                                <TextBox Grid.Column="1" Text="{Binding General.Motd, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -70,9 +98,9 @@
                             <Grid ColumnDefinitions="*, 220">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
                                     <TextBlock Text="Server Port" Classes="setting-title" />
-                                    <TextBlock Text="The network port players connect to (Java: 25565, Bedrock: 19132)." Classes="setting-description" />
+                                    <TextBlock Text="Network port players connect to (Java: 25565, Bedrock: 19132)." Classes="setting-description" />
                                 </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding ServerPort, Mode=TwoWay}" Minimum="1" Maximum="65535" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <NumericUpDown Grid.Column="1" Value="{Binding General.ServerPort, Mode=TwoWay}" Minimum="1" Maximum="65535" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -81,42 +109,9 @@
                             <Grid ColumnDefinitions="*, 220">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
                                     <TextBlock Text="Bedrock Cross-play Port (UDP)" Classes="setting-title" />
-                                    <TextBlock Text="The UDP port for Bedrock edition players connecting via Geyser (default: 19132)." Classes="setting-description" />
+                                    <TextBlock Text="UDP port for Bedrock edition players connecting via Geyser (default: 19132)." Classes="setting-description" />
                                 </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding GeyserBedrockPort, Mode=TwoWay}" Minimum="1" Maximum="65535" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- MAX PLAYERS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Maximum Online Players" Classes="setting-title" />
-                                    <TextBlock Text="Limits total simultaneous player connections." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding MaxPlayers, Mode=TwoWay}" Minimum="1" Maximum="1000" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- ONLINE MODE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Online Mode (Authentication)" Classes="setting-title" />
-                                    <TextBlock Text="Requires official Mojang/Microsoft account verification." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding OnlineMode, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- WHITELIST -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enforce Whitelist" Classes="setting-title" />
-                                    <TextBlock Text="Only players listed in whitelist.json can join." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding WhiteList, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Text="{Binding General.GeyserBedrockPort, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -127,7 +122,18 @@
                                     <TextBlock Text="Server IP Binding" Classes="setting-title" />
                                     <TextBlock Text="Bind to specific network interface IP address (blank = all)." Classes="setting-description" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding ServerIp, Mode=TwoWay}" Watermark="0.0.0.0" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <TextBox Grid.Column="1" Text="{Binding General.ServerIp, Mode=TwoWay}" Watermark="0.0.0.0" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- AUTO START -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Auto-Start With PocketMC" Classes="setting-title" />
+                                    <TextBlock Text="Automatically launch this server when PocketMC application starts." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding General.AutoStartWithApp, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -135,7 +141,7 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- WORLD TAB -->
+            <!-- 2. WORLD TAB -->
             <TabItem Header="World" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Spacing="0" HorizontalAlignment="Stretch">
@@ -147,7 +153,7 @@
                                     <TextBlock Text="Level Name (World Folder)" Classes="setting-title" />
                                     <TextBlock Text="Folder name storing regions and world data." Classes="setting-description" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding LevelName, Mode=TwoWay}" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <TextBox Grid.Column="1" Text="{Binding World.LevelName, Mode=TwoWay}" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -156,9 +162,9 @@
                             <Grid ColumnDefinitions="*, 220">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
                                     <TextBlock Text="Difficulty" Classes="setting-title" />
-                                    <TextBlock Text="Mob spawn damage, hazard behavior and player survival rules." Classes="setting-description" />
+                                    <TextBlock Text="Mob damage, hazard behavior and player survival rules." Classes="setting-description" />
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding Difficulties}" SelectedItem="{Binding Difficulty, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.Difficulties}" SelectedItem="{Binding World.Difficulty, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -169,29 +175,7 @@
                                     <TextBlock Text="Default Game Mode" Classes="setting-title" />
                                     <TextBlock Text="Default mode assigned to new players entering the server." Classes="setting-description" />
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding Gamemodes}" SelectedItem="{Binding Gamemode, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- FORCE GAMEMODE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Force Game Mode" Classes="setting-title" />
-                                    <TextBlock Text="Force players to join in the default gamemode every session." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ForceGamemode, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- HARDCORE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Hardcore Mode" Classes="setting-title" />
-                                    <TextBlock Text="Permanent death mode (players are set to spectator upon death)." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Hardcore, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.Gamemodes}" SelectedItem="{Binding World.Gamemode, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -202,7 +186,7 @@
                                     <TextBlock Text="World Generation Seed" Classes="setting-title" />
                                     <TextBlock Text="Seed string for generating terrain and biome structures." Classes="setting-description" />
                                 </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding LevelSeed, Mode=TwoWay}" Watermark="e.g. 123456789" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <TextBox Grid.Column="1" Text="{Binding World.Seed, Mode=TwoWay}" Watermark="e.g. 123456789" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -213,7 +197,40 @@
                                     <TextBlock Text="World Type" Classes="setting-title" />
                                     <TextBlock Text="Generator preset (default, flat, large biomes, amplified)." Classes="setting-description" />
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding LevelTypes}" SelectedItem="{Binding LevelType, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.LevelTypes}" SelectedItem="{Binding World.LevelType, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- MAX PLAYERS -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 220">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Maximum Online Players" Classes="setting-title" />
+                                    <TextBlock Text="Limits total simultaneous player connections." Classes="setting-description" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding World.MaxPlayers, Mode=TwoWay}" Minimum="1" Maximum="1000" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- ONLINE MODE -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Online Mode (Authentication)" Classes="setting-title" />
+                                    <TextBlock Text="Requires official Mojang/Microsoft account verification." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.OnlineMode, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- WHITELIST -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Enforce Whitelist" Classes="setting-title" />
+                                    <TextBlock Text="Only players listed in whitelist.json can join." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.WhiteList, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -224,7 +241,7 @@
                                     <TextBlock Text="Spawn Protection Radius" Classes="setting-title" />
                                     <TextBlock Text="Block radius around spawn protected from non-OP changes." Classes="setting-description" />
                                 </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding SpawnProtection, Mode=TwoWay}" Minimum="0" Maximum="500" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <NumericUpDown Grid.Column="1" Value="{Binding World.SpawnProtection, Mode=TwoWay}" Minimum="0" Maximum="500" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -235,7 +252,7 @@
                                     <TextBlock Text="Generate Structures" Classes="setting-title" />
                                     <TextBlock Text="Generate villages, strongholds, temples, and dungeons." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding GenerateStructures, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.GenerateStructures, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -245,7 +262,7 @@
                                     <TextBlock Text="Spawn Hostile Monsters" Classes="setting-title" />
                                     <TextBlock Text="Allow zombies, skeletons, and hostile mobs to spawn." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding SpawnMonsters, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.SpawnMonsters, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -255,7 +272,7 @@
                                     <TextBlock Text="Spawn Passive Animals" Classes="setting-title" />
                                     <TextBlock Text="Allow cows, sheep, pigs, and animals to spawn." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding SpawnAnimals, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.SpawnAnimals, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -263,20 +280,56 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- PERFORMANCE TAB -->
+            <!-- 3. PERFORMANCE TAB -->
             <TabItem Header="Performance" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Spacing="0" HorizontalAlignment="Stretch">
                         
-                        <!-- RAM SLIDER -->
+                        <!-- RAM SLIDERS -->
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*, 300">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="{Binding MaxRamGb, StringFormat='{}Max Memory Allocation: {0} GB'}" Classes="setting-title" />
-                                    <TextBlock Text="Maximum RAM allocated to the Java process (-Xmx)." Classes="setting-description" />
+                                    <TextBlock Text="{Binding Performance.MaxRamDisplay, StringFormat='{}Max Memory Allocation: {0}'}" Classes="setting-title" />
+                                    <TextBlock Text="Maximum RAM allocated to the server process (-Xmx)." Classes="setting-description" />
+                                    <TextBlock Text="Warning: Exceeds 85% of total system memory." Foreground="#E74C3C" FontSize="11" IsVisible="{Binding Performance.ShowRamWarning}"/>
                                 </StackPanel>
-                                <Slider Grid.Column="1" Minimum="1" Maximum="32" Value="{Binding MaxRamGb, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center" Margin="0,4,0,0"/>
+                                <Slider Grid.Column="1" Minimum="512" Maximum="32768" Value="{Binding Performance.MaxRam, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="512" VerticalAlignment="Center" Margin="0,4,0,0"/>
                             </Grid>
+                        </Border>
+
+                        <!-- MIN RAM -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 300">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="{Binding Performance.MinRamDisplay, StringFormat='{}Initial Memory Allocation: {0}'}" Classes="setting-title" />
+                                    <TextBlock Text="Initial RAM allocated at server startup (-Xms)." Classes="setting-description" />
+                                </StackPanel>
+                                <Slider Grid.Column="1" Minimum="512" Maximum="16384" Value="{Binding Performance.MinRam, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="512" VerticalAlignment="Center" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- CUSTOM JAVA PATH -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Custom Java Executable" Classes="setting-title" />
+                                    <TextBlock Text="Path to custom Java runtime (leave blank to use auto-detected runtime)." Classes="setting-description" />
+                                    <TextBox Text="{Binding Performance.JavaPath, Mode=TwoWay}" Watermark="/usr/bin/java or auto-detected" Margin="0,6,0,0" CornerRadius="8"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding Performance.BrowseJavaCommand}" Content="Browse..."
+                                        Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
+                                        VerticalAlignment="Bottom" Cursor="Hand" Margin="0,0,0,2"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- ADVANCED JVM ARGS -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Advanced JVM Flags" Classes="setting-title" />
+                                <TextBlock Text="Custom Java Virtual Machine arguments passed at launch (e.g. Aikar flags)." Classes="setting-description" />
+                                <TextBox Text="{Binding Performance.AdvancedJvmArgs, Mode=TwoWay}" Watermark="-XX:+UseG1GC -XX:+ParallelRefProcEnabled ..." Margin="0,4,0,0" CornerRadius="8"/>
+                            </StackPanel>
                         </Border>
 
                         <!-- VIEW DISTANCE -->
@@ -286,7 +339,7 @@
                                     <TextBlock Text="View Distance (Chunks)" Classes="setting-title" />
                                     <TextBlock Text="Render distance sent to clients (2 to 32 chunks)." Classes="setting-description" />
                                 </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding ViewDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <NumericUpDown Grid.Column="1" Value="{Binding World.ViewDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -297,29 +350,7 @@
                                     <TextBlock Text="Simulation Distance (Chunks)" Classes="setting-title" />
                                     <TextBlock Text="Distance around players where entity and block ticking occurs." Classes="setting-description" />
                                 </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding SimulationDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- ENTITY BROADCAST RANGE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Entity Broadcast Range (%)" Classes="setting-title" />
-                                    <TextBlock Text="Controls entity visibility distance percentage." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding EntityBroadcastRange, Mode=TwoWay}" Minimum="10" Maximum="500" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- MAX TICK TIME -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Watchdog Max Tick Time (ms)" Classes="setting-title" />
-                                    <TextBlock Text="Max ms a single tick may take before watchdog halts server (-1 disables)." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding MaxTickTime, Mode=TwoWay}" Minimum="-1" Maximum="300000" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                <NumericUpDown Grid.Column="1" Value="{Binding World.SimulationDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -327,131 +358,63 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ADVANCED TAB -->
-            <TabItem Header="Advanced" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+            <!-- 4. BEDROCK TAB -->
+            <TabItem Header="Bedrock" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Spacing="0" HorizontalAlignment="Stretch">
                         
-                        <!-- PVP -->
+                        <!-- IPV6 PORT -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 220">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Bedrock IPv6 Port" Classes="setting-title" />
+                                    <TextBlock Text="UDP IPv6 listening port (default: 19133)." Classes="setting-description" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding Bedrock.ServerPortV6, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- CHEATS -->
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*, 100">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable PvP" Classes="setting-title" />
-                                    <TextBlock Text="Allows player vs player combat damage." Classes="setting-description" />
+                                    <TextBlock Text="Allow In-Game Cheats" Classes="setting-title" />
+                                    <TextBlock Text="Allows operator commands such as /gamemode and /give." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Pvp, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Bedrock.AllowCheats, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
-                        <!-- ALLOW FLIGHT -->
+                        <!-- TEXTURE PACK REQUIRED -->
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*, 100">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Allow Flight" Classes="setting-title" />
-                                    <TextBlock Text="Allows clients to fly without automatic kick." Classes="setting-description" />
+                                    <TextBlock Text="Require Server Texture Pack" Classes="setting-title" />
+                                    <TextBlock Text="Forces connecting clients to download and use the server texture pack." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowFlight, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Bedrock.TexturepackRequired, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
-                        <!-- COMMAND BLOCKS -->
+                        <!-- DEFAULT PERMISSION LEVEL -->
                         <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
+                            <Grid ColumnDefinitions="*, 220">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable Command Blocks" Classes="setting-title" />
-                                    <TextBlock Text="Allows command block execution in-game." Classes="setting-description" />
+                                    <TextBlock Text="Default Player Permission Level" Classes="setting-title" />
+                                    <TextBlock Text="Permission level for new players (visitor, member, operator)." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableCommandBlock, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding Bedrock.PermissionLevels}" SelectedItem="{Binding Bedrock.DefaultPlayerPermissionLevel, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
-                        <!-- QUERY -->
+                        <!-- TICK DISTANCE -->
                         <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
+                            <Grid ColumnDefinitions="*, 220">
                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable GameSpy Query" Classes="setting-title" />
-                                    <TextBlock Text="Exposes server query logs and active statistics." Classes="setting-description" />
+                                    <TextBlock Text="Tick Distance (Chunks)" Classes="setting-title" />
+                                    <TextBlock Text="Chunk radius around players updated every server tick (4 to 12)." Classes="setting-description" />
                                 </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableQuery, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- RCON -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 280">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable RCON Remote Access" Classes="setting-title" />
-                                    <TextBlock Text="Enables remote console command execution." Classes="setting-description" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBox Text="{Binding RconPassword, Mode=TwoWay}" Watermark="RCON Password" PasswordChar="*" Width="160" CornerRadius="8"/>
-                                    <ToggleSwitch IsChecked="{Binding EnableRcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- RESOURCE PACK -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 360">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Custom Resource Pack URL" Classes="setting-title" />
-                                    <TextBlock Text="Direct HTTP link to server resource pack ZIP file." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding ResourcePack, Mode=TwoWay}" Watermark="https://..." VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- SECTION: SCHEDULED MAINTENANCE -->
-                        <TextBlock Text="Scheduled Maintenance" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
-
-                        <!-- SCHEDULED REBOOT TOGGLE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Scheduled Server Reboot" Classes="setting-title" />
-                                    <TextBlock Text="Periodically reboot the server to clear memory leaks and maintain peak responsiveness." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableScheduledReboot, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- REBOOT FREQUENCY -->
-                        <Border Classes="setting-card" IsEnabled="{Binding EnableScheduledReboot}">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Reboot Frequency" Classes="setting-title" />
-                                    <TextBlock Text="Configure whether the server reboots at a fixed daily time (24h format) or after a recurring interval." Classes="setting-description" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <ComboBox ItemsSource="{Binding RebootModes}" SelectedItem="{Binding ScheduledRebootMode, Mode=TwoWay}" Width="110" VerticalAlignment="Center"/>
-                                    <TextBox Text="{Binding ScheduledRebootTime, Mode=TwoWay}" IsVisible="{Binding IsDailyMode}" Width="100" Watermark="04:00" CornerRadius="8" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsIntervalMode}" VerticalAlignment="Center">
-                                        <TextBlock Text="Every (Hours):" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <TextBox Text="{Binding ScheduledRebootIntervalHours, Mode=TwoWay}" Width="70" Watermark="24" CornerRadius="8" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- IN-GAME WARNING -->
-                        <Border Classes="setting-card" IsEnabled="{Binding EnableScheduledReboot}">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="In-Game Warning Countdown" Classes="setting-title" />
-                                    <TextBlock Text="Broadcast countdown notifications in Minecraft server chat before restarting." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ScheduledRebootWarning, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- WARNING DURATION -->
-                        <Border Classes="setting-card" IsEnabled="{Binding IsWarningSettingsEnabled}">
-                            <Grid ColumnDefinitions="*, 120">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Warning Duration (Seconds)" Classes="setting-title" />
-                                    <TextBlock Text="Seconds before reboot to initiate broadcast warnings (1-3600)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding ScheduledRebootWarningSeconds, Mode=TwoWay}" Width="100" Watermark="60" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Text="{Binding Bedrock.TickDistance, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
                             </Grid>
                         </Border>
 
@@ -459,15 +422,155 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- RAW PROPERTIES TAB -->
-            <TabItem Header="Raw Properties" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <Grid RowDefinitions="Auto, *" Margin="0,16,0,0">
-                    <TextBlock Grid.Row="0" Text="Inspect the raw server.properties key-value pairs below:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                    <TextBox Grid.Row="1" Text="{Binding RawPropertiesText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, Monospace" FontSize="12" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14"/>
-                </Grid>
+            <!-- 5. BACKUPS TAB -->
+            <TabItem Header="Backups" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
+                        
+                        <!-- BACKUP CONTROLS & RETENTION -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Automated Backup Retention" Classes="setting-title" />
+                                <TextBlock Text="Configure automated snapshot frequency and maximum retained archives." Classes="setting-description" />
+
+                                <Grid ColumnDefinitions="*, 220" Margin="0,6,0,0">
+                                    <TextBlock Grid.Column="0" Text="Backup Interval (Hours)" VerticalAlignment="Center" FontSize="13"/>
+                                    <NumericUpDown Grid.Column="1" Value="{Binding Backups.BackupIntervalHours, Mode=TwoWay}" Minimum="1" Maximum="168" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*, 220">
+                                    <TextBlock Grid.Column="0" Text="Max Backups to Retain" VerticalAlignment="Center" FontSize="13"/>
+                                    <NumericUpDown Grid.Column="1" Value="{Binding Backups.MaxBackupsToKeep, Mode=TwoWay}" Minimum="1" Maximum="50" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*, 100">
+                                    <TextBlock Grid.Column="0" Text="Automatic Backup Pruning" VerticalAlignment="Center" FontSize="13"/>
+                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding Backups.AutomaticBackupPruningEnabled, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SNAPSHOT ACTION BAR -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Create Server Snapshot" Classes="setting-title" />
+                                    <TextBlock Text="Creates an immediate ZIP archive of the entire world and server files." Classes="setting-description" />
+                                    <TextBlock Text="{Binding Backups.BackupStatusText}" FontSize="12" Foreground="#1E90FF" IsVisible="{Binding Backups.IsBackingUp}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding Backups.CreateBackupCommand}" Content="Create Backup Now"
+                                        Background="#1E90FF" Foreground="White" FontWeight="SemiBold" CornerRadius="8" Padding="18,10"
+                                        IsEnabled="{Binding !Backups.IsBackingUp}" Cursor="Hand" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- BACKUP LIST -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Existing Backups" Classes="setting-title" />
+                                
+                                <ItemsControl ItemsSource="{Binding Backups.BackupList}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <TextBlock Text="{Binding FormattedDate}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding Trigger}" FontSize="11" Foreground="#1E90FF"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    
+                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.RestoreBackupCommand}"
+                                                            Content="Restore" Background="#262ECC71" Foreground="#2ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,8,0" Cursor="Hand"/>
+
+                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.DeleteBackupCommand}"
+                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="10,6" Cursor="Hand"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
-            <!-- SERVER VERSION UPDATES TAB -->
+            <!-- 6. ADDONS TAB -->
+            <TabItem Header="Addons" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
+                        
+                        <!-- ADDON TOOLBAR -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, Auto, Auto">
+                                <TextBox Grid.Column="0" Text="{Binding Addons.SearchText, Mode=TwoWay}" Watermark="Search installed plugins and mods..." CornerRadius="8" Margin="0,0,12,0"/>
+                                <Button Grid.Column="1" Command="{Binding Addons.OpenFolderCommand}" Content="Open Folder" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,0,8,0" Cursor="Hand"/>
+                                <Button Grid.Column="2" Command="{Binding Addons.RefreshCommand}" Content="Refresh" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8" Cursor="Hand"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- PLUGINS SECTION -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Installed Plugins" Classes="setting-title" />
+                                <TextBlock Text="No plugins installed in /plugins folder." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" IsVisible="{Binding !Addons.Plugins.Count}"/>
+
+                                <ItemsControl ItemsSource="{Binding Addons.Plugins}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleAddonCommand}" CommandParameter="{Binding}"
+                                                            Content="{Binding IsEnabled, Converter={x:Static ObjectConverters.IsNull}}" Background="Transparent" BorderThickness="0" Margin="0,0,8,0" Cursor="Hand">
+                                                        <TextBlock Text="{Binding IsEnabled, StringFormat='{}Enabled: {0}'}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    </Button>
+                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}" CommandParameter="{Binding}"
+                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- MODS SECTION -->
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Installed Mods" Classes="setting-title" />
+                                <TextBlock Text="No mods installed in /mods folder." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" IsVisible="{Binding !Addons.Mods.Count}"/>
+
+                                <ItemsControl ItemsSource="{Binding Addons.Mods}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleAddonCommand}" CommandParameter="{Binding}"
+                                                            Content="{Binding IsEnabled, Converter={x:Static ObjectConverters.IsNull}}" Background="Transparent" BorderThickness="0" Margin="0,0,8,0" Cursor="Hand">
+                                                        <TextBlock Text="{Binding IsEnabled, StringFormat='{}Enabled: {0}'}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    </Button>
+                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}" CommandParameter="{Binding}"
+                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 7. VERSION UPDATES TAB -->
             <TabItem Header="Version Updates" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Spacing="14" HorizontalAlignment="Stretch">
@@ -485,10 +588,10 @@
                                     </StackPanel>
                                     <TextBlock Text="Transactionally upgrade or switch software versions without manual file replacement." Classes="setting-description" />
                                 </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding LoadTargetVersionsCommand}" Content="Check for Updates"
+                                <Button Grid.Column="1" Command="{Binding VersionUpdates.LoadTargetVersionsCommand}" Content="Check for Updates"
                                         Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
                                         BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
-                                        IsEnabled="{Binding !IsUpdating}" Cursor="Hand" VerticalAlignment="Center"/>
+                                        IsEnabled="{Binding !VersionUpdates.IsUpdating}" Cursor="Hand" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -499,9 +602,9 @@
                                 <TextBlock Text="Select a verified upstream version release to install." Classes="setting-description" />
 
                                 <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
-                                    <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableTargetVersions}"
-                                              SelectedItem="{Binding SelectedTargetVersion, Mode=TwoWay}"
-                                              IsEnabled="{Binding !IsUpdating}"
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding VersionUpdates.AvailableTargetVersions}"
+                                              SelectedItem="{Binding VersionUpdates.SelectedTargetVersion, Mode=TwoWay}"
+                                              IsEnabled="{Binding !VersionUpdates.IsUpdating}"
                                               HorizontalAlignment="Stretch" CornerRadius="8">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
@@ -519,52 +622,52 @@
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
 
-                                    <Button Grid.Column="1" Command="{Binding ApplyUpdateCommand}" Content="Upgrade Server"
+                                    <Button Grid.Column="1" Command="{Binding VersionUpdates.ApplyUpdateCommand}" Content="Upgrade Server"
                                             Background="#2ECC71" Foreground="White" FontWeight="Bold"
-                                            IsEnabled="{Binding !IsUpdating}" CornerRadius="8" Padding="20,10"
+                                            IsEnabled="{Binding !VersionUpdates.IsUpdating}" CornerRadius="8" Padding="20,10"
                                             Cursor="Hand" Margin="14,0,0,0" VerticalAlignment="Center"/>
                                 </Grid>
 
                                 <!-- RUNTIME REQUIREMENT CHANGE NOTICE -->
                                 <Border Background="#1A1E90FF" CornerRadius="8" Padding="14,10"
-                                        IsVisible="{Binding UpdateRuntimeChangeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        IsVisible="{Binding VersionUpdates.UpdateRuntimeChangeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <lucide:LucideIcon Kind="Cpu" Size="16" Foreground="#1E90FF" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding UpdateRuntimeChangeText}" Foreground="#1E90FF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding VersionUpdates.UpdateRuntimeChangeText}" Foreground="#1E90FF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
                         </Border>
 
                         <!-- UPDATE IN PROGRESS PANEL -->
-                        <Border Classes="setting-card" IsVisible="{Binding IsUpdating}">
+                        <Border Classes="setting-card" IsVisible="{Binding VersionUpdates.IsUpdating}">
                             <StackPanel Spacing="10">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <ProgressBar IsIndeterminate="{Binding UpdateProgress, Converter={x:Static ObjectConverters.IsNull}}"
-                                                 Value="{Binding UpdateProgress}" Minimum="0" Maximum="1" Width="200" Height="8" CornerRadius="4"/>
-                                    <TextBlock Text="{Binding UpdateStatusText}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <ProgressBar IsIndeterminate="{Binding VersionUpdates.UpdateProgress, Converter={x:Static ObjectConverters.IsNull}}"
+                                                 Value="{Binding VersionUpdates.UpdateProgress}" Minimum="0" Maximum="1" Width="200" Height="8" CornerRadius="4"/>
+                                    <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="The server will be safely stopped before update. World files and server properties are protected by rollback journal." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- UPDATE SUCCESS BANNER -->
-                        <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding IsUpdateSuccess}">
+                        <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding VersionUpdates.IsUpdateSuccess}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <lucide:LucideIcon Kind="Check" Size="18" Foreground="#2ECC71" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding UpdateStatusText}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
                         <!-- UPDATE ERROR BANNER -->
-                        <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding HasUpdateError}">
+                        <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding VersionUpdates.HasUpdateError}">
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <lucide:LucideIcon Kind="Info" Size="18" Foreground="#E74C3C" VerticalAlignment="Center"/>
                                     <TextBlock Text="Server Upgrade Failed" Foreground="#E74C3C" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding UpdateErrorText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding UpdateStatusText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding VersionUpdates.UpdateErrorText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
@@ -572,7 +675,204 @@
                         <Border Classes="setting-card">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Atomic Update &amp; Rollback Guarantee" Classes="setting-title" />
-                                <TextBlock Text="PocketMC downloads and verifies update artifacts in an isolated staging workspace before touching server files. If any error or power outage occurs during file replacement, the transaction journal automatically restores your existing server files to prevent world corruption." Classes="setting-description" />
+                                <TextBlock Text="PocketMC downloads and verifies update artifacts in an isolated staging workspace before touching server files. If any error occurs during file replacement, the transaction journal automatically restores your existing server files to prevent world corruption." Classes="setting-description" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 8. AI SUMMARIES TAB -->
+            <TabItem Header="AI Summaries" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
+                        
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Game Session Summaries" Classes="setting-title" />
+                                <TextBlock Text="AI-generated session logs, player achievements, and world events." Classes="setting-description" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="setting-card" IsVisible="{Binding !Summaries.HasSummaries}">
+                            <TextBlock Text="No session summaries recorded yet. Summaries are automatically generated after server play sessions when AI is configured in Settings." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        </Border>
+
+                        <!-- SUMMARIES LIST -->
+                        <ItemsControl ItemsSource="{Binding Summaries.Summaries}" IsVisible="{Binding Summaries.HasSummaries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="setting-card">
+                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="14"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <TextBlock Text="{Binding FormattedDuration, StringFormat='{}Duration: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    <TextBlock Text="{Binding AiProvider, StringFormat='{}Model: {0}'}" FontSize="12" Foreground="#1E90FF"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.ViewSummaryCommand}" CommandParameter="{Binding}"
+                                                    Content="View Summary" Background="#1E90FF" Foreground="White" CornerRadius="6" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"/>
+
+                                            <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.DeleteSummaryCommand}" CommandParameter="{Binding}"
+                                                    Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="12,6" Cursor="Hand"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- VIEWING SUMMARY MODAL / PANEL -->
+                        <Border Classes="setting-card" IsVisible="{Binding Summaries.IsViewingSummary}" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="#1E90FF" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding Summaries.SelectedSummary.FormattedDate, StringFormat='{}Session Summary: {0}'}" FontWeight="Bold" FontSize="15"/>
+                                    <Button Grid.Column="1" Command="{Binding Summaries.CloseSummaryCommand}" Content="Close" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+                                </Grid>
+                                <TextBox Text="{Binding Summaries.SummaryContent}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="300" FontFamily="Consolas, Monospace" FontSize="12" Background="Transparent" BorderThickness="0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 9. ADVANCED TAB -->
+            <TabItem Header="Advanced" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
+                        
+                        <!-- PVP -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Enable PvP" Classes="setting-title" />
+                                    <TextBlock Text="Allows player vs player combat damage." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.Pvp, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- ALLOW FLIGHT -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Allow Flight" Classes="setting-title" />
+                                    <TextBlock Text="Allows clients to fly without automatic kick." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.AllowFlight, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- COMMAND BLOCKS -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Enable Command Blocks" Classes="setting-title" />
+                                    <TextBlock Text="Allows command block execution in-game." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableCommandBlock, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- QUERY -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Enable GameSpy Query" Classes="setting-title" />
+                                    <TextBlock Text="Exposes server query logs and active statistics." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableQuery, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- RCON -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 280">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Enable RCON Remote Access" Classes="setting-title" />
+                                    <TextBlock Text="Enables remote console command execution." Classes="setting-description" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBox Text="{Binding Advanced.RconPassword, Mode=TwoWay}" Watermark="RCON Password" PasswordChar="*" Width="160" CornerRadius="8"/>
+                                    <ToggleSwitch IsChecked="{Binding Advanced.EnableRcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- RESOURCE PACK -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 360">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Custom Resource Pack URL" Classes="setting-title" />
+                                    <TextBlock Text="Direct HTTP link to server resource pack ZIP file." Classes="setting-description" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding Advanced.ResourcePack, Mode=TwoWay}" Watermark="https://..." VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- SCHEDULED MAINTENANCE SECTION -->
+                        <TextBlock Text="Scheduled Maintenance" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
+
+                        <!-- SCHEDULED REBOOT TOGGLE -->
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Scheduled Server Reboot" Classes="setting-title" />
+                                    <TextBlock Text="Periodically reboot the server to clear memory leaks and maintain peak responsiveness." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableScheduledReboot, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- REBOOT FREQUENCY -->
+                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Reboot Frequency" Classes="setting-title" />
+                                    <TextBlock Text="Configure whether the server reboots at a fixed daily time (24h format) or after a recurring interval." Classes="setting-description" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <ComboBox ItemsSource="{Binding Advanced.RebootModes}" SelectedItem="{Binding Advanced.ScheduledRebootMode, Mode=TwoWay}" Width="110" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding Advanced.ScheduledRebootTime, Mode=TwoWay}" IsVisible="{Binding Advanced.IsDailyMode}" Width="100" Watermark="04:00" CornerRadius="8" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Advanced.IsIntervalMode}" VerticalAlignment="Center">
+                                        <TextBlock Text="Every (Hours):" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <TextBox Text="{Binding Advanced.ScheduledRebootIntervalHours, Mode=TwoWay}" Width="70" Watermark="24" CornerRadius="8" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- IN-GAME WARNING -->
+                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
+                            <Grid ColumnDefinitions="*, 100">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="In-Game Warning Countdown" Classes="setting-title" />
+                                    <TextBlock Text="Broadcast countdown notifications in Minecraft server chat before restarting." Classes="setting-description" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.ScheduledRebootWarning, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- WARNING DURATION -->
+                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.IsWarningSettingsEnabled}">
+                            <Grid ColumnDefinitions="*, 120">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="Warning Duration (Seconds)" Classes="setting-title" />
+                                    <TextBlock Text="Seconds before reboot to initiate broadcast warnings (1-3600)." Classes="setting-description" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding Advanced.ScheduledRebootWarningSeconds, Mode=TwoWay}" Width="100" Watermark="60" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- RAW PROPERTIES INSPECTOR -->
+                        <TextBlock Text="Raw Properties" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="server.properties editor" Classes="setting-title" />
+                                <TextBox Text="{Binding Advanced.RawPropertiesText, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, Monospace" FontSize="12" Height="180" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10"/>
                             </StackPanel>
                         </Border>
 

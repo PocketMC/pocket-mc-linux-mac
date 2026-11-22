@@ -406,7 +406,7 @@ namespace PocketMC.App.ViewModels
             }
         }
 
-        private void UpdateTarget(Settings settings, CloudBackupProviderType provider, bool enabled, int retention)
+        private void UpdateTarget(PocketMC.Core.Models.Settings settings, CloudBackupProviderType provider, bool enabled, int retention)
         {
             var target = settings.CloudBackups.Targets.FirstOrDefault(t => t.Provider == provider);
             if (target == null)

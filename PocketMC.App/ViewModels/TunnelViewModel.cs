@@ -251,6 +251,37 @@ public partial class TunnelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenConsoleAsync()
+    {
+        if (_tunnelManager.GetProvider<PlayitHttpsTunnelProvider>("playit-https") is { } provider)
+        {
+            var consoleWin = new Views.Tunnel.PlayitConsoleWindow(provider.ProcessManager);
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                await consoleWin.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                consoleWin.Show();
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenCreateTunnelDialogAsync()
+    {
+        var dialog = new Views.Tunnel.CreateTunnelDialog(_playitApiClient);
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            await dialog.ShowDialog(desktop.MainWindow);
+            if (dialog.TunnelCreated)
+            {
+                await RefreshAllAsync();
+            }
+        }
+    }
+
+    [RelayCommand]
     private async Task UnlinkAccountAsync()
     {
         _settingsService.Settings.PlayitPartnerConnection = null;

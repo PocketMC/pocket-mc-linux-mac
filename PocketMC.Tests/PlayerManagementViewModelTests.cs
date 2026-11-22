@@ -122,6 +122,7 @@ namespace PocketMC.Tests
         {
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDir);
+            PlayerManagementViewModel? vm = null;
 
             try
             {
@@ -136,7 +137,7 @@ namespace PocketMC.Tests
                 var playerService = new FakePlayerService2();
                 var processRunner = new FakeProcessRunner();
 
-                using var vm = new PlayerManagementViewModel(instService, playerService, processRunner);
+                vm = new PlayerManagementViewModel(instService, playerService, processRunner);
                 vm.Initialize(instance);
 
                 // Confirm initially empty whitelist
@@ -153,6 +154,7 @@ namespace PocketMC.Tests
             }
             finally
             {
+                vm?.Dispose();
                 if (Directory.Exists(tempDir))
                 {
                     Directory.Delete(tempDir, true);

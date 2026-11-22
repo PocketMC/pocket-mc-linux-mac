@@ -114,6 +114,7 @@ This document provides an exhaustive, capability-by-capability parity assessment
 | Remote File Access Security | `RemoteFileAccessPolicy.cs` | `RemoteFileAccessPolicy.cs` | Verified | Strict policy denies sensitive keys (.key, .pem, .pfx, .jks, .keystore), tokens, credentials, and internal journals unconditionally even for authenticated admins. Blocks path traversal. Allows clean directory/file browsing. | Verified: 27 test scenarios passing in `RemoteFilesAndBackupsTests`. |
 | WebSocket Console Streaming | `RemoteConsoleWebSocketHandler.cs` | `RemoteConsoleWebSocketHandler.cs` | Verified | Real-time console output streaming with session token authentication. | Verified via WebSocket handler tests. |
 | Web Dashboard SPA | `Web/index.html`, `Web/app.js`, `Web/styles.css` | `Web/index.html`, `Web/app.js`, `Web/styles.css` | Verified | Identical modern web client assets embedded and served directly from assembly. | Verified in assembly resources. |
+| Remote Control UI & User Management | `RemoteControlPage.xaml`, `RemoteControlSettingsViewModel.cs` | `RemoteControlPage.axaml`, `RemoteControlViewModel.cs`, `RemoteControlUserViewModel.cs` | Verified | Dual-tab interface (General Settings vs Users & Permissions), LAN & Public Tunnel URL cards with live QR codes and copy actions, granular user permission toggles. | Verified via `RemoteControlViewModelTests`. |
 
 ---
 
@@ -136,6 +137,8 @@ This document provides an exhaustive, capability-by-capability parity assessment
 | System Tray / Menu Bar | `Hardcodet.NotifyIcon.Wpf`, `TrayIconViewModel.cs` | Avalonia `TrayIcon` in `App.axaml`, `App.axaml.cs` | Verified | Background minimization, restore on click, and clean application shutdown on quit. | Verified in `App.axaml.cs`. |
 | Release Notes & What's New | `WhatsNewWindow.xaml`, `WhatsNewService.cs` | `WhatsNewWindow.axaml`, `WhatsNewService.cs`, `ChangelogParser.cs` | Verified | In-app version highlights dialog shown once per release, parsed from `WhatsNew.txt`. | Verified via WhatsNewService tests. |
 | Settings Parity & Scheduled Reboot UI | `ServerSettingsPage.xaml`, `SettingsAdvancedVM.cs` | `ServerSettingsPage.axaml`, `ServerSettingsViewModel.cs` | Verified | Full properties tabs: General, World, Performance, Advanced (with Scheduled Reboot, Frequency, and In-Game Warnings), Raw Properties, and Version Updates. | Verified: ViewModel properties, bindings, and persistence tested. |
+| About & Studio Attribution Parity | `AboutPage.xaml`, `AboutPage.xaml.cs` | `AboutPage.axaml`, `AboutViewModel.cs` | Verified | Studio attribution (DS Labs), Hero card with logo, Co-Founders (Divy Viradiya, Sahaj Italiya), Contributors & Helpers (Johndinglesin), Donators (NexVice), storage root relocation, community links. | Verified via `AboutViewModelTests`. |
+| Native POSIX Packaging & Distribution | InnoSetup / MSIX | `build-dmg.sh`, `build-appimage.sh`, `build-deb.sh`, `build-rpm.sh`, `pocketmc.desktop`, `pocketmc.mime.xml` | Verified | Apple Silicon & Intel macOS DMG with URL scheme handling, AppImage, Debian (.deb), RPM (.rpm), Freedesktop entry, and `IPosixFilePermissionService` (0755 permissions). | Verified via `PosixFilePermissionServiceTests` and packaging scripts. |
 
 ---
 
@@ -158,3 +161,14 @@ This document provides an exhaustive, capability-by-capability parity assessment
    - Windows supports Mica and Acrylic compositor backdrops.
    - macOS supports `NSVisualEffectView` materials.
    - Linux depends on the running window manager (Wayland/X11 Compositor) supporting background blur; tasteful solid surface fallback brushes are provided on unsupported compositors.
+
+---
+
+## 13. Automated Test Suite Summary
+
+- Total Automated Tests: 195
+- Passing: 195
+- Failed: 0
+- Skipped: 0
+- Test Duration: ~22s
+- Coverage Areas: Server update transactions, artifact integrity, POSIX process management, file security policies, reboot schedules, port reliability engine, native metrics, sleep prevention, notifications, Discord RPC, console filters, player log parsers, crash detector, about page, and remote control user permissions.

@@ -1,10 +1,17 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
 using PocketMC.Platform.Services;
+using PocketMC.Platform.Lifecycle;
+using PocketMC.Platform.Notifications;
+using PocketMC.Platform.Integrations;
+using PocketMC.Infrastructure.Power;
+using PocketMC.App.Navigation;
+using PocketMC.App.Services;
 using PocketMC.App.ViewModels;
 using PocketMC.App.Views;
 
@@ -136,9 +143,41 @@ namespace PocketMC.App
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.PlayitApiClient>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.RemoteTunnelManager>();
 
+                    services.AddSingleton<INativeMetricsProvider, PocketMC.Platform.Metrics.NativeMetricsProvider>();
+                    services.AddSingleton<DashboardMetricsViewModel>();
+                    services.AddSingleton<DashboardInstanceListViewModel>();
+                    services.AddSingleton<DashboardActionsViewModel>(sp => new DashboardActionsViewModel(
+                        sp.GetRequiredService<IProcessRunner>(),
+                        sp.GetRequiredService<IInstanceService>(),
+                        sp.GetRequiredService<IDialogService>()));
+
                     // ViewModels & Views
+                    services.AddSingleton<IAppNavigationService, AppNavigationService>();
+                    services.AddSingleton<IDialogService, AvaloniaDialogService>();
+                    services.AddSingleton<AccentColorService>();
+                    services.AddSingleton<WallpaperBackdropService>();
+                    services.AddSingleton<ISleepPreventionService, SleepPreventionService>();
+                    services.AddSingleton<ServerSleepPreventionCoordinator>(sp =>
+                        new ServerSleepPreventionCoordinator(
+                            sp.GetRequiredService<ISleepPreventionService>(),
+                            () => sp.GetRequiredService<ISettingsService>().Settings,
+                            () => sp.GetRequiredService<IProcessRunner>().GetRunningSlugs().Count,
+                            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ServerSleepPreventionCoordinator>>(),
+                            sp.GetService<IProcessRunner>()));
+                    services.AddSingleton<ISingleInstanceService, SingleInstanceService>();
+                    services.AddSingleton<INotificationService, NativeNotificationService>();
+                    services.AddSingleton<IDiscordRpcService, DiscordRpcService>();
+                    services.AddSingleton<SettingsBackupService>();
+                    services.AddSingleton<PocketMC.Core.Services.IPosixPortOwnerResolver, PocketMC.Platform.Networking.PosixPortOwnerResolver>();
+                    services.AddSingleton<PocketMC.Core.Services.IPosixFilePermissionService, PocketMC.Platform.Services.PosixFilePermissionService>();
+                    services.AddSingleton<PocketMC.Infrastructure.Networking.PortLeaseRegistry>();
+                    services.AddSingleton<PocketMC.Infrastructure.Networking.PortProbeService>();
+                    services.AddSingleton<PocketMC.Infrastructure.Networking.PortRecoveryService>();
+
                     services.AddSingleton<MainWindowViewModel>();
                     services.AddTransient<MainWindow>();
+                    services.AddTransient<AppSettingsViewModel>();
+                    services.AddTransient<AppSettingsPage>();
                     services.AddSingleton<DashboardViewModel>();
                     services.AddTransient<DashboardView>();
                     services.AddTransient<NewInstanceViewModel>();
@@ -167,6 +206,12 @@ namespace PocketMC.App
                     services.AddTransient<JavaManagementPage>();
                     services.AddTransient<AboutViewModel>();
                     services.AddTransient<AboutPage>();
+                    services.AddTransient<PocketMC.App.ViewModels.Instances.InstanceImportViewModel>();
+                    services.AddTransient<PocketMC.App.Views.Instances.InstanceExportPage>();
+                    services.AddTransient<PocketMC.App.Views.Instances.InstanceImportPage>();
+                    services.AddTransient<PocketMC.App.Views.Marketplace.PluginBrowserPage>();
+                    services.AddTransient<PocketMC.App.Views.Marketplace.MapBrowserPage>();
+
                     services.AddTransient<RootDirectorySetupViewModel>();
                     services.AddTransient<RootDirectorySetupWindow>();
                 });

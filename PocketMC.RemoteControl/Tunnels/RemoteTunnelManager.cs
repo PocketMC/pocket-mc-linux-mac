@@ -49,4 +49,9 @@ public class RemoteTunnelManager
         }
         return "Not Found";
     }
+
+    public TProvider? GetProvider<TProvider>(string providerId) where TProvider : class, IRemoteTunnelProvider
+    {
+        return _providers.FirstOrDefault(p => p.ProviderId == providerId) as TProvider;
+    }
 }

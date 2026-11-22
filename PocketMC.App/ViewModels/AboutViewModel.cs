@@ -9,6 +9,8 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.WhatsNew;
+using PocketMC.App.Views;
 
 namespace PocketMC.App.ViewModels;
 
@@ -16,6 +18,7 @@ public partial class AboutViewModel : ObservableObject
 {
     private readonly ISettingsService _settingsService;
     private readonly IInstanceService _instanceService;
+    private readonly WhatsNewService? _whatsNewService;
 
     public string AppVersion => "Version 1.0.2 (Linux & macOS Native)";
 
@@ -26,6 +29,13 @@ public partial class AboutViewModel : ObservableObject
     private string _changeRootStatus = string.Empty;
 
     public IRelayCommand OpenGitHubCommand { get; }
+    public IRelayCommand OpenWebsiteCommand { get; }
+    public IRelayCommand OpenStudioCommand { get; }
+    public IRelayCommand OpenWhatsNewCommand { get; }
+    public IRelayCommand OpenDivyCommand { get; }
+    public IRelayCommand OpenSahajCommand { get; }
+    public IRelayCommand OpenJohndinglesinCommand { get; }
+    public IRelayCommand OpenNexViceCommand { get; }
     public IRelayCommand OpenDiscordCommand { get; }
     public IRelayCommand CopyDiscordInviteCommand { get; }
     public IRelayCommand OpenInstagramCommand { get; }
@@ -37,13 +47,21 @@ public partial class AboutViewModel : ObservableObject
     public IAsyncRelayCommand ChangeDataRootCommand { get; }
     public IRelayCommand OpenDataRootFolderCommand { get; }
 
-    public AboutViewModel(ISettingsService settingsService, IInstanceService instanceService)
+    public AboutViewModel(ISettingsService settingsService, IInstanceService instanceService, WhatsNewService? whatsNewService = null)
     {
         _settingsService = settingsService;
         _instanceService = instanceService;
+        _whatsNewService = whatsNewService;
         _currentDataRoot = _settingsService.GetDataRoot();
 
         OpenGitHubCommand = new RelayCommand(() => OpenUrl("https://github.com/PocketMC/pocket-mc-linux-mac"));
+        OpenWebsiteCommand = new RelayCommand(() => OpenUrl("https://pocketmc.net"));
+        OpenStudioCommand = new RelayCommand(() => OpenUrl("https://github.com/DS-Labs-Org"));
+        OpenWhatsNewCommand = new RelayCommand(OpenWhatsNew);
+        OpenDivyCommand = new RelayCommand(() => OpenUrl("https://github.com/divyviradiya2"));
+        OpenSahajCommand = new RelayCommand(() => OpenUrl("https://github.com/SizWinz"));
+        OpenJohndinglesinCommand = new RelayCommand(() => OpenUrl("https://github.com/Johndinglesin"));
+        OpenNexViceCommand = new RelayCommand(() => OpenUrl("https://discord.com/users/353457177579847680"));
         OpenDiscordCommand = new RelayCommand(() => OpenUrl("https://discord.gg/pocketmc"));
         CopyDiscordInviteCommand = new RelayCommand(CopyDiscordInvite);
         OpenInstagramCommand = new RelayCommand(() => OpenUrl("https://instagram.com/pocketmc"));
@@ -54,6 +72,16 @@ public partial class AboutViewModel : ObservableObject
         NavigateBackCommand = new RelayCommand(NavigateBack);
         ChangeDataRootCommand = new AsyncRelayCommand(ChangeDataRootAsync);
         OpenDataRootFolderCommand = new RelayCommand(OpenDataRootFolder);
+    }
+
+    private void OpenWhatsNew()
+    {
+        var whatsNewSvc = _whatsNewService ?? App.Services.GetService(typeof(WhatsNewService)) as WhatsNewService;
+        if (whatsNewSvc != null && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            var win = new WhatsNewWindow(whatsNewSvc);
+            win.ShowDialog(desktop.MainWindow);
+        }
     }
 
     private async Task ChangeDataRootAsync()

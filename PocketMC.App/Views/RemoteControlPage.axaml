@@ -3,154 +3,299 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:models="using:PocketMC.Core.Models"
              xmlns:lucide="using:Lucide.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="PocketMC.App.Views.RemoteControlPage"
-             x:DataType="vm:RemoteControlViewModel">
+             x:DataType="vm:RemoteControlViewModel"
+             x:CompileBindings="True">
 
-    <Grid RowDefinitions="Auto, *">
+    <Grid RowDefinitions="Auto, Auto, *">
         <!-- HEADER BAR -->
         <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" Padding="16,12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="Auto, *, Auto">
                 <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
-                        Background="Transparent" BorderThickness="0" Padding="8" CornerRadius="8">
+                        Background="Transparent" BorderThickness="0" Padding="8" CornerRadius="8" Cursor="Hand">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock Text="Back to Dashboard" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Medium"/>
                     </StackPanel>
                 </Button>
                 
-                <TextBlock Grid.Column="1" Text="Remote Control Dashboard" 
-                           FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" 
+                <TextBlock Grid.Column="1" Text="Remote Control" 
+                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" 
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
+        <!-- TAB NAVIGATION SELECTOR -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" Padding="20,12" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                <ToggleButton Content="General Settings"
+                              IsChecked="{Binding IsGeneralTab, Mode=TwoWay}"
+                              CornerRadius="8" Padding="18,8" FontWeight="SemiBold" Cursor="Hand"/>
+                <ToggleButton Content="Users &amp; Permissions"
+                              IsChecked="{Binding IsUsersTab, Mode=TwoWay}"
+                              CornerRadius="8" Padding="18,8" FontWeight="SemiBold" Cursor="Hand"/>
+            </StackPanel>
+        </Border>
+
         <!-- CONTENT AREA -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <Grid ColumnDefinitions="1.2*, *" Margin="20">
-                
-                <!-- LEFT COLUMN: SETTINGS CARDS -->
-                <StackPanel Grid.Column="0" Spacing="20" Margin="0,0,12,0">
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Panel Margin="24">
+
+                <!-- TAB 1: GENERAL SETTINGS -->
+                <Grid ColumnDefinitions="1.2*, *" IsVisible="{Binding IsGeneralTab}">
                     
-                    <!-- SERVER CONNECTION CARD -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="16">
-                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
-                                <lucide:LucideIcon Kind="Radio" Size="20" Foreground="#1e90ff" VerticalAlignment="Center"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Server Connection" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="Enable remote dashboard hosting and configure the port" FontSize="11" Opacity="0.6" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <!-- LEFT COLUMN: SETTINGS CARDS -->
+                    <StackPanel Grid.Column="0" Spacing="20" Margin="0,0,14,0">
+                        
+                        <!-- SERVER CONNECTION CARD -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
+                                    <lucide:LucideIcon Kind="Radio" Size="20" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Server Connection" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Starts a local web dashboard secured by paired device tokens." FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
-                            
-                            <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
+                                
+                                <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
 
-                            <ToggleSwitch IsChecked="{Binding IsEnabled}" Content="Enable Remote Dashboard" OffContent="Disabled" OnContent="Active" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            
-                            <StackPanel Spacing="6" IsEnabled="{Binding IsEnabled}">
-                                <TextBlock Text="Port Configuration" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <NumericUpDown Value="{Binding Port}" Minimum="1" Maximum="65535" FormatString="F0" HorizontalAlignment="Stretch" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- ACCESS SECURITY CARD -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="16">
-                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
-                                <lucide:LucideIcon Kind="Key" Size="20" Foreground="#2ecc71" VerticalAlignment="Center"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Access Security" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="Secure remote access to prevent unauthorized controls" FontSize="11" Opacity="0.6" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
-
-                            <ToggleSwitch IsChecked="{Binding RequireAuthentication}" Content="Require Password Authentication" OffContent="Disabled" OnContent="Enabled" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            
-                            <StackPanel Spacing="6" IsEnabled="{Binding RequireAuthentication}">
-                                <TextBlock Text="Set Session Password" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBox Text="{Binding Password}" PasswordChar="*" Watermark="Leave blank to keep existing password" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- PERMISSION SETTINGS CARD -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="16">
-                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
-                                <lucide:LucideIcon Kind="Shield" Size="20" Foreground="#e67e22" VerticalAlignment="Center"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Permissions" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="Control what actions remote paired devices can perform" FontSize="11" Opacity="0.6" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
-
-                            <StackPanel Spacing="12">
-                                <CheckBox IsChecked="{Binding AllowRemoteConsoleCommands}" Content="Allow Remote Console Commands" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <CheckBox IsChecked="{Binding AllowRemotePlayerActions}" Content="Allow Remote Player Actions (Start / Stop)" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- SAVE BUTTON -->
-                    <Button Command="{Binding SaveSettingsCommand}" Background="#1e90ff" Foreground="White" CornerRadius="8" Padding="20,12" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <lucide:LucideIcon Kind="Save" Size="16" VerticalAlignment="Center"/>
-                            <TextBlock Text="Save Settings" FontWeight="Bold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-                
-                <!-- RIGHT COLUMN: PAIRING & ACCESS DETAILS -->
-                <StackPanel Grid.Column="1" Spacing="20" Margin="12,0,0,0">
-                    
-                    <!-- PAIRING CARD -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" IsVisible="{Binding IsEnabled}">
-                        <StackPanel Spacing="16" HorizontalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,0,0,4">
-                                <lucide:LucideIcon Kind="Smartphone" Size="20" Foreground="#9b59b6" VerticalAlignment="Center"/>
-                                <TextBlock Text="Pair Device" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <TextBlock Text="Scan this QR code with your mobile device camera to open the dashboard automatically." 
-                                       TextWrapping="Wrap" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
-                            
-                            <!-- QR Code card border -->
-                            <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Background="White" HorizontalAlignment="Center" Margin="0,8">
-                                <Image Source="{Binding PairingQrCode}" Width="200" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-
-                            <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
-
-                            <!-- Manual access -->
-                            <StackPanel Spacing="8" HorizontalAlignment="Stretch">
-                                <TextBlock Text="Manual Connection Link" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBox Grid.Column="0" Text="{Binding PairingUrl}" IsReadOnly="True" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <Button Grid.Column="1" Command="{Binding CopyUrlCommand}" ToolTip.Tip="Copy Link" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8" CornerRadius="6" VerticalAlignment="Center">
-                                        <lucide:LucideIcon Kind="Copy" Size="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </Button>
+                                <ToggleSwitch IsChecked="{Binding IsEnabled}" Content="Enable Remote Control" OffContent="Disabled" OnContent="Active" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                
+                                <Grid ColumnDefinitions="120, *" IsEnabled="{Binding IsEnabled}">
+                                    <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,12,0">
+                                        <TextBlock Text="Port" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <NumericUpDown Value="{Binding Port}" Minimum="1" Maximum="65535" FormatString="F0" HorizontalAlignment="Stretch" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Access Mode" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <ComboBox SelectedIndex="0" HorizontalAlignment="Stretch">
+                                            <ComboBoxItem Content="Local Network (LAN Only)"/>
+                                            <ComboBoxItem Content="Cloudflare Quick Tunnel"/>
+                                            <ComboBoxItem Content="PlayIt Premium HTTPS"/>
+                                        </ComboBox>
+                                    </StackPanel>
                                 </Grid>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
 
-                    <!-- PAIRING STATE PLACEHOLDER (when disabled) -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" IsVisible="{Binding !IsEnabled}">
-                        <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <lucide:LucideIcon Kind="ServerCrash" Size="48" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.3" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Dashboard Offline" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Enable the remote control dashboard from settings to generate pairing codes." 
-                                       TextWrapping="Wrap" FontSize="12" Opacity="0.5" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+                                <!-- LAN Network Card -->
+                                <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="12,10" IsVisible="{Binding HasLocalUrl}">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <lucide:LucideIcon Grid.Column="0" Kind="Network" Size="20" Foreground="#1E90FF" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Local Network (LAN)" FontSize="11" Opacity="0.7" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding LocalUrl}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Button Command="{Binding CopyLocalUrlCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand">
+                                                <lucide:LucideIcon Kind="Copy" Size="14"/>
+                                            </Button>
+                                            <Button Command="{Binding ToggleLocalQrCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand">
+                                                <lucide:LucideIcon Kind="QrCode" Size="14"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Public Tunnel Card -->
+                                <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="12,10" IsVisible="{Binding HasPublicUrl}">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <lucide:LucideIcon Grid.Column="0" Kind="Globe" Size="20" Foreground="#2ECC71" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Public Tunnel URL" FontSize="11" Opacity="0.7" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding PublicUrl}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Button Command="{Binding CopyPublicUrlCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand">
+                                                <lucide:LucideIcon Kind="Copy" Size="14"/>
+                                            </Button>
+                                            <Button Command="{Binding TogglePublicQrCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand">
+                                                <lucide:LucideIcon Kind="QrCode" Size="14"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock Text="{Binding StatusText}" 
+                                           FontSize="12" 
+                                           Foreground="#1E90FF" 
+                                           IsVisible="{Binding HasStatusText}" 
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ACCESS SECURITY CARD -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
+                                    <lucide:LucideIcon Kind="Key" Size="20" Foreground="#2ECC71" VerticalAlignment="Center"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Global Authentication" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Secure remote access to prevent unauthorized controls" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
+
+                                <ToggleSwitch IsChecked="{Binding RequireAuthentication}" Content="Require Password Authentication" OffContent="Disabled" OnContent="Enabled" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                
+                                <StackPanel Spacing="6" IsEnabled="{Binding RequireAuthentication}">
+                                    <TextBlock Text="Set Session Password" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBox Text="{Binding Password}" PasswordChar="*" Watermark="Leave blank to keep existing password" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- DISCORD NOTIFICATIONS CARD -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                            <StackPanel Spacing="14">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <lucide:LucideIcon Kind="MessageSquare" Size="20" Foreground="#5865F2" VerticalAlignment="Center"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Discord Notifications" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Receive remote connection URLs automatically via Discord Direct Message" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
+
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Text="Direct Message Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Bot sends generated public URLs to linked admin account." FontSize="11" Opacity="0.6" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableDiscordNotifications}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Button Command="{Binding JoinDiscordCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" HorizontalAlignment="Left" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:LucideIcon Kind="ExternalLink" Size="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Join PocketMC Discord Server" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SAVE BUTTON -->
+                        <Button Command="{Binding SaveSettingsCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="22,12" HorizontalAlignment="Left" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <lucide:LucideIcon Kind="Save" Size="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Save Settings" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    
+                    <!-- RIGHT COLUMN: PAIRING & ACCESS DETAILS -->
+                    <StackPanel Grid.Column="1" Spacing="20" Margin="14,0,0,0">
+                        
+                        <!-- PAIRING CARD -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" IsVisible="{Binding IsEnabled}">
+                            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                    <lucide:LucideIcon Kind="Smartphone" Size="20" Foreground="#9B59B6" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Pair Device" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Text="Scan this QR code with your mobile device camera to open the dashboard automatically." 
+                                           TextWrapping="Wrap" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+                                
+                                <!-- QR Code card border -->
+                                <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Background="White" HorizontalAlignment="Center" Margin="0,8">
+                                    <Image Source="{Binding PairingQrCode}" Width="200" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <Separator Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,2"/>
+
+                                <!-- Manual access -->
+                                <StackPanel Spacing="8" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="Manual Connection Link" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding PairingUrl}" IsReadOnly="True" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <Button Grid.Column="1" Command="{Binding CopyUrlCommand}" ToolTip.Tip="Copy Link" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8" CornerRadius="6" VerticalAlignment="Center" Cursor="Hand">
+                                            <lucide:LucideIcon Kind="Copy" Size="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- PAIRING STATE PLACEHOLDER (when disabled) -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" IsVisible="{Binding !IsEnabled}">
+                            <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <lucide:LucideIcon Kind="ServerCrash" Size="48" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.3" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Dashboard Offline" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Enable the remote control dashboard from settings to generate pairing codes." 
+                                           TextWrapping="Wrap" FontSize="12" Opacity="0.5" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- TAB 2: USERS & PERMISSIONS -->
+                <StackPanel Spacing="16" IsVisible="{Binding IsUsersTab}">
+                    <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Dashboard Users" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Manage user accounts and specify granular permissions for remote management." FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
-                    </Border>
+                        <Button Grid.Column="1" Command="{Binding AddUserCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="14,8" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <lucide:LucideIcon Kind="UserPlus" Size="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add User" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Users}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RemoteControlUserViewModel">
+                                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,0,14">
+                                    <Grid RowDefinitions="Auto, Auto, Auto">
+                                        <!-- User Header -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,14">
+                                            <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#1E3A5F" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                <lucide:LucideIcon Kind="User" Size="18" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBox Text="{Binding Username}" FontWeight="Bold" FontSize="14" Watermark="Username" MaxWidth="250" HorizontalAlignment="Left"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                                <Button Command="{Binding $parent[UserControl].((vm:RemoteControlViewModel)DataContext).SaveUserCommand}" CommandParameter="{Binding}" Background="#1E90FF" Foreground="White" CornerRadius="6" Padding="12,6" Cursor="Hand">
+                                                    <TextBlock Text="Save" FontSize="12" FontWeight="SemiBold"/>
+                                                </Button>
+                                                <Button Command="{Binding $parent[UserControl].((vm:RemoteControlViewModel)DataContext).RemoveUserCommand}" CommandParameter="{Binding}" Background="#EF4444" Foreground="White" CornerRadius="6" Padding="12,6" Cursor="Hand">
+                                                    <TextBlock Text="Delete" FontSize="12" FontWeight="SemiBold"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Separator Grid.Row="1" Background="{DynamicResource CardBorderBrush}" Height="1" Margin="0,0,0,14"/>
+
+                                        <!-- User Permissions Grid -->
+                                        <StackPanel Grid.Row="2" Spacing="10">
+                                            <Grid ColumnDefinitions="*, *">
+                                                <StackPanel Grid.Column="0" Spacing="8">
+                                                    <CheckBox IsChecked="{Binding AllowRemoteConsoleCommands}" Content="Allow Console Commands" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <CheckBox IsChecked="{Binding AllowRemotePlayerActions}" Content="Allow Player Actions (Kick / Ban / Op)" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <CheckBox IsChecked="{Binding AllowRemoteServerSettings}" Content="Allow Server Settings Changes" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="8">
+                                                    <CheckBox IsChecked="{Binding AllowRemoteServerAddons}" Content="Allow Plugin / Mod Management" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <CheckBox IsChecked="{Binding AllowRemoteFileManager}" Content="Allow File Manager Operations" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <CheckBox IsChecked="{Binding AllowRemoteServerBackups}" Content="Allow Backup Creation / Restore" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
-            </Grid>
+            </Panel>
         </ScrollViewer>
     </Grid>
 </UserControl>

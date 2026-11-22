@@ -1,0 +1,112 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PocketMC.App.Views.Dialogs.ServerCrashDialogWindow"
+        Title="Server Crash Detected"
+        Width="740"
+        SizeToContent="Height"
+        MinWidth="640" MaxWidth="840"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#18181B">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Margin="0,0,0,16">
+            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#3B202A" Margin="0,0,14,0" VerticalAlignment="Center">
+                <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                          Width="20" Height="20"
+                          Foreground="#F38BA8"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtServerName" Text="Server Name" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    <Border Background="#F38BA8" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtCategoryBadge" Text="Crashed" FontSize="11" FontWeight="Bold" Foreground="#1E1E2E"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock x:Name="TxtServerDetails" Text="Engine Type &amp; Version" FontSize="12" Foreground="#A1A1AA" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Crash Summary Card -->
+        <Border Grid.Row="1"
+                Background="#27272A"
+                BorderBrush="#3F3F46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14,12"
+                Margin="0,0,0,16">
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="TxtCrashTitle" Text="Crash Summary" FontSize="13" FontWeight="SemiBold" Foreground="#F38BA8"/>
+                <TextBlock x:Name="TxtCrashSummary" Text="The server encountered an unhandled exception." FontSize="12" Foreground="#E4E4E7" TextWrapping="Wrap" LineHeight="18"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Diagnostic Log Section -->
+        <Grid Grid.Row="2" RowDefinitions="Auto, *" Margin="0,0,0,20">
+            <TextBlock Grid.Row="0" Text="Diagnostic &amp; Exception Log" FontSize="12" FontWeight="SemiBold" Foreground="#A1A1AA" Margin="0,0,0,6"/>
+            <Border Grid.Row="1" Background="#09090B" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="6" Padding="10">
+                <ScrollViewer MaxHeight="220" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <SelectableTextBlock x:Name="TxtLogViewer"
+                                         FontFamily="Consolas, Menlo, Monaco, 'Courier New', monospace"
+                                         FontSize="11"
+                                         Foreground="#CDD6F4"
+                                         LineHeight="18"
+                                         TextWrapping="NoWrap"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Action buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="Auto, *">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="BtnOpenFolder"
+                        Content="Open Crash Folder"
+                        Background="#27272A"
+                        BorderBrush="#3F3F46"
+                        Foreground="#FFFFFF"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        Cursor="Hand"
+                        IsVisible="False"/>
+                <Button x:Name="BtnCopyLogs"
+                        Content="Copy Logs"
+                        Background="#27272A"
+                        BorderBrush="#3F3F46"
+                        Foreground="#FFFFFF"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        Cursor="Hand"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button x:Name="BtnClose"
+                        Content="Close"
+                        Background="#27272A"
+                        BorderBrush="#3F3F46"
+                        Foreground="#FFFFFF"
+                        CornerRadius="6"
+                        Padding="16,8"
+                        MinWidth="80"
+                        Cursor="Hand"/>
+                <Button x:Name="BtnRestart"
+                        Content="Restart Server"
+                        Background="#3B82F6"
+                        Foreground="#FFFFFF"
+                        CornerRadius="6"
+                        Padding="16,8"
+                        MinWidth="120"
+                        Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

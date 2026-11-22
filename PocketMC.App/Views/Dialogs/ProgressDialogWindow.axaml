@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lucide="using:Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.Dialogs.ProgressDialogWindow"
+        Title="Progress"
+        Width="460"
+        SizeToContent="Height"
+        MinWidth="380" MaxWidth="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource CardBackgroundBrush}">
+
+  <Grid Margin="24,24,24,24" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+    <!-- Icon -->
+    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24"
+            Background="#263498DB" HorizontalAlignment="Center" Margin="0,0,0,16">
+      <lucide:LucideIcon Kind="RefreshCw" Size="24" Foreground="#3498DB"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+
+    <!-- Message Text -->
+    <TextBlock Grid.Row="1" x:Name="TxtMessage"
+               Text="Please wait..."
+               FontSize="15" FontWeight="SemiBold"
+               TextAlignment="Center" TextWrapping="Wrap"
+               Foreground="{DynamicResource TextPrimaryBrush}"
+               Margin="0,0,0,6"/>
+
+    <!-- Detail Text -->
+    <TextBlock Grid.Row="2" x:Name="TxtDetail"
+               Text="Working on request..."
+               FontSize="13" TextAlignment="Center" TextWrapping="Wrap"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               Margin="0,0,0,20"/>
+
+    <!-- Progress Bar -->
+    <ProgressBar Grid.Row="3" x:Name="DialogProgressBar"
+                 Minimum="0" Maximum="100" Value="0"
+                 Height="6" CornerRadius="3"
+                 IsIndeterminate="True"
+                 Foreground="{DynamicResource AccentBrush}"
+                 Margin="0,0,0,16"/>
+
+    <!-- Cancel button -->
+    <Button Grid.Row="4" x:Name="BtnCancel"
+            Content="Cancel"
+            IsVisible="False"
+            HorizontalAlignment="Center"
+            Click="BtnCancel_Click"
+            Background="{DynamicResource InputBackgroundBrush}"
+            Foreground="{DynamicResource TextSecondaryBrush}"
+            BorderBrush="{DynamicResource CardBorderBrush}"
+            BorderThickness="1"
+            Padding="18,8"
+            CornerRadius="6"
+            Cursor="Hand"/>
+  </Grid>
+</Window>
