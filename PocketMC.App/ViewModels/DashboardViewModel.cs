@@ -295,9 +295,9 @@ namespace PocketMC.App.ViewModels
         private Task NavigateToNewInstance()
         {
             if (_serviceProvider == null || _navigationService == null) return Task.CompletedTask;
-            var page = _serviceProvider.GetRequiredService<NewInstancePage>();
+            var vm = _serviceProvider.GetRequiredService<NewInstanceViewModel>();
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 "New Instance",
                 DetailRouteKind.NewInstance,
                 DetailBackNavigation.Dashboard);
@@ -307,13 +307,10 @@ namespace PocketMC.App.ViewModels
         private void NavigateToSettings(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
-            var page = _serviceProvider.GetRequiredService<ServerSettingsPage>();
-            if (page.DataContext is ServerSettingsViewModel vm)
-            {
-                vm.SelectedInstance = card.Instance;
-            }
+            var vm = _serviceProvider.GetRequiredService<ServerSettingsViewModel>();
+            vm.SelectedInstance = card.Instance;
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 $"{card.Name} Settings",
                 DetailRouteKind.ServerSettings,
                 DetailBackNavigation.Dashboard);
@@ -322,13 +319,10 @@ namespace PocketMC.App.ViewModels
         private void NavigateToConsole(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
-            var page = _serviceProvider.GetRequiredService<ServerConsolePage>();
-            if (page.DataContext is ServerConsoleViewModel vm)
-            {
-                vm.SelectedInstance = card.Instance;
-            }
+            var vm = _serviceProvider.GetRequiredService<ServerConsoleViewModel>();
+            vm.SelectedInstance = card.Instance;
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 $"{card.Name} Console",
                 DetailRouteKind.ServerConsole,
                 DetailBackNavigation.Dashboard);
@@ -337,13 +331,10 @@ namespace PocketMC.App.ViewModels
         private void NavigateToPlayers(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
-            var page = _serviceProvider.GetRequiredService<PlayerManagementPage>();
-            if (page.DataContext is PlayerManagementViewModel vm)
-            {
-                vm.SelectedInstance = card.Instance;
-            }
+            var vm = _serviceProvider.GetRequiredService<PlayerManagementViewModel>();
+            vm.SelectedInstance = card.Instance;
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 $"{card.Name} Players",
                 DetailRouteKind.PlayerManagement,
                 DetailBackNavigation.Dashboard);
@@ -352,11 +343,9 @@ namespace PocketMC.App.ViewModels
         private void NavigateToExport(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
-            var page = _serviceProvider.GetRequiredService<PocketMC.App.Views.Instances.InstanceExportPage>();
             var vm = new PocketMC.App.ViewModels.Instances.InstanceExportViewModel(card.Instance, _instanceService, _dialogService);
-            page.DataContext = vm;
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 $"{card.Name} Export",
                 Navigation.DetailRouteKind.InstanceExport,
                 Navigation.DetailBackNavigation.Dashboard);
@@ -366,11 +355,9 @@ namespace PocketMC.App.ViewModels
         public void NavigateToImport()
         {
             if (_serviceProvider == null || _navigationService == null) return;
-            var page = _serviceProvider.GetRequiredService<PocketMC.App.Views.Instances.InstanceImportPage>();
             var vm = new PocketMC.App.ViewModels.Instances.InstanceImportViewModel(_instanceService, _dialogService);
-            page.DataContext = vm;
             _navigationService.NavigateToDetailPage(
-                page,
+                vm,
                 "Import Instance",
                 Navigation.DetailRouteKind.InstanceImport,
                 Navigation.DetailBackNavigation.Dashboard);

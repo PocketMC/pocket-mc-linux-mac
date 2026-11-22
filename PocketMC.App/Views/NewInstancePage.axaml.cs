@@ -8,5 +8,10 @@ namespace PocketMC.App.Views
         {
             InitializeComponent();
         }
+
+        public NewInstancePage(PocketMC.App.ViewModels.NewInstanceViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
+        }
     }
 }
