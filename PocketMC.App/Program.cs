@@ -178,7 +178,23 @@ namespace PocketMC.App
                     services.AddTransient<MainWindow>();
                     services.AddTransient<AppSettingsViewModel>();
                     services.AddTransient<AppSettingsPage>();
-                    services.AddSingleton<DashboardViewModel>();
+                    services.AddSingleton<DashboardViewModel>(sp => new DashboardViewModel(
+                        sp.GetRequiredService<IInstanceService>(),
+                        sp.GetRequiredService<IProcessRunner>(),
+                        sp.GetRequiredService<IPlayerService>(),
+                        sp.GetRequiredService<ProcessMetricsTracker>(),
+                        sp.GetRequiredService<INativeMetricsProvider>(),
+                        sp.GetRequiredService<PocketMC.RemoteControl.Tunnels.PlayitApiClient>(),
+                        sp.GetRequiredService<PocketMC.RemoteControl.Services.LocalNetworkAddressService>(),
+                        sp.GetRequiredService<ISettingsService>(),
+                        sp.GetService<IDialogService>(),
+                        sp.GetService<IAppNavigationService>(),
+                        sp,
+                        sp.GetRequiredService<DashboardInstanceListViewModel>(),
+                        sp.GetRequiredService<DashboardMetricsViewModel>(),
+                        sp.GetRequiredService<DashboardActionsViewModel>(),
+                        sp.GetService<IGeyserDetector>(),
+                        sp.GetService<ISimpleVoiceChatDetector>()));
                     services.AddTransient<DashboardView>();
                     services.AddTransient<NewInstanceViewModel>();
                     services.AddTransient<NewInstancePage>();

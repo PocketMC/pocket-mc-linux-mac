@@ -8,6 +8,7 @@ using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
 using PocketMC.RemoteControl.Tunnels;
 using PocketMC.RemoteControl.Services;
+using PocketMC.Platform.Metrics;
 using Xunit;
 
 namespace PocketMC.Tests
@@ -91,7 +92,7 @@ namespace PocketMC.Tests
             var localNetworkAddressService = new LocalNetworkAddressService();
 
             var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, new NativeMetricsProvider(), playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -117,7 +118,7 @@ namespace PocketMC.Tests
             var localNetworkAddressService = new LocalNetworkAddressService();
 
             var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, new NativeMetricsProvider(), playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();

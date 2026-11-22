@@ -20,5 +20,15 @@ namespace PocketMC.Tests
                 Assert.NotNull(secretStore);
             }
         }
+
+        [Fact]
+        public void Host_CanResolveDashboardViewModelAndMainWindowViewModel()
+        {
+            using var host = Program.CreateHostBuilder(System.Array.Empty<string>()).Build();
+            var dashboardVm = host.Services.GetRequiredService<PocketMC.App.ViewModels.DashboardViewModel>();
+            Assert.NotNull(dashboardVm);
+            var mainWindowVm = host.Services.GetRequiredService<PocketMC.App.ViewModels.MainWindowViewModel>();
+            Assert.NotNull(mainWindowVm);
+        }
     }
 }

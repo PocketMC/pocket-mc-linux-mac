@@ -82,12 +82,22 @@ namespace PocketMC.App.ViewModels
             {
                 Directory.CreateDirectory(SelectedPath);
                 _settingsService.SetDataRoot(SelectedPath);
-                SetupCompleted?.Invoke();
             }
             catch (Exception ex)
             {
                 IsError = true;
                 StatusMessage = $"Cannot access directory: {ex.Message}";
+                return;
+            }
+
+            try
+            {
+                SetupCompleted?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                IsError = true;
+                StatusMessage = $"Failed to start application: {ex.Message}";
             }
         }
     }

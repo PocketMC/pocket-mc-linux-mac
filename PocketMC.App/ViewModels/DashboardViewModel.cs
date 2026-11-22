@@ -89,31 +89,6 @@ namespace PocketMC.App.ViewModels
             IProcessRunner processRunner,
             IPlayerService playerService,
             ProcessMetricsTracker metricsTracker,
-            ThemeManager themeManager,
-            PlayitApiClient playitClient,
-            LocalNetworkAddressService localNetworkAddressService,
-            ISettingsService settingsService,
-            RemoteTunnelManager tunnelManager)
-            : this(
-                instanceService,
-                processRunner,
-                playerService,
-                metricsTracker,
-                new NativeMetricsProvider(),
-                playitClient,
-                localNetworkAddressService,
-                settingsService,
-                dialogService: null,
-                navigationService: null,
-                serviceProvider: null)
-        {
-        }
-
-        public DashboardViewModel(
-            IInstanceService instanceService,
-            IProcessRunner processRunner,
-            IPlayerService playerService,
-            ProcessMetricsTracker metricsTracker,
             INativeMetricsProvider metricsProvider,
             PlayitApiClient playitClient,
             LocalNetworkAddressService localNetworkAddressService,
