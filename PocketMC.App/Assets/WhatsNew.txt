@@ -1,13 +1,19 @@
-VERSION=1.9.10
+VERSION=1.0.4-beta.1
 
-[NEW FEATURES]
-Read PocketMC announcements and service notices in the new News page. News syncs in the background, stays cached for offline reading, and can show unread popup notices.
+[NEW FEATURES & LINUX/MACOS PARITY]
+Exact PocketMC Windows UI and UX parity delivered for Linux and macOS.
+TitleBar live System RAM usage telemetry with threshold alert coloring.
+Full Remote Control subsystem with auto-start, Cloudflare/Playit tunnels, and PBKDF2 authentication.
+Cross-platform AppClipboard service supporting Wayland (wl-copy), X11 (xclip/xsel), and macOS (pbcopy).
 
 [IMPROVEMENTS]
-Manage local Ollama models in separate Installed, Download, and Manual tabs. Pull recommended or custom models with progress and cancellation, and delete local models you no longer use.
-PocketMC checks the Playit agent at startup and before connecting. If the runtime is incompatible, PocketMC attempts a verified repair while keeping your saved agent credentials.
-Existing flat settings and version 1 PocketMC backups are converted to the organized format without resetting saved appearance or credentials.
+Accurate instance card state synchronization for running servers with emerald status indicators.
+Platform-aware title bar margin adjustment ensuring flush right-edge alignment on Linux and macOS.
+Enforced word wrapping on server console logs eliminating horizontal scrollbars.
+Interactive Ports Map visualizing local ports, RCON, Query, Simple Voice Chat UDP, and Playit public endpoints.
 
 [FIXES & STABILITY]
-A window saved as maximized now reopens maximized instead of sometimes opening as a large, normal window.
-Updating settings no longer replaces an existing backdrop, accent color, or wallpaper path with migration defaults.
+Fixed session.lock DirectoryLock LockException crash caused by duplicate process execution and orphaned child processes.
+Guaranteed entireProcessTree process termination on server shutdown and stop timeouts.
+Configurable server crash auto-restart preventing infinite crash loops on fatal errors.
+Console Copy Logs button with visual confirmation and dynamic checkmark feedback.

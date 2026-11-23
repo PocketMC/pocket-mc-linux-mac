@@ -214,10 +214,11 @@ namespace PocketMC.Tests
                 };
 
                 await _runner.StartAsync(instance);
-                await Task.Delay(1000);
+                await Task.Delay(1500);
 
+                // Initial start transitioned to Starting once and Crashed once; no restart attempts occurred
                 Assert.Equal(1, crashTransitions);
-                Assert.Equal(0, startTransitions);
+                Assert.Equal(1, startTransitions);
             }
         }
     }

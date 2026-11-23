@@ -1,21 +1,19 @@
-VERSION=1.0.3
+VERSION=1.0.4-beta.1
 
 [NEW FEATURES & LINUX/MACOS PARITY]
-Complete Windows experience and functional parity delivered for Linux and macOS.
-Interactive Ports Map visualizing local ports, RCON, Query, Simple Voice Chat UDP, and Playit public endpoints.
-Remote Control REST API and full embedded SPA Web Dashboard host for remote server administration.
-Cross-platform instance export and import with metadata bundle preservation (pocketmc-export.json).
-Automatic Geyser and Floodgate Bedrock crossplay provisioning with dynamic UDP port patching.
-Bedrock dedicated ban sidecar management for atomic pocketmc-bans.json synchronization.
-CurseForge and Modrinth unified marketplace integration with client-only mod filtering.
+Exact PocketMC Windows UI and UX parity delivered for Linux and macOS.
+TitleBar live System RAM usage telemetry with threshold alert coloring.
+Full Remote Control subsystem with auto-start, Cloudflare/Playit tunnels, and PBKDF2 authentication.
+Cross-platform AppClipboard service supporting Wayland (wl-copy), X11 (xclip/xsel), and macOS (pbcopy).
 
 [IMPROVEMENTS]
-Single-instance process supervision with setpgid process groups and escalation to SIGKILL on timeout.
-Zero-leak circular buffer console log streaming with real-time ANSI terminal escape filtering.
-Native secret storage supporting macOS Keychain and Linux Secret Service with AES-256 fallback.
-Automatic server crash detection and rate-limited auto-restart backoff.
+Accurate instance card state synchronization for running servers with emerald status indicators.
+Platform-aware title bar margin adjustment ensuring flush right-edge alignment on Linux and macOS.
+Enforced word wrapping on server console logs eliminating horizontal scrollbars.
+Interactive Ports Map visualizing local ports, RCON, Query, Simple Voice Chat UDP, and Playit public endpoints.
 
 [FIXES & STABILITY]
-Fixed path traversal vulnerability by blocking symlink and reparse point escapes across Unix filesystems.
-Resolved instance slug collision handling by automatically incrementing numeric suffixes.
-Preserved full server.properties comments, ordering, and whitespace on port updates.
+Fixed session.lock DirectoryLock LockException crash caused by duplicate process execution and orphaned child processes.
+Guaranteed entireProcessTree process termination on server shutdown and stop timeouts.
+Configurable server crash auto-restart preventing infinite crash loops on fatal errors.
+Console Copy Logs button with visual confirmation and dynamic checkmark feedback.
