@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Configuration;
 using PocketMC.Infrastructure.WhatsNew;
 using PocketMC.App.Views;
 
@@ -54,21 +55,21 @@ public partial class AboutViewModel : ObservableObject
         _whatsNewService = whatsNewService;
         _currentDataRoot = _settingsService.GetDataRoot();
 
-        OpenGitHubCommand = new RelayCommand(() => OpenUrl("https://github.com/PocketMC/pocket-mc-linux-mac"));
-        OpenWebsiteCommand = new RelayCommand(() => OpenUrl("https://pocketmc.net"));
-        OpenStudioCommand = new RelayCommand(() => OpenUrl("https://github.com/DS-Labs-Org"));
+        OpenGitHubCommand = new RelayCommand(() => OpenUrl(AppUrls.GitHub));
+        OpenWebsiteCommand = new RelayCommand(() => OpenUrl(AppUrls.Website));
+        OpenStudioCommand = new RelayCommand(() => OpenUrl(AppUrls.Studio));
         OpenWhatsNewCommand = new RelayCommand(OpenWhatsNew);
-        OpenDivyCommand = new RelayCommand(() => OpenUrl("https://github.com/divyviradiya2"));
-        OpenSahajCommand = new RelayCommand(() => OpenUrl("https://github.com/SizWinz"));
-        OpenJohndinglesinCommand = new RelayCommand(() => OpenUrl("https://github.com/Johndinglesin"));
-        OpenNexViceCommand = new RelayCommand(() => OpenUrl("https://discord.com/users/353457177579847680"));
-        OpenDiscordCommand = new RelayCommand(() => OpenUrl("https://discord.gg/pocketmc"));
+        OpenDivyCommand = new RelayCommand(() => OpenUrl(AppUrls.DivyGitHub));
+        OpenSahajCommand = new RelayCommand(() => OpenUrl(AppUrls.SahajGitHub));
+        OpenJohndinglesinCommand = new RelayCommand(() => OpenUrl(AppUrls.JohndinglesinGitHub));
+        OpenNexViceCommand = new RelayCommand(() => OpenUrl(AppUrls.NexViceDiscord));
+        OpenDiscordCommand = new RelayCommand(() => OpenUrl(AppUrls.DiscordInvite));
         CopyDiscordInviteCommand = new RelayCommand(CopyDiscordInvite);
-        OpenInstagramCommand = new RelayCommand(() => OpenUrl("https://instagram.com/pocketmc"));
-        OpenYouTubeCommand = new RelayCommand(() => OpenUrl("https://youtube.com/@pocketmc"));
-        OpenRedditCommand = new RelayCommand(() => OpenUrl("https://reddit.com/r/pocketmc"));
-        OpenFeedbackCommand = new RelayCommand(() => OpenUrl("https://github.com/PocketMC/pocket-mc-linux-mac/issues"));
-        OpenDonationCommand = new RelayCommand(() => OpenUrl("https://buymeacoffee.com/pocketmc"));
+        OpenInstagramCommand = new RelayCommand(() => OpenUrl(AppUrls.Instagram));
+        OpenYouTubeCommand = new RelayCommand(() => OpenUrl(AppUrls.YouTube));
+        OpenRedditCommand = new RelayCommand(() => OpenUrl(AppUrls.Reddit));
+        OpenFeedbackCommand = new RelayCommand(() => OpenUrl(AppUrls.Feedback));
+        OpenDonationCommand = new RelayCommand(() => OpenUrl(AppUrls.Donation));
         NavigateBackCommand = new RelayCommand(NavigateBack);
         ChangeDataRootCommand = new AsyncRelayCommand(ChangeDataRootAsync);
         OpenDataRootFolderCommand = new RelayCommand(OpenDataRootFolder);
@@ -160,7 +161,7 @@ public partial class AboutViewModel : ObservableObject
             var topLevel = TopLevel.GetTopLevel(desktop.MainWindow);
             if (topLevel?.Clipboard != null)
             {
-                await topLevel.Clipboard.SetTextAsync("https://discord.gg/pocketmc");
+                await topLevel.Clipboard.SetTextAsync(AppUrls.DiscordInvite);
             }
         }
     }

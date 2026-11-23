@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Configuration;
 using PocketMC.RemoteControl.Hosting;
 using PocketMC.RemoteControl.Services;
 using QRCoder;
@@ -147,7 +148,7 @@ public partial class RemoteControlViewModel : ObservableObject
         CopyLocalUrlCommand = new AsyncRelayCommand(CopyLocalUrlAsync);
         TogglePublicQrCommand = new RelayCommand(() => IsPublicQrVisible = !IsPublicQrVisible);
         CopyPublicUrlCommand = new AsyncRelayCommand(CopyPublicUrlAsync);
-        JoinDiscordCommand = new RelayCommand(() => OpenUrl("https://discord.gg/pocketmc"));
+        JoinDiscordCommand = new RelayCommand(() => OpenUrl(AppUrls.DiscordInvite));
 
         LoadSettings();
         GenerateQrCode();

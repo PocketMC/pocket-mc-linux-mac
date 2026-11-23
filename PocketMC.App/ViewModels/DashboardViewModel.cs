@@ -135,6 +135,14 @@ namespace PocketMC.App.ViewModels
                 onOpenSettings: NavigateToSettings,
                 onOpenConsole: NavigateToConsole,
                 onOpenPlayers: NavigateToPlayers,
+                onOpenExport: NavigateToExport,
+                navigationService: _navigationService,
+                serviceProvider: _serviceProvider);
+
+            ActionsVm.SetCallbacks(
+                onOpenSettings: NavigateToSettings,
+                onOpenConsole: NavigateToConsole,
+                onOpenPlayers: NavigateToPlayers,
                 onOpenExport: NavigateToExport);
 
             NewInstanceCommand = new AsyncRelayCommand(NavigateToNewInstance);
@@ -308,36 +316,39 @@ namespace PocketMC.App.ViewModels
         {
             if (_serviceProvider == null || _navigationService == null) return;
             var vm = _serviceProvider.GetRequiredService<ServerSettingsViewModel>();
-            vm.SelectedInstance = card.Instance;
+            vm.Initialize(card.Instance);
             _navigationService.NavigateToDetailPage(
                 vm,
                 $"{card.Name} Settings",
                 DetailRouteKind.ServerSettings,
-                DetailBackNavigation.Dashboard);
+                DetailBackNavigation.Dashboard,
+                clearDetailStack: true);
         }
 
         private void NavigateToConsole(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
             var vm = _serviceProvider.GetRequiredService<ServerConsoleViewModel>();
-            vm.SelectedInstance = card.Instance;
+            vm.Initialize(card.Instance);
             _navigationService.NavigateToDetailPage(
                 vm,
                 $"{card.Name} Console",
                 DetailRouteKind.ServerConsole,
-                DetailBackNavigation.Dashboard);
+                DetailBackNavigation.Dashboard,
+                clearDetailStack: true);
         }
 
         private void NavigateToPlayers(InstanceCardViewModel card)
         {
             if (_serviceProvider == null || _navigationService == null) return;
             var vm = _serviceProvider.GetRequiredService<PlayerManagementViewModel>();
-            vm.SelectedInstance = card.Instance;
+            vm.Initialize(card.Instance);
             _navigationService.NavigateToDetailPage(
                 vm,
                 $"{card.Name} Players",
                 DetailRouteKind.PlayerManagement,
-                DetailBackNavigation.Dashboard);
+                DetailBackNavigation.Dashboard,
+                clearDetailStack: true);
         }
 
         private void NavigateToExport(InstanceCardViewModel card)
@@ -348,7 +359,8 @@ namespace PocketMC.App.ViewModels
                 vm,
                 $"{card.Name} Export",
                 Navigation.DetailRouteKind.InstanceExport,
-                Navigation.DetailBackNavigation.Dashboard);
+                Navigation.DetailBackNavigation.Dashboard,
+                clearDetailStack: true);
         }
 
         [RelayCommand]

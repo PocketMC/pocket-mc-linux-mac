@@ -5,6 +5,7 @@ namespace PocketMC.App.Navigation;
 
 public sealed class AppNavigationService : IAppNavigationService
 {
+    private readonly IServiceProvider? _serviceProvider;
     private readonly ControlledNavigationStack _stack = new();
     private IShellHost? _shellHost;
 
@@ -15,6 +16,11 @@ public sealed class AppNavigationService : IAppNavigationService
     public string? CurrentBreadcrumb => _stack.Current?.Breadcrumb;
     public DetailRouteKind? CurrentRouteKind => _stack.Current?.RouteKind;
 
+    public AppNavigationService(IServiceProvider? serviceProvider = null)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
     public void Initialize(IShellHost shellHost)
     {
         _shellHost = shellHost;
@@ -23,8 +29,13 @@ public sealed class AppNavigationService : IAppNavigationService
     public bool NavigateToDashboard()
     {
         if (_shellHost == null) return false;
-        // Dashboard is the primary root: navigate back until root or push dashboard
-        _stack.Push("Dashboard", "Dashboard", DetailRouteKind.Dashboard, DetailBackNavigation.Dashboard, clearDetailStack: true);
+        object page = "Dashboard";
+        if (_serviceProvider != null)
+        {
+            var vm = _serviceProvider.GetService(typeof(ViewModels.DashboardViewModel));
+            if (vm != null) page = vm;
+        }
+        _stack.Push(page, "Dashboard", DetailRouteKind.Dashboard, DetailBackNavigation.Dashboard, clearDetailStack: true);
         ApplyCurrent();
         return true;
     }
@@ -32,7 +43,13 @@ public sealed class AppNavigationService : IAppNavigationService
     public bool NavigateToTunnel()
     {
         if (_shellHost == null) return false;
-        _stack.Push("Tunnel", "Tunnel", DetailRouteKind.Tunnel, DetailBackNavigation.Dashboard, clearDetailStack: true);
+        object page = "Tunnel";
+        if (_serviceProvider != null)
+        {
+            var vm = _serviceProvider.GetService(typeof(ViewModels.TunnelViewModel));
+            if (vm != null) page = vm;
+        }
+        _stack.Push(page, "Tunnel", DetailRouteKind.Tunnel, DetailBackNavigation.Dashboard, clearDetailStack: true);
         ApplyCurrent();
         return true;
     }
@@ -40,7 +57,13 @@ public sealed class AppNavigationService : IAppNavigationService
     public bool NavigateToNews()
     {
         if (_shellHost == null) return false;
-        _stack.Push("News", "Community News", DetailRouteKind.News, DetailBackNavigation.Dashboard);
+        object page = "News";
+        if (_serviceProvider != null)
+        {
+            var vm = _serviceProvider.GetService(typeof(ViewModels.NewsViewModel));
+            if (vm != null) page = vm;
+        }
+        _stack.Push(page, "Community News", DetailRouteKind.News, DetailBackNavigation.Dashboard);
         ApplyCurrent();
         return true;
     }

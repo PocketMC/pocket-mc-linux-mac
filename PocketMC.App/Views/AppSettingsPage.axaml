@@ -6,8 +6,8 @@
              x:DataType="vm:AppSettingsViewModel"
              Background="Transparent">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,24,32,32">
-    <StackPanel MaxWidth="900" Spacing="24">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,24,32,48">
+    <StackPanel MaxWidth="900" Spacing="24" Margin="0,0,0,48">
       <!-- Page Header -->
       <Grid ColumnDefinitions="*, Auto">
         <StackPanel Grid.Column="0" Spacing="4">
@@ -259,6 +259,9 @@
           </StackPanel>
         </StackPanel>
       </Border>
+
+      <!-- Bottom scroll margin spacer -->
+      <Border Height="32"/>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

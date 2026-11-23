@@ -13,6 +13,46 @@
         ExtendClientAreaTitleBarHeightHint="40"
         MinWidth="1024" MinHeight="680" Width="1100" Height="740">
 
+  <Window.Styles>
+    <Style Selector="Button.nav-item">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Left"/>
+      <Setter Property="Padding" Value="12,10"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+    <Style Selector="Button.nav-item:pointerover">
+      <Setter Property="Background" Value="#15FFFFFF"/>
+    </Style>
+    <Style Selector="Button.nav-item.active">
+      <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Button.nav-item-footer">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Left"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+    <Style Selector="Button.nav-item-footer:pointerover">
+      <Setter Property="Background" Value="#15FFFFFF"/>
+    </Style>
+    <Style Selector="Button.nav-item-footer.active">
+      <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+  </Window.Styles>
+
   <Grid x:Name="RootGrid">
     <!-- Blurred wallpaper fallback layer -->
     <Image x:Name="WallpaperBlurLayer"
@@ -157,54 +197,42 @@
             <StackPanel Grid.Row="0" Spacing="4">
               <!-- Dashboard -->
               <Button Command="{Binding NavigateDashboardCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="{DynamicResource InputBackgroundBrush}"
-                      Foreground="{DynamicResource TextPrimaryBrush}"
-                      Padding="12,10" CornerRadius="8" Cursor="Hand">
+                      Classes="nav-item"
+                      Classes.active="{Binding IsDashboardSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="LayoutDashboard" Size="18" Foreground="{DynamicResource AccentBrush}"/>
-                  <TextBlock Text="Dashboard" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
               <!-- Tunnel -->
               <Button Command="{Binding NavigateTunnelCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextPrimaryBrush}"
-                      Padding="12,10" CornerRadius="8" Cursor="Hand">
+                      Classes="nav-item"
+                      Classes.active="{Binding IsTunnelSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="Globe" Size="18" Foreground="#3498DB"/>
-                  <TextBlock Text="Tunnel" FontWeight="Medium" VerticalAlignment="Center"/>
+                  <TextBlock Text="Tunnel" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
               <!-- Remote Control -->
               <Button Command="{Binding NavigateRemoteControlCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextPrimaryBrush}"
-                      Padding="12,10" CornerRadius="8" Cursor="Hand">
+                      Classes="nav-item"
+                      Classes.active="{Binding IsRemoteControlSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="Smartphone" Size="18" Foreground="#9B59B6"/>
-                  <TextBlock Text="Remote Control" FontWeight="Medium" VerticalAlignment="Center"/>
+                  <TextBlock Text="Remote Control" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
               <!-- News -->
               <Button Command="{Binding NavigateNewsCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextPrimaryBrush}"
-                      Padding="12,10" CornerRadius="8" Cursor="Hand">
+                      Classes="nav-item"
+                      Classes.active="{Binding IsNewsSelected}">
                 <Grid ColumnDefinitions="Auto, *, Auto">
                   <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
                     <lucide:LucideIcon Kind="Megaphone" Size="18" Foreground="#E67E22"/>
-                    <TextBlock Text="News" FontWeight="Medium" VerticalAlignment="Center"/>
+                    <TextBlock Text="News" VerticalAlignment="Center"/>
                   </StackPanel>
                   <Border Grid.Column="2"
                           MinWidth="16" Height="16"
@@ -225,11 +253,8 @@
             <StackPanel Grid.Row="1" Spacing="4">
               <!-- Settings -->
               <Button Command="{Binding NavigateSettingsCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextSecondaryBrush}"
-                      Padding="12,8" CornerRadius="6" Cursor="Hand">
+                      Classes="nav-item-footer"
+                      Classes.active="{Binding IsSettingsSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="Settings" Size="16" Foreground="{DynamicResource TextSecondaryBrush}"/>
                   <TextBlock Text="Settings" FontSize="13" VerticalAlignment="Center"/>
@@ -238,11 +263,8 @@
 
               <!-- Runtimes -->
               <Button Command="{Binding NavigateRuntimesCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextSecondaryBrush}"
-                      Padding="12,8" CornerRadius="6" Cursor="Hand">
+                      Classes="nav-item-footer"
+                      Classes.active="{Binding IsRuntimesSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="Download" Size="16" Foreground="{DynamicResource TextSecondaryBrush}"/>
                   <TextBlock Text="Runtimes" FontSize="13" VerticalAlignment="Center"/>
@@ -251,11 +273,8 @@
 
               <!-- About -->
               <Button Command="{Binding NavigateAboutCommand}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextSecondaryBrush}"
-                      Padding="12,8" CornerRadius="6" Cursor="Hand">
+                      Classes="nav-item-footer"
+                      Classes.active="{Binding IsAboutSelected}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <lucide:LucideIcon Kind="Info" Size="16" Foreground="{DynamicResource TextSecondaryBrush}"/>
                   <TextBlock Text="About" FontSize="13" VerticalAlignment="Center"/>

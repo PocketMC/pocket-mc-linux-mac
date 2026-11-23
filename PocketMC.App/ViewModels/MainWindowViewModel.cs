@@ -63,6 +63,25 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     [ObservableProperty]
     private string _selectedNavSection = "Dashboard";
 
+    public bool IsDashboardSelected => SelectedNavSection == "Dashboard";
+    public bool IsTunnelSelected => SelectedNavSection == "Tunnel";
+    public bool IsRemoteControlSelected => SelectedNavSection == "RemoteControl";
+    public bool IsNewsSelected => SelectedNavSection == "News";
+    public bool IsSettingsSelected => SelectedNavSection == "Settings";
+    public bool IsRuntimesSelected => SelectedNavSection == "Runtimes";
+    public bool IsAboutSelected => SelectedNavSection == "About";
+
+    partial void OnSelectedNavSectionChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsDashboardSelected));
+        OnPropertyChanged(nameof(IsTunnelSelected));
+        OnPropertyChanged(nameof(IsRemoteControlSelected));
+        OnPropertyChanged(nameof(IsNewsSelected));
+        OnPropertyChanged(nameof(IsSettingsSelected));
+        OnPropertyChanged(nameof(IsRuntimesSelected));
+        OnPropertyChanged(nameof(IsAboutSelected));
+    }
+
     public MainWindowViewModel(
         IAppNavigationService navigationService,
         IServiceProvider serviceProvider,
@@ -76,6 +95,7 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
 
         _navigationService.Initialize(this);
         _navigationService.NavigationChanged += OnNavigationChanged;
+        _navigationService.NavigateToDetailPage(dashboardViewModel, "Dashboard", DetailRouteKind.Dashboard, DetailBackNavigation.Dashboard, clearDetailStack: true);
     }
 
     private void OnNavigationChanged()
@@ -86,7 +106,16 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
 
         if (_navigationService.CurrentRouteKind.HasValue)
         {
-            SelectedNavSection = _navigationService.CurrentRouteKind.Value.ToString();
+            var kind = _navigationService.CurrentRouteKind.Value;
+            SelectedNavSection = kind switch
+            {
+                DetailRouteKind.Dashboard => "Dashboard",
+                DetailRouteKind.Tunnel => "Tunnel",
+                DetailRouteKind.News => "News",
+                DetailRouteKind.Settings => "Settings",
+                DetailRouteKind.About => "About",
+                _ => SelectedNavSection
+            };
         }
     }
 

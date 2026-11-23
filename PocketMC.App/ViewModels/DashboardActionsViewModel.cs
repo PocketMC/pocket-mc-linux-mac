@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+using PocketMC.App.Navigation;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
 
@@ -16,10 +18,12 @@ namespace PocketMC.App.ViewModels
         private readonly IProcessRunner _processRunner;
         private readonly IInstanceService _instanceService;
         private readonly IDialogService? _dialogService;
-        private readonly Action<InstanceCardViewModel>? _onOpenSettings;
-        private readonly Action<InstanceCardViewModel>? _onOpenConsole;
-        private readonly Action<InstanceCardViewModel>? _onOpenPlayers;
-        private readonly Action<InstanceCardViewModel>? _onOpenExport;
+        private readonly IAppNavigationService? _navigationService;
+        private readonly IServiceProvider? _serviceProvider;
+        private Action<InstanceCardViewModel>? _onOpenSettings;
+        private Action<InstanceCardViewModel>? _onOpenConsole;
+        private Action<InstanceCardViewModel>? _onOpenPlayers;
+        private Action<InstanceCardViewModel>? _onOpenExport;
 
         public DashboardActionsViewModel(
             IProcessRunner processRunner,
@@ -28,7 +32,9 @@ namespace PocketMC.App.ViewModels
             Action<InstanceCardViewModel>? onOpenSettings = null,
             Action<InstanceCardViewModel>? onOpenConsole = null,
             Action<InstanceCardViewModel>? onOpenPlayers = null,
-            Action<InstanceCardViewModel>? onOpenExport = null)
+            Action<InstanceCardViewModel>? onOpenExport = null,
+            IAppNavigationService? navigationService = null,
+            IServiceProvider? serviceProvider = null)
         {
             _processRunner = processRunner;
             _instanceService = instanceService;
@@ -37,6 +43,20 @@ namespace PocketMC.App.ViewModels
             _onOpenConsole = onOpenConsole;
             _onOpenPlayers = onOpenPlayers;
             _onOpenExport = onOpenExport;
+            _navigationService = navigationService;
+            _serviceProvider = serviceProvider;
+        }
+
+        public void SetCallbacks(
+            Action<InstanceCardViewModel>? onOpenSettings = null,
+            Action<InstanceCardViewModel>? onOpenConsole = null,
+            Action<InstanceCardViewModel>? onOpenPlayers = null,
+            Action<InstanceCardViewModel>? onOpenExport = null)
+        {
+            if (onOpenSettings != null) _onOpenSettings = onOpenSettings;
+            if (onOpenConsole != null) _onOpenConsole = onOpenConsole;
+            if (onOpenPlayers != null) _onOpenPlayers = onOpenPlayers;
+            if (onOpenExport != null) _onOpenExport = onOpenExport;
         }
 
         public async Task StartServerAsync(InstanceCardViewModel vm)
@@ -174,9 +194,96 @@ namespace PocketMC.App.ViewModels
             }
         }
 
-        public void OpenSettings(InstanceCardViewModel vm) => _onOpenSettings?.Invoke(vm);
-        public void OpenConsole(InstanceCardViewModel vm) => _onOpenConsole?.Invoke(vm);
-        public void OpenPlayers(InstanceCardViewModel vm) => _onOpenPlayers?.Invoke(vm);
-        public void OpenExport(InstanceCardViewModel vm) => _onOpenExport?.Invoke(vm);
+        public void OpenSettings(InstanceCardViewModel vm)
+        {
+            if (_onOpenSettings != null)
+            {
+                _onOpenSettings.Invoke(vm);
+                return;
+            }
+
+            if (_serviceProvider != null && _navigationService != null)
+            {
+                var settingsVm = _serviceProvider.GetService<ServerSettingsViewModel>();
+                if (settingsVm != null)
+                {
+                    settingsVm.Initialize(vm.Instance);
+                    _navigationService.NavigateToDetailPage(
+                        settingsVm,
+                        $"{vm.Name} Settings",
+                        DetailRouteKind.ServerSettings,
+                        DetailBackNavigation.Dashboard,
+                        clearDetailStack: true);
+                }
+            }
+        }
+
+        public void OpenConsole(InstanceCardViewModel vm)
+        {
+            if (_onOpenConsole != null)
+            {
+                _onOpenConsole.Invoke(vm);
+                return;
+            }
+
+            if (_serviceProvider != null && _navigationService != null)
+            {
+                var consoleVm = _serviceProvider.GetService<ServerConsoleViewModel>();
+                if (consoleVm != null)
+                {
+                    consoleVm.Initialize(vm.Instance);
+                    _navigationService.NavigateToDetailPage(
+                        consoleVm,
+                        $"{vm.Name} Console",
+                        DetailRouteKind.ServerConsole,
+                        DetailBackNavigation.Dashboard,
+                        clearDetailStack: true);
+                }
+            }
+        }
+
+        public void OpenPlayers(InstanceCardViewModel vm)
+        {
+            if (_onOpenPlayers != null)
+            {
+                _onOpenPlayers.Invoke(vm);
+                return;
+            }
+
+            if (_serviceProvider != null && _navigationService != null)
+            {
+                var playersVm = _serviceProvider.GetService<PlayerManagementViewModel>();
+                if (playersVm != null)
+                {
+                    playersVm.Initialize(vm.Instance);
+                    _navigationService.NavigateToDetailPage(
+                        playersVm,
+                        $"{vm.Name} Players",
+                        DetailRouteKind.PlayerManagement,
+                        DetailBackNavigation.Dashboard,
+                        clearDetailStack: true);
+                }
+            }
+        }
+
+        public void OpenExport(InstanceCardViewModel vm)
+        {
+            if (_onOpenExport != null)
+            {
+                _onOpenExport.Invoke(vm);
+                return;
+            }
+
+            if (_navigationService != null)
+            {
+                var exportVm = new PocketMC.App.ViewModels.Instances.InstanceExportViewModel(vm.Instance, _instanceService, _dialogService);
+                _navigationService.NavigateToDetailPage(
+                    exportVm,
+                    $"{vm.Name} Export",
+                    DetailRouteKind.InstanceExport,
+                    DetailBackNavigation.Dashboard,
+                    clearDetailStack: true);
+            }
+        }
     }
 }

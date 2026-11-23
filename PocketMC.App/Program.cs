@@ -149,7 +149,9 @@ namespace PocketMC.App
                     services.AddSingleton<DashboardActionsViewModel>(sp => new DashboardActionsViewModel(
                         sp.GetRequiredService<IProcessRunner>(),
                         sp.GetRequiredService<IInstanceService>(),
-                        sp.GetRequiredService<IDialogService>()));
+                        sp.GetRequiredService<IDialogService>(),
+                        navigationService: sp.GetService<IAppNavigationService>(),
+                        serviceProvider: sp));
 
                     // ViewModels & Views
                     services.AddSingleton<IAppNavigationService, AppNavigationService>();
