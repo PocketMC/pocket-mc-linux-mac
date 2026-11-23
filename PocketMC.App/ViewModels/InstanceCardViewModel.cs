@@ -81,6 +81,7 @@ namespace PocketMC.App.ViewModels
 
         public bool IsRunning =>
             string.Equals(StatusText, "Online", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(StatusText, "Running", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(StatusText, "Starting", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(StatusText, "SettingUp", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(StatusText, "Installing", StringComparison.OrdinalIgnoreCase) ||
@@ -98,10 +99,9 @@ namespace PocketMC.App.ViewModels
 
         public string StatusBrush => StatusText switch
         {
-            "Online" => "#10b981", // Emerald green
+            "Online" or "Running" => "#10b981", // Emerald green
             "Starting" or "SettingUp" or "Installing" => "#f59e0b", // Amber
-            "Stopping" => "#ef4444", // Red
-            "Crashed" => "#ef4444",
+            "Stopping" or "Crashed" => "#ef4444", // Red
             _ => "#9ca3af" // Muted gray
         };
 

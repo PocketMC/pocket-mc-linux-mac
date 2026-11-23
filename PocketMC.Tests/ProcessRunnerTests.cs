@@ -152,7 +152,9 @@ namespace PocketMC.Tests
                     Slug = "crash-server",
                     Path = _testTempDir,
                     EngineType = EngineType.VanillaJava,
-                    EngineVersion = "mock:false"
+                    EngineVersion = "mock:false",
+                    EnableAutoRestart = true,
+                    AutoRestartDelaySeconds = 0
                 };
 
                 File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
@@ -177,6 +179,45 @@ namespace PocketMC.Tests
                 // Verify it triggered restart attempts (should be 3 crashes and restarts)
                 Assert.True(crashTransitions >= 1);
                 Assert.True(startTransitions >= 1);
+            }
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task Crash_WhenAutoRestartDisabled_DoesNotTriggerRestart()
+        {
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                var instance = new ServerInstance
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Crash Server No Restart",
+                    Slug = "crash-server-no-restart",
+                    Path = _testTempDir,
+                    EngineType = EngineType.VanillaJava,
+                    EngineVersion = "mock:false",
+                    EnableAutoRestart = false
+                };
+
+                File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
+
+                int crashTransitions = 0;
+                int startTransitions = 0;
+
+                _runner.StateChanged += (slug, state) =>
+                {
+                    if (slug == instance.Slug)
+                    {
+                        if (state == "Crashed") crashTransitions++;
+                        if (state == "Starting") startTransitions++;
+                    }
+                };
+
+                await _runner.StartAsync(instance);
+                await Task.Delay(1000);
+
+                Assert.Equal(1, crashTransitions);
+                Assert.Equal(0, startTransitions);
             }
         }
     }

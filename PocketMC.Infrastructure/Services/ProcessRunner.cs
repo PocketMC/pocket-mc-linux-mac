@@ -75,6 +75,7 @@ namespace PocketMC.Infrastructure.Services
 
             try
             {
+                KillOrphanedProcessesForInstance(instance);
                 InspectSessionLock(instance);
 
                 string execPath = "";
@@ -390,21 +391,32 @@ namespace PocketMC.Infrastructure.Services
                 _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Server crashed with non-zero exit code: {exitCode}");
                 TransitionState(instance.Slug, "Crashed");
 
-                // Auto restart check (rate-limited up to 3 times in 5 minutes)
-                var now = DateTime.UtcNow;
-                var stats = _autoRestartStats.GetOrAdd(instance.Slug, _ => (0, now));
-                if ((now - stats.LastAttempt).TotalMinutes >= 5)
+                // Auto restart check (only if explicitly enabled on instance)
+                if (instance.EnableAutoRestart)
                 {
-                    stats = (0, now);
-                }
+                    var now = DateTime.UtcNow;
+                    var stats = _autoRestartStats.GetOrAdd(instance.Slug, _ => (0, now));
+                    if ((now - stats.LastAttempt).TotalMinutes >= 5)
+                    {
+                        stats = (0, now);
+                    }
 
-                if (stats.Count < 3)
-                {
-                    stats = (stats.Count + 1, now);
-                    _autoRestartStats[instance.Slug] = stats;
+                    if (stats.Count < 3)
+                    {
+                        stats = (stats.Count + 1, now);
+                        _autoRestartStats[instance.Slug] = stats;
 
-                    _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Auto-restart attempt {stats.Count} of 3...");
-                    Task.Run(() => StartAsync(instance, isAutoRestart: true));
+                        int delaySec = instance.AutoRestartDelaySeconds;
+                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Auto-restart attempt {stats.Count} of 3 in {delaySec}s...");
+                        Task.Run(async () =>
+                        {
+                            if (delaySec > 0)
+                            {
+                                await Task.Delay(TimeSpan.FromSeconds(delaySec));
+                            }
+                            await StartAsync(instance, isAutoRestart: true);
+                        });
+                    }
                 }
             }
         }
@@ -450,9 +462,10 @@ namespace PocketMC.Infrastructure.Services
 
             if (!exited)
             {
+                _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Terminating process tree...");
+
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Sending SIGTERM to process group...");
                     try
                     {
                         UnixNative.kill(-info.Pgid, UnixNative.SIGTERM);
@@ -464,7 +477,7 @@ namespace PocketMC.Infrastructure.Services
 
                     try
                     {
-                        using var termCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        using var termCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                         await info.Process.WaitForExitAsync(termCts.Token);
                         exited = true;
                     }
@@ -472,34 +485,117 @@ namespace PocketMC.Infrastructure.Services
 
                     if (!exited)
                     {
-                        _logService.WriteLog(instance.Slug, "[PocketMC Engine] Process did not terminate after SIGTERM. Escalating to SIGKILL...");
                         try
                         {
                             UnixNative.kill(-info.Pgid, UnixNative.SIGKILL);
                         }
-                        catch (Exception ex)
-                        {
-                            _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error sending SIGKILL: {ex.Message}");
-                        }
+                        catch { }
                     }
                 }
-                else
+
+                // Process tree kill ensuring no orphan remains
+                try
                 {
-                    _logService.WriteLog(instance.Slug, "[PocketMC Engine] Graceful stop timed out. Terminating process tree...");
-                    try
-                    {
-                        info.Process.Kill(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Error terminating process: {ex.Message}");
-                    }
+                    info.Process.Kill(entireProcessTree: true);
+                    await info.Process.WaitForExitAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Process.Kill completed: {ex.Message}");
                 }
             }
 
             TransitionState(instance.Slug, "Stopped");
             _runningInstances.TryRemove(instance.Slug, out _);
             _coordinator.SetRunning(instance.Path, false);
+        }
+
+        private void KillOrphanedProcessesForInstance(ServerInstance instance)
+        {
+            if (string.IsNullOrWhiteSpace(instance.Path) || !Directory.Exists(instance.Path))
+            {
+                return;
+            }
+
+            try
+            {
+                int currentPid = Environment.ProcessId;
+
+                // 1. Linux /proc scanner
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    string targetPath = Path.GetFullPath(instance.Path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    if (Directory.Exists("/proc"))
+                    {
+                        foreach (var dir in Directory.GetDirectories("/proc"))
+                        {
+                            var dirName = Path.GetFileName(dir);
+                            if (!int.TryParse(dirName, out int pid) || pid == currentPid || pid <= 1)
+                            {
+                                continue;
+                            }
+
+                            try
+                            {
+                                string cwdSymlink = Path.Combine(dir, "cwd");
+                                var linkTarget = File.ResolveLinkTarget(cwdSymlink, returnFinalTarget: true)?.FullName;
+                                if (!string.IsNullOrEmpty(linkTarget))
+                                {
+                                    string resolvedTarget = Path.GetFullPath(linkTarget).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                                    if (string.Equals(resolvedTarget, targetPath, StringComparison.OrdinalIgnoreCase) ||
+                                        resolvedTarget.StartsWith(targetPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Cleaning up orphaned process {pid} using instance directory...");
+                                        try
+                                        {
+                                            var proc = Process.GetProcessById(pid);
+                                            proc.Kill(entireProcessTree: true);
+                                            proc.WaitForExit(1500);
+                                        }
+                                        catch { }
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Ignore unreadable /proc entries
+                            }
+                        }
+                    }
+                }
+
+                // 2. Terminate any processes holding session.lock using fuser
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    try
+                    {
+                        var lockFiles = Directory.GetFiles(instance.Path, "session.lock", SearchOption.AllDirectories);
+                        foreach (var lockFile in lockFiles)
+                        {
+                            try
+                            {
+                                using var fuserProc = Process.Start(new ProcessStartInfo
+                                {
+                                    FileName = "fuser",
+                                    Arguments = $"-k \"{lockFile}\"",
+                                    RedirectStandardOutput = true,
+                                    RedirectStandardError = true,
+                                    UseShellExecute = false,
+                                    CreateNoWindow = true
+                                });
+                                fuserProc?.WaitForExit(1500);
+                            }
+                            catch { }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logService.WriteLog(instance.Slug, $"[PocketMC Engine] Note: Process inspection: {ex.Message}");
+            }
         }
 
         private void InspectSessionLock(ServerInstance instance)

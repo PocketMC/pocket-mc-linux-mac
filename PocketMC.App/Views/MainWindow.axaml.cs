@@ -27,20 +27,34 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        TitleBarContentMargin = GetDefaultTitleBarMargin();
     }
 
     public MainWindow(MainWindowViewModel viewModel) : this()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        DataContext = viewModel;
+    }
+
+    public static Thickness GetDefaultTitleBarMargin(OSPlatform? platform = null)
+    {
+        if (platform.HasValue)
         {
-            TitleBarContentMargin = new Thickness(80, 0, 0, 0);
-        }
-        else
-        {
-            TitleBarContentMargin = new Thickness(0, 0, 140, 0);
+            if (platform.Value == OSPlatform.OSX) return new Thickness(80, 0, 0, 0);
+            if (platform.Value == OSPlatform.Linux) return new Thickness(0, 0, 0, 0);
+            return new Thickness(0, 0, 140, 0);
         }
 
-        DataContext = viewModel;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return new Thickness(80, 0, 0, 0);
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            return new Thickness(0, 0, 0, 0);
+        }
+
+        return new Thickness(0, 0, 140, 0);
     }
 
     protected override void OnOpened(EventArgs e)

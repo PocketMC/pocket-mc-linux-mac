@@ -163,5 +163,21 @@ namespace PocketMC.Tests
             Assert.Equal(DetailRouteKind.Runtimes, nav.CurrentRouteKind);
             Assert.Equal("Runtimes", nav.CurrentBreadcrumb);
         }
+
+        [Fact]
+        public void MainWindow_GetDefaultTitleBarMargin_ReturnsPlatformSpecificMargins()
+        {
+            var linuxMargin = PocketMC.App.Views.MainWindow.GetDefaultTitleBarMargin(System.Runtime.InteropServices.OSPlatform.Linux);
+            Assert.Equal(0, linuxMargin.Left);
+            Assert.Equal(0, linuxMargin.Right);
+
+            var osxMargin = PocketMC.App.Views.MainWindow.GetDefaultTitleBarMargin(System.Runtime.InteropServices.OSPlatform.OSX);
+            Assert.Equal(80, osxMargin.Left);
+            Assert.Equal(0, osxMargin.Right);
+
+            var windowsMargin = PocketMC.App.Views.MainWindow.GetDefaultTitleBarMargin(System.Runtime.InteropServices.OSPlatform.Windows);
+            Assert.Equal(0, windowsMargin.Left);
+            Assert.Equal(140, windowsMargin.Right);
+        }
     }
 }

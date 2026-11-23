@@ -39,5 +39,9 @@ namespace PocketMC.Core.Models
         // Scheduled Maintenance
         public RebootScheduleSettings? RebootSchedule { get; set; }
         public DateTime? LastScheduledRebootTime { get; set; }
+
+        // Crash Recovery & Auto Restart
+        public bool EnableAutoRestart { get; set; } = false;
+        public int AutoRestartDelaySeconds { get; set; } = 10;
     }
 }

@@ -76,6 +76,12 @@ namespace PocketMC.App.ViewModels
         [ObservableProperty]
         private bool _isCrashed;
 
+        [ObservableProperty]
+        private string _copyButtonText = "Copy Logs";
+
+        [ObservableProperty]
+        private bool _isCopied;
+
         public IAsyncRelayCommand SendCommandCommand { get; }
         public IRelayCommand RefreshInstancesCommand { get; }
         public IRelayCommand GoBackCommand { get; }
@@ -157,14 +163,28 @@ namespace PocketMC.App.ViewModels
         [RelayCommand]
         public async Task CopyLogsAsync()
         {
-            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            var textToCopy = LogLines.Count > 0
+                ? string.Join(Environment.NewLine, LogLines.Select(l => l.Text))
+                : string.Join(Environment.NewLine, _consoleLogService.GetLogs(SelectedInstance?.Slug ?? string.Empty));
+
+            if (string.IsNullOrEmpty(textToCopy))
             {
-                var clipboard = desktop.MainWindow?.Clipboard;
-                if (clipboard != null)
+                return;
+            }
+
+            bool success = await PocketMC.App.Services.AppClipboard.SetTextAsync(textToCopy);
+            if (success)
+            {
+                CopyButtonText = "Copied!";
+                IsCopied = true;
+                _ = Task.Delay(2000).ContinueWith(_ =>
                 {
-                    var fullText = string.Join(Environment.NewLine, LogLines.Select(l => l.Text));
-                    await clipboard.SetTextAsync(fullText);
-                }
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        CopyButtonText = "Copy Logs";
+                        IsCopied = false;
+                    });
+                });
             }
         }
 

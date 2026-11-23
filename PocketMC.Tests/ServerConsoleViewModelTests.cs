@@ -122,5 +122,46 @@ namespace PocketMC.Tests
             Assert.Equal("command 3", vm.CycleHistory(false));
             Assert.Equal("", vm.CycleHistory(false));
         }
+
+        [Fact]
+        public async Task ServerConsoleViewModel_CopyLogsAsync_SetsCopiedFeedbackState()
+        {
+            var instService = new FakeInstanceService();
+            var inst = new ServerInstance { Name = "Server 1", Slug = "server-1" };
+            instService.Instances.Add(inst);
+
+            var logService = new FakeConsoleLogService();
+            logService.Logs.Add("Line 1");
+            logService.Logs.Add("Line 2");
+
+            var processRunner = new FakeProcessRunner();
+
+            using var vm = new ServerConsoleViewModel(instService, logService, processRunner);
+            vm.SelectedInstance = inst;
+
+            string copiedText = "";
+            PocketMC.App.Services.AppClipboard.OverrideHandler = text =>
+            {
+                copiedText = text;
+                return Task.FromResult(true);
+            };
+
+            try
+            {
+                Assert.Equal("Copy Logs", vm.CopyButtonText);
+                Assert.False(vm.IsCopied);
+
+                await vm.CopyLogsAsync();
+
+                Assert.Contains("Line 1", copiedText);
+                Assert.Contains("Line 2", copiedText);
+                Assert.Equal("Copied!", vm.CopyButtonText);
+                Assert.True(vm.IsCopied);
+            }
+            finally
+            {
+                PocketMC.App.Services.AppClipboard.OverrideHandler = null;
+            }
+        }
     }
 }

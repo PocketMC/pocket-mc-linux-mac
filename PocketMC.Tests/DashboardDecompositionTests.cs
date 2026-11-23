@@ -71,6 +71,34 @@ namespace PocketMC.Tests
             Assert.Equal("· · ·", card.PlayerStatus);
         }
 
+        [Theory]
+        [InlineData("Running", true, "#10b981")]
+        [InlineData("Online", true, "#10b981")]
+        [InlineData("Starting", true, "#f59e0b")]
+        [InlineData("SettingUp", true, "#f59e0b")]
+        [InlineData("Installing", true, "#f59e0b")]
+        [InlineData("Stopping", true, "#ef4444")]
+        [InlineData("Crashed", false, "#ef4444")]
+        [InlineData("Stopped", false, "#9ca3af")]
+        public void InstanceCardViewModel_StatusMapping_MatchesExpectedRunningAndBrush(string status, bool expectedIsRunning, string expectedBrush)
+        {
+            var instance = new ServerInstance
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Instance",
+                EngineType = EngineType.Paper,
+                EngineVersion = "1.20.4"
+            };
+
+            var card = new InstanceCardViewModel(instance);
+            card.UpdateState(status);
+
+            Assert.Equal(expectedIsRunning, card.IsRunning);
+            Assert.Equal(expectedBrush, card.StatusBrush);
+            Assert.Equal(expectedIsRunning, card.ShowRunningControls);
+            Assert.Equal(!expectedIsRunning, card.ShowStoppedControls);
+        }
+
         [Fact]
         public async Task DashboardInstanceListViewModel_LoadsAndSortsPinnedInstancesFirst()
         {
