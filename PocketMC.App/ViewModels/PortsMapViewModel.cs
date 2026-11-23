@@ -367,22 +367,42 @@ namespace PocketMC.App.ViewModels
         [RelayCommand]
         public void GoBack()
         {
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            var tunnelVM = App.Services.GetService(typeof(TunnelViewModel)) as TunnelViewModel;
-            if (mainVM != null && tunnelVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            if (navService?.CanNavigateBack == true)
             {
-                mainVM.CurrentViewModel = tunnelVM;
+                navService.NavigateBack();
+            }
+            else if (navService != null)
+            {
+                navService.NavigateToTunnel();
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                var tunnelVM = App.Services?.GetService(typeof(TunnelViewModel)) as TunnelViewModel;
+                if (mainVM != null && tunnelVM != null)
+                {
+                    mainVM.CurrentViewModel = tunnelVM;
+                }
             }
         }
 
         [RelayCommand]
         public void NavigateToConsole(Guid serverId)
         {
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            var consoleVM = App.Services.GetService(typeof(ServerConsoleViewModel)) as ServerConsoleViewModel;
-            if (mainVM != null && consoleVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            var consoleVM = App.Services?.GetService(typeof(ServerConsoleViewModel)) as ServerConsoleViewModel;
+            if (consoleVM != null)
             {
-                mainVM.CurrentViewModel = consoleVM;
+                if (navService != null)
+                {
+                    navService.NavigateToDetailPage(consoleVM, "Server Console", PocketMC.App.Navigation.DetailRouteKind.ServerConsole, PocketMC.App.Navigation.DetailBackNavigation.PreviousDetail);
+                }
+                else
+                {
+                    var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                    if (mainVM != null) mainVM.CurrentViewModel = consoleVM;
+                }
             }
         }
     }

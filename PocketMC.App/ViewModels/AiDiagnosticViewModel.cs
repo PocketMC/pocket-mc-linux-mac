@@ -218,13 +218,27 @@ namespace PocketMC.App.ViewModels
 
         private void GoBack()
         {
-            if (SelectedInstance == null) return;
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            if (navService?.CanNavigateBack == true)
             {
-                var consoleVM = App.Services.GetRequiredService<ServerConsoleViewModel>();
-                consoleVM.Initialize(SelectedInstance);
-                mainVM.CurrentViewModel = consoleVM;
+                navService.NavigateBack();
+            }
+            else if (navService != null)
+            {
+                navService.NavigateToDashboard();
+            }
+            else if (SelectedInstance != null)
+            {
+                var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                if (mainVM != null)
+                {
+                    var consoleVM = App.Services?.GetRequiredService<ServerConsoleViewModel>();
+                    if (consoleVM != null)
+                    {
+                        consoleVM.Initialize(SelectedInstance);
+                        mainVM.CurrentViewModel = consoleVM;
+                    }
+                }
             }
         }
     }

@@ -153,6 +153,23 @@ namespace PocketMC.App.ViewModels
         public bool IsBedrockServer => _instance.EngineType == EngineType.Bedrock || _instance.EngineType == EngineType.PocketMine;
         public bool ShowBedrockIp => IsBedrockServer || HasBedrockTunnelAddress;
 
+        public bool ShowCrossPlayBadge => _showCrossPlayBadge;
+        private bool _showCrossPlayBadge;
+        public string CrossPlayBadgeText => "Cross-play";
+        public string CrossPlayBadgeTooltip => "Java and Bedrock players can join through Geyser/Floodgate.";
+
+        public bool ShowVoiceChatBadge => _showVoiceChatBadge;
+        private bool _showVoiceChatBadge;
+        public string VoiceChatBadgeTooltip => "Simple Voice Chat is configured on this server.";
+
+        public void SetBadges(bool crossPlay, bool voiceChat)
+        {
+            _showCrossPlayBadge = crossPlay;
+            _showVoiceChatBadge = voiceChat;
+            OnPropertyChanged(nameof(ShowCrossPlayBadge));
+            OnPropertyChanged(nameof(ShowVoiceChatBadge));
+        }
+
         public bool HasTunnelAddress => !string.IsNullOrWhiteSpace(TunnelAddress);
         public bool HasNumericTunnelAddress => !string.IsNullOrWhiteSpace(NumericTunnelAddress);
         public bool HasBedrockTunnelAddress => !string.IsNullOrWhiteSpace(BedrockTunnelAddress);

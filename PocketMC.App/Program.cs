@@ -218,6 +218,10 @@ namespace PocketMC.App
                     services.AddTransient<PocketMC.App.Views.PortsMapPage>();
                     services.AddSingleton<PocketMC.Infrastructure.WhatsNew.WhatsNewService>();
                     services.AddTransient<PocketMC.App.Views.WhatsNewWindow>();
+                    services.AddSingleton<PocketMC.Infrastructure.News.NewsTextParser>();
+                    services.AddSingleton<PocketMC.Infrastructure.News.NewsService>();
+                    services.AddTransient<NewsViewModel>();
+                    services.AddTransient<NewsPage>();
                     services.AddTransient<JavaManagementViewModel>();
                     services.AddTransient<JavaManagementPage>();
                     services.AddTransient<AboutViewModel>();

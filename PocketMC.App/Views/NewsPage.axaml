@@ -1,0 +1,146 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:news="using:PocketMC.Infrastructure.News"
+             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.NewsPage"
+             x:DataType="vm:NewsViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="28,20,28,24">
+        <!-- HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,18">
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="News" FontSize="24" FontWeight="Bold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,4"/>
+                <TextBlock Text="PocketMC announcements and service notices"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13"/>
+            </StackPanel>
+            <Button Grid.Column="1" Command="{Binding RefreshCommand}"
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="6" Padding="12,6" Cursor="Hand"
+                    IsEnabled="{Binding !IsLoading}">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="RefreshCw" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Refresh" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- MAIN 2-COLUMN SPLIT -->
+        <Grid Grid.Row="1" ColumnDefinitions="300, 18, *">
+            <!-- LEFT COLUMN: News Articles List -->
+            <ListBox Grid.Column="0"
+                     ItemsSource="{Binding Articles}"
+                     SelectedItem="{Binding SelectedArticle, Mode=TwoWay}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     CornerRadius="6">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:NewsItemViewModel">
+                        <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" Margin="0,4">
+                            <!-- Unread Indicator Dot -->
+                            <Ellipse Grid.Row="0" Grid.Column="0" Width="6" Height="6" Margin="0,6,8,0"
+                                     Fill="{DynamicResource AccentFillColorDefaultBrush}"
+                                     VerticalAlignment="Top"
+                                     IsVisible="{Binding UnreadVisibility}"/>
+
+                            <!-- Title -->
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding Title}"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+
+                            <!-- Badge Pills -->
+                            <WrapPanel Grid.Row="1" Grid.Column="1" Margin="0,6,0,2">
+                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,4,3">
+                                    <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Border>
+                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,4,3">
+                                    <TextBlock Text="{Binding PriorityLabel}" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Border>
+                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,4,3">
+                                    <TextBlock Text="{Binding PublishedLabel}" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Border>
+                            </WrapPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- RIGHT COLUMN: Article Reader Surface or Empty State -->
+            <Grid Grid.Column="2">
+                <!-- Article Reader Surface -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8"
+                        Padding="24"
+                        IsVisible="{Binding HasSelectedArticle}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="16">
+                            <!-- Article Badges & Date -->
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="{Binding SelectedArticle.TypeLabel}" FontSize="11" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                </Border>
+                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="{Binding SelectedArticle.PriorityLabel}" FontSize="11" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                                </Border>
+                                <TextBlock Text="{Binding SelectedArticle.PublishedLabel}" FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Title -->
+                            <TextBlock Text="{Binding SelectedArticle.Title}" FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap"/>
+
+                            <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4"/>
+
+                            <!-- Content Blocks -->
+                            <ItemsControl ItemsSource="{Binding SelectedArticle.Blocks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="news:NewsContentBlock">
+                                        <Panel Margin="0,4,0,8">
+                                            <TextBlock Text="{Binding Text}" FontSize="14" LineHeight="20"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                       TextWrapping="Wrap"/>
+                                        </Panel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Empty Panel -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                            IsVisible="{Binding !HasSelectedArticle}" Spacing="12">
+                    <lucide:LucideIcon Kind="Megaphone" Size="36" Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="No news is available yet." FontSize="14" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- FOOTER: Sync Status -->
+        <TextBlock Grid.Row="2" Text="{Binding SyncStatusText}" Margin="0,10,0,0"
+                   FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+    </Grid>
+</UserControl>

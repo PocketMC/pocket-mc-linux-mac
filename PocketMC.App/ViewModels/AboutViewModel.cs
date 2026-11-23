@@ -167,11 +167,20 @@ public partial class AboutViewModel : ObservableObject
 
     private void NavigateBack()
     {
-        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-        if (mainVM != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        if (navService?.CanNavigateBack == true)
         {
-            var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
-            if (dashVM != null)
+            navService.NavigateBack();
+        }
+        else if (navService != null)
+        {
+            navService.NavigateToDashboard();
+        }
+        else
+        {
+            var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            var dashVM = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+            if (mainVM != null && dashVM != null)
             {
                 mainVM.CurrentViewModel = dashVM;
             }

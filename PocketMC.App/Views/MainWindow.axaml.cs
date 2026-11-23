@@ -124,6 +124,13 @@ public partial class MainWindow : Window
             e.Handled = true;
             return;
         }
+        // Ctrl+7: News
+        else if (e.Key == Key.D7 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            vm?.NavigateNewsCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
 
         base.OnKeyDown(e);
     }

@@ -212,10 +212,22 @@ namespace PocketMC.App.ViewModels
         [RelayCommand]
         private void NavigateBack()
         {
-            var mainVM = App.Services.GetService<MainWindowViewModel>();
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            if (navService?.CanNavigateBack == true)
             {
-                mainVM.CurrentViewModel = App.Services.GetRequiredService<DashboardViewModel>();
+                navService.NavigateBack();
+            }
+            else if (navService != null)
+            {
+                navService.NavigateToDashboard();
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService<MainWindowViewModel>();
+                if (mainVM != null)
+                {
+                    mainVM.CurrentViewModel = App.Services?.GetRequiredService<DashboardViewModel>()!;
+                }
             }
         }
 

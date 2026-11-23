@@ -14,7 +14,9 @@ using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
+using PocketMC.App.Navigation;
 using PocketMC.App.Views;
+using PocketMC.App.ViewModels.Instances;
 
 namespace PocketMC.App.ViewModels
 {
@@ -150,6 +152,8 @@ namespace PocketMC.App.ViewModels
         public IAsyncRelayCommand CancelCommand { get; }
         public IAsyncRelayCommand BrowseWorldCommand { get; }
         public IRelayCommand OpenEulaLinkCommand { get; }
+        public IAsyncRelayCommand ImportModpackCommand { get; }
+        public IRelayCommand ImportInstanceCommand { get; }
 
         public NewInstanceViewModel(
             IInstanceService instanceService,
@@ -166,9 +170,60 @@ namespace PocketMC.App.ViewModels
             CancelCommand = new AsyncRelayCommand(CancelAsync);
             BrowseWorldCommand = new AsyncRelayCommand(BrowseWorldAsync);
             OpenEulaLinkCommand = new RelayCommand(OpenEulaLink);
+            ImportModpackCommand = new AsyncRelayCommand(ImportModpackAsync);
+            ImportInstanceCommand = new RelayCommand(ImportInstance);
 
             // Initial load
             _ = LoadVersionsAsync();
+        }
+
+        private async Task ImportModpackAsync()
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(desktop.MainWindow);
+                if (topLevel != null)
+                {
+                    var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+                    {
+                        Title = "Select Modpack Archive (.mrpack / .zip)",
+                        AllowMultiple = false,
+                        FileTypeFilter = new[]
+                        {
+                            new Avalonia.Platform.Storage.FilePickerFileType("Modpack Archive (*.mrpack, *.zip)")
+                            {
+                                Patterns = new[] { "*.mrpack", "*.zip" }
+                            }
+                        }
+                    });
+
+                    if (files.Count > 0)
+                    {
+                        var file = files[0];
+                        CustomWorldPath = file.Path.LocalPath;
+                        string baseName = Path.GetFileNameWithoutExtension(file.Path.LocalPath);
+                        if (string.IsNullOrWhiteSpace(Name))
+                        {
+                            Name = baseName.Replace(" ", "-");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ImportInstance()
+        {
+            var navService = App.Services?.GetService(typeof(IAppNavigationService)) as IAppNavigationService;
+            var importVm = new InstanceImportViewModel(_instanceService);
+            if (navService != null)
+            {
+                navService.NavigateToDetailPage(importVm, "Import Instance", DetailRouteKind.InstanceImport, DetailBackNavigation.Dashboard);
+            }
+            else if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
+            {
+                mainVm.SetContent(importVm);
+                mainVm.UpdateBreadcrumb("Import Instance");
+            }
         }
 
         private async Task BrowseWorldAsync()
@@ -808,9 +863,9 @@ namespace PocketMC.App.ViewModels
                 ProgressText = "Created successfully!";
                 await Task.Delay(1000);
 
-                var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-                var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
-                if (mainVM != null && dashVM != null)
+                var navService = App.Services?.GetService(typeof(IAppNavigationService)) as IAppNavigationService;
+                var dashVM = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+                if (dashVM != null)
                 {
                     await dashVM.LoadInstancesAsync();
                     var createdInstance = dashVM.Instances.FirstOrDefault(i => string.Equals(i.Name, instance.Name, StringComparison.OrdinalIgnoreCase)) ?? dashVM.Instances.LastOrDefault();
@@ -818,6 +873,14 @@ namespace PocketMC.App.ViewModels
                     {
                         dashVM.SelectedInstance = createdInstance;
                     }
+                }
+
+                if (navService != null)
+                {
+                    navService.NavigateToDashboard();
+                }
+                else if (App.Services?.GetService(typeof(MainWindowViewModel)) is MainWindowViewModel mainVM && dashVM != null)
+                {
                     mainVM.CurrentViewModel = dashVM;
                 }
             }
@@ -1317,10 +1380,14 @@ namespace PocketMC.App.ViewModels
                 catch { }
             }
 
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(IAppNavigationService)) as IAppNavigationService;
+            if (navService != null)
             {
-                var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+                navService.NavigateToDashboard();
+            }
+            else if (App.Services?.GetService(typeof(MainWindowViewModel)) is MainWindowViewModel mainVM)
+            {
+                var dashVM = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
                 if (dashVM != null)
                 {
                     mainVM.CurrentViewModel = dashVM;

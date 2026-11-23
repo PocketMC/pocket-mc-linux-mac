@@ -292,21 +292,44 @@ public partial class TunnelViewModel : ObservableObject
     [RelayCommand]
     private void OpenPortsMap()
     {
-        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-        var portsMapVM = App.Services.GetService(typeof(PortsMapViewModel)) as PortsMapViewModel;
-        if (mainVM != null && portsMapVM != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        var portsMapVM = App.Services?.GetService(typeof(PortsMapViewModel)) as PortsMapViewModel;
+        if (portsMapVM != null)
         {
-            mainVM.CurrentViewModel = portsMapVM;
+            if (navService != null)
+            {
+                navService.NavigateToDetailPage(portsMapVM, "Ports Map", PocketMC.App.Navigation.DetailRouteKind.PortsMap, PocketMC.App.Navigation.DetailBackNavigation.Dashboard);
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                if (mainVM != null)
+                {
+                    mainVM.CurrentViewModel = portsMapVM;
+                }
+            }
         }
     }
 
     [RelayCommand]
     private void GoBack()
     {
-        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-        if (mainVM != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        if (navService?.CanNavigateBack == true)
         {
-            mainVM.CurrentViewModel = App.Services.GetRequiredService<DashboardViewModel>();
+            navService.NavigateBack();
+        }
+        else if (navService != null)
+        {
+            navService.NavigateToDashboard();
+        }
+        else
+        {
+            var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            if (mainVM != null)
+            {
+                mainVM.CurrentViewModel = App.Services?.GetRequiredService<DashboardViewModel>()!;
+            }
         }
     }
 }

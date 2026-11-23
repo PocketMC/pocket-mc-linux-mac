@@ -25,6 +25,7 @@ namespace PocketMC.Tests
         [InlineData(typeof(AboutViewModel), typeof(AboutPage))]
         [InlineData(typeof(InstanceExportViewModel), typeof(InstanceExportPage))]
         [InlineData(typeof(InstanceImportViewModel), typeof(InstanceImportPage))]
+        [InlineData(typeof(NewsViewModel), typeof(NewsPage))]
         [InlineData(typeof(DashboardViewModel), typeof(DashboardView))]
         public void ViewLocator_ResolvesExpectedViewType_ForViewModel(Type viewModelType, Type expectedViewType)
         {

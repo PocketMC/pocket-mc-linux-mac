@@ -9,69 +9,96 @@
              Margin="24">
 
     <Grid RowDefinitions="Auto, *">
-        <!-- Page Header -->
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
-            <TextBlock Grid.Column="0" Text="Instances" FontSize="26" FontWeight="Bold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                <Button Command="{Binding NavigateToImportCommand}"
-                        Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                        CornerRadius="8" Padding="14,8" Cursor="Hand" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <lucide:LucideIcon Kind="Download" Size="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding NewInstanceCommand}"
-                        Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                        CornerRadius="8" Padding="16,8" Cursor="Hand" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="New Instance" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Grid>
+        <!-- Page Header: Matches Windows Title + "New Instance" Button -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24" Orientation="Horizontal">
+            <TextBlock Text="Instances" FontSize="26" FontWeight="Bold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+            <Button Command="{Binding NewInstanceCommand}"
+                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
+                    CornerRadius="8" Padding="16,8" Cursor="Hand" VerticalAlignment="Center" Margin="0,4,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="New Instance" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
         <!-- Main Body -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
             <Grid>
-                <!-- Skeleton Loader (active during initial load) -->
+                <!-- Skeleton Loader Grid (Active during initial data load) -->
                 <controls:AdaptiveGridPanel IsVisible="{Binding IsLoading}" MinColumnWidth="320" HorizontalSpacing="16" VerticalSpacing="16">
-                    <Border Classes="skeleton-card" Height="360"/>
-                    <Border Classes="skeleton-card" Height="360"/>
-                    <Border Classes="skeleton-card" Height="360"/>
-                    <Border Classes="skeleton-card" Height="360"/>
+                    <!-- 4 Skeleton Cards -->
+                    <Border Classes="skeleton-card">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="6">
+                                <Border Classes="skeleton-element" Height="18" Width="140" HorizontalAlignment="Left"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Border Classes="skeleton-element" Height="18" Width="52"/>
+                                    <Border Classes="skeleton-element" Height="18" Width="48"/>
+                                    <Border Classes="skeleton-element" Height="18" Width="60"/>
+                                </StackPanel>
+                                <Border Classes="skeleton-element" Height="12" Width="90" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                            <Border Classes="skeleton-element" Height="34"/>
+                            <Border Classes="skeleton-element" Height="36"/>
+                            <Border Classes="skeleton-element" Height="32"/>
+                            <Grid ColumnDefinitions="*, 8, Auto, 6, Auto">
+                                <Border Grid.Column="0" Classes="skeleton-element" Height="32"/>
+                                <Border Grid.Column="2" Classes="skeleton-element" Height="32" Width="36"/>
+                                <Border Grid.Column="4" Classes="skeleton-element" Height="32" Width="36"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="skeleton-card">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="6">
+                                <Border Classes="skeleton-element" Height="18" Width="140" HorizontalAlignment="Left"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Border Classes="skeleton-element" Height="18" Width="52"/>
+                                    <Border Classes="skeleton-element" Height="18" Width="48"/>
+                                </StackPanel>
+                                <Border Classes="skeleton-element" Height="12" Width="90" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                            <Border Classes="skeleton-element" Height="34"/>
+                            <Border Classes="skeleton-element" Height="36"/>
+                            <Border Classes="skeleton-element" Height="32"/>
+                            <Grid ColumnDefinitions="*, 8, Auto, 6, Auto">
+                                <Border Grid.Column="0" Classes="skeleton-element" Height="32"/>
+                                <Border Grid.Column="2" Classes="skeleton-element" Height="32" Width="36"/>
+                                <Border Grid.Column="4" Classes="skeleton-element" Height="32" Width="36"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </controls:AdaptiveGridPanel>
 
                 <!-- Empty State (when instances list is empty and not loading) -->
                 <Border IsVisible="{Binding !HasInstances}"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Margin="0,48,0,0" Padding="48,40"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        Margin="0,0,0,64" Padding="64,48"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1" CornerRadius="16">
                     <StackPanel Spacing="16" HorizontalAlignment="Center">
-                        <Border Width="72" Height="72" CornerRadius="36"
-                                Background="{DynamicResource ControlFillSecondaryBrush}"
+                        <Border Width="80" Height="80" CornerRadius="40"
+                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
                                 HorizontalAlignment="Center">
-                            <lucide:LucideIcon Kind="Layers" Size="36"
-                                               Foreground="{DynamicResource TextMutedBrush}"
+                            <lucide:LucideIcon Kind="Package" Size="40"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="No instances found" FontSize="20" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
                         <TextBlock Text="Get started by creating your first local Minecraft server instance."
-                                   FontSize="13" Foreground="{DynamicResource TextMutedBrush}"
-                                   HorizontalAlignment="Center"/>
+                                   FontSize="14" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   HorizontalAlignment="Center" Margin="0,0,0,16"/>
                         <Button Command="{Binding NewInstanceCommand}"
                                 Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                                CornerRadius="8" Padding="24,10" HorizontalAlignment="Center"
-                                Cursor="Hand" Margin="0,8,0,0">
+                                CornerRadius="8" Padding="32,10" HorizontalAlignment="Center"
+                                Cursor="Hand">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="Create Instance" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Create Instance" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -86,58 +113,67 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:InstanceCardViewModel">
-                            <Border Background="{DynamicResource CardBackgroundBrush}"
-                                    BorderBrush="{DynamicResource CardBorderBrush}"
+                            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="12"
-                                    Padding="16"
+                                    CornerRadius="8"
+                                    Padding="16,14"
                                     BoxShadow="0 4 16 0 #20000000">
                                 <Grid RowDefinitions="Auto, Auto, Auto, Auto, *">
                                     <!-- Header Row -->
                                     <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
-                                        <StackPanel Grid.Column="0" Spacing="6">
+                                        <StackPanel Grid.Column="0">
                                             <!-- Title & Pin Icon -->
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                                           TextTrimming="CharacterEllipsis"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                 <lucide:LucideIcon Kind="Pin" Size="14"
-                                                                   Foreground="{DynamicResource AccentPrimaryBrush}"
+                                                                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                                                    IsVisible="{Binding IsPinned}"
-                                                                   VerticalAlignment="Center"/>
+                                                                   VerticalAlignment="Center"
+                                                                   ToolTip.Tip="Pinned to Top"/>
                                             </StackPanel>
 
-                                            <!-- Engine Badges -->
-                                            <WrapPanel>
-                                                <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,4">
+                                            <!-- Engine & Feature Badges -->
+                                            <WrapPanel Margin="0,6,0,0">
+                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3">
                                                     <TextBlock Text="{Binding MinecraftVersion}" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                 </Border>
-                                                <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,4">
+                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3">
                                                     <TextBlock Text="{Binding ServerType}" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                 </Border>
-                                                <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,4"
-                                                        IsVisible="{Binding IsBedrockServer}">
-                                                    <TextBlock Text="Bedrock" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="#f59e0b"/>
+                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3"
+                                                        IsVisible="{Binding ShowCrossPlayBadge}"
+                                                        ToolTip.Tip="{Binding CrossPlayBadgeTooltip}">
+                                                    <TextBlock Text="{Binding CrossPlayBadgeText}" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,5,3"
+                                                        IsVisible="{Binding ShowVoiceChatBadge}"
+                                                        ToolTip.Tip="{Binding VoiceChatBadgeTooltip}">
+                                                    <lucide:LucideIcon Kind="Mic" Size="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
                                                 </Border>
                                             </WrapPanel>
 
                                             <!-- Description -->
-                                            <TextBlock Text="{Binding Description}" FontSize="11"
-                                                       Foreground="{DynamicResource TextMutedBrush}"
-                                                       MaxLines="2" TextTrimming="CharacterEllipsis"
+                                            <TextBlock Text="{Binding Description}" FontSize="12"
+                                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                       Margin="0,4,0,0" MaxLines="2" TextTrimming="CharacterEllipsis"
                                                        IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                                             <!-- Status Indicator -->
-                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0" VerticalAlignment="Center">
                                                 <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
                                                 <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Bold"
                                                            Foreground="{Binding StatusBrush}" VerticalAlignment="Center"/>
@@ -146,8 +182,9 @@
 
                                         <!-- More Options Menu -->
                                         <Button Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                                Padding="6,4" Cursor="Hand" VerticalAlignment="Top">
-                                            <lucide:LucideIcon Kind="EllipsisVertical" Size="16" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                Padding="6,4" Cursor="Hand" VerticalAlignment="Top"
+                                                ToolTip.Tip="More options">
+                                            <lucide:LucideIcon Kind="EllipsisVertical" Size="16" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
                                             <Button.Flyout>
                                                 <MenuFlyout Placement="BottomEdgeAlignedRight">
                                                     <MenuItem Header="Pin Instance"
@@ -158,18 +195,18 @@
                                                         </MenuItem.Icon>
                                                     </MenuItem>
                                                     <Separator/>
-                                                    <MenuItem Header="Open Folder"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="FolderOpen" Size="14"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
                                                     <MenuItem Header="Copy Crash Report"
                                                               Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyCrashReportCommand}"
                                                               CommandParameter="{Binding}">
                                                         <MenuItem.Icon>
                                                             <lucide:LucideIcon Kind="Copy" Size="14"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Open Folder"
+                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
+                                                              CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:LucideIcon Kind="FolderOpen" Size="14"/>
                                                         </MenuItem.Icon>
                                                     </MenuItem>
                                                     <MenuItem Header="Export Instance"
@@ -192,125 +229,135 @@
                                         </Button>
                                     </Grid>
 
-                                    <!-- Metadata Row -->
-                                    <Border Grid.Row="1" Background="{DynamicResource ControlFillSecondaryBrush}"
-                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    <!-- Metadata Row (3 Columns: Last Played, Created, Platform) -->
+                                    <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,10">
-                                        <Grid ColumnDefinitions="*, *, *">
-                                            <StackPanel Grid.Column="0">
+                                        <UniformGrid Columns="3">
+                                            <StackPanel Margin="0,0,8,0">
                                                 <TextBlock Text="{Binding LastPlayedLabelText}" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextMutedBrush}"/>
+                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
                                                 <TextBlock Text="{Binding LastPlayedValueText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <StackPanel Margin="4,0,4,0" HorizontalAlignment="Center">
                                                 <TextBlock Text="Created" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextMutedBrush}" TextAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" TextAlignment="Center"/>
                                                 <TextBlock Text="{Binding CreatedValueText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextAlignment="Center"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                            <StackPanel Margin="8,0,0,0" HorizontalAlignment="Right">
                                                 <TextBlock Text="Platform" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextMutedBrush}" TextAlignment="Right"/>
+                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" TextAlignment="Right"/>
                                                 <TextBlock Text="{Binding PlatformSummaryText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Right"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextAlignment="Right"/>
                                             </StackPanel>
-                                        </Grid>
+                                        </UniformGrid>
                                     </Border>
 
-                                    <!-- Metrics Row -->
-                                    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}"
-                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    <!-- Metrics Row (3 Columns: CPU, RAM, PLAYERS) -->
+                                    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
-                                        <Grid ColumnDefinitions="*, *, *">
-                                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                        <UniformGrid Columns="3">
+                                            <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="CPU" FontSize="10" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="{Binding CpuText}" FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="RAM" FontSize="10" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="{Binding RamText}" FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
                                             </StackPanel>
-                                            <Button Grid.Column="2" Background="Transparent" BorderThickness="0"
-                                                    Padding="0" HorizontalAlignment="Center" Cursor="Hand"
+                                            <Button Background="Transparent" BorderThickness="0"
+                                                    Padding="12,4" Margin="0,-4" HorizontalAlignment="Center" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenPlayersCommand}"
-                                                    CommandParameter="{Binding}">
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Manage online players">
                                                 <StackPanel HorizontalAlignment="Center">
                                                     <TextBlock Text="PLAYERS" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
                                                     <TextBlock Text="{Binding PlayerStatus}" FontSize="13" FontWeight="Bold"
-                                                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                        </Grid>
+                                        </UniformGrid>
                                     </Border>
 
                                     <!-- Connections Row (Active when Running) -->
-                                    <StackPanel Grid.Row="3" Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsRunning}">
-                                        <!-- Primary Tunnel IP -->
-                                        <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                CornerRadius="6" Padding="10,6" IsVisible="{Binding HasTunnelAddress}">
+                                    <StackPanel Grid.Row="3" Spacing="4" Margin="0,0,0,16" IsVisible="{Binding IsRunning}">
+                                        <!-- Primary Connection IP -->
+                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                                CornerRadius="6" Padding="10,8" Margin="0,0,0,4"
+                                                IsVisible="{Binding HasTunnelAddress}">
                                             <Grid ColumnDefinitions="Auto, *, Auto">
                                                 <lucide:LucideIcon Grid.Column="0" Kind="Globe" Size="14"
-                                                                   Foreground="{DynamicResource AccentPrimaryBrush}"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding TunnelAddress}" FontSize="11"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                <TextBlock Grid.Column="1" Text="{Binding TunnelAddress}" FontSize="12"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                                 <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
                                                         Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyIpCommand}"
                                                         CommandParameter="{Binding}" ToolTip.Tip="Copy IP address" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                 </Button>
                                             </Grid>
                                         </Border>
 
-                                        <!-- Local LAN IP -->
-                                        <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                CornerRadius="6" Padding="10,6" IsVisible="{Binding HasLanAddress}">
+                                        <!-- Local Network (LAN) IP -->
+                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                                CornerRadius="6" Padding="10,8" Margin="0,0,0,4"
+                                                IsVisible="{Binding HasLanAddress}">
                                             <Grid ColumnDefinitions="Auto, *, Auto">
                                                 <lucide:LucideIcon Grid.Column="0" Kind="Radio" Size="14"
-                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding LanAddressDisplayText}" FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="Local Network (LAN)" FontSize="10" FontWeight="Bold"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                    <TextBlock Text="{Binding LanAddressDisplayText}" FontSize="12"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
                                                 <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
                                                         Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyLanIpCommand}"
-                                                        CommandParameter="{Binding}" ToolTip.Tip="Copy LAN IP address" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                        CommandParameter="{Binding}" ToolTip.Tip="Copy Local Network LAN IP" Cursor="Hand">
+                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                 </Button>
                                             </Grid>
                                         </Border>
 
                                         <!-- Bedrock Tunnel IP -->
-                                        <Border Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                CornerRadius="6" Padding="10,6" IsVisible="{Binding HasBedrockTunnelAddress}">
+                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                                CornerRadius="6" Padding="10,8"
+                                                IsVisible="{Binding HasBedrockTunnelAddress}">
                                             <Grid ColumnDefinitions="Auto, *, Auto">
-                                                <lucide:LucideIcon Grid.Column="0" Kind="Layers" Size="14"
-                                                                   Foreground="#f59e0b"
+                                                <lucide:LucideIcon Grid.Column="0" Kind="Box" Size="14"
+                                                                   Foreground="{DynamicResource SystemFillColorCautionBrush}"
                                                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding BedrockTunnelAddress}" FontSize="11"
-                                                           Foreground="#f59e0b"
-                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="Bedrock" FontSize="10" FontWeight="Bold"
+                                                               Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
+                                                    <TextBlock Text="{Binding BedrockTunnelAddress}" FontSize="12"
+                                                               Foreground="{DynamicResource SystemFillColorCautionBrush}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
                                                 <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
                                                         Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyBedrockIpCommand}"
                                                         CommandParameter="{Binding}" ToolTip.Tip="Copy Bedrock IP address" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
                                                 </Button>
                                             </Grid>
                                         </Border>
                                     </StackPanel>
 
-                                    <!-- Actions Row -->
+                                    <!-- Actions Row (2x2 UniformGrid) -->
                                     <Grid Grid.Row="4">
                                         <!-- Stopped Controls -->
                                         <UniformGrid Columns="2" IsVisible="{Binding ShowStoppedControls}">
-                                            <Button Content="Start" Background="{DynamicResource AccentPrimaryBrush}"
+                                            <Button Background="{DynamicResource AccentPrimaryBrush}"
                                                     Foreground="White" CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).StartServerCommand}"
@@ -320,21 +367,21 @@
                                                     <TextBlock Text="Start" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
                                                     CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
                                                     CommandParameter="{Binding}">
                                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                                     <lucide:LucideIcon Kind="Terminal" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Console" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Logs" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
                                                     CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
@@ -344,9 +391,9 @@
                                                     <TextBlock Text="Files" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
                                                     CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"
@@ -370,9 +417,9 @@
                                                     <TextBlock Text="{Binding StopButtonText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
                                                     CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).RestartServerCommand}"
@@ -393,9 +440,9 @@
                                                     <TextBlock Text="Console" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Background="{DynamicResource ControlFillSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
                                                     CornerRadius="6" Margin="2" Padding="8"
                                                     HorizontalAlignment="Stretch" Cursor="Hand"
                                                     Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"

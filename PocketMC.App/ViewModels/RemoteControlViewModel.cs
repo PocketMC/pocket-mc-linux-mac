@@ -303,7 +303,16 @@ public partial class RemoteControlViewModel : ObservableObject
     [RelayCommand]
     private void NavigateBack()
     {
-        if (App.Services != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        if (navService?.CanNavigateBack == true)
+        {
+            navService.NavigateBack();
+        }
+        else if (navService != null)
+        {
+            navService.NavigateToDashboard();
+        }
+        else if (App.Services != null)
         {
             var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
             if (mainVM != null)

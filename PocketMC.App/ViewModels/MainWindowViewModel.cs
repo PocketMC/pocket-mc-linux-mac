@@ -172,6 +172,47 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     }
 
     [RelayCommand]
+    public void NavigateNews()
+    {
+        SelectedNavSection = "News";
+        var newsVm = (NewsViewModel?)_serviceProvider.GetService(typeof(NewsViewModel));
+        if (newsVm != null)
+        {
+            _navigationService.NavigateToDetailPage(newsVm, "Community News", DetailRouteKind.News, DetailBackNavigation.Dashboard);
+        }
+        else
+        {
+            // Fallback: Shows What's New changelog dialog if NewsViewModel is not available
+            var whatsNewService = (Infrastructure.WhatsNew.WhatsNewService?)_serviceProvider.GetService(typeof(Infrastructure.WhatsNew.WhatsNewService));
+            if (whatsNewService != null)
+            {
+                var window = new Views.WhatsNewWindow(whatsNewService);
+                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+                {
+                    window.ShowDialog(desktop.MainWindow);
+                }
+                else
+                {
+                    window.Show();
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void RestartAndApplyUpdate()
+    {
+        // Dismiss banner and restart application
+        IsUpdateBannerVisible = false;
+    }
+
+    [RelayCommand]
+    public void DismissUpdateBanner()
+    {
+        IsUpdateBannerVisible = false;
+    }
+
+    [RelayCommand]
     public void NavigateBack()
     {
         _navigationService.NavigateBack();

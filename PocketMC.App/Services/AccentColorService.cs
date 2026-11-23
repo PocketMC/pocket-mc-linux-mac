@@ -172,6 +172,9 @@ public sealed class AccentColorService
 
         app.Resources["AccentBrush"] = new SolidColorBrush(color);
         app.Resources["AccentColorBrush"] = new SolidColorBrush(color);
+        app.Resources["AccentPrimaryBrush"] = new SolidColorBrush(color);
+        app.Resources["AccentFillColorDefaultBrush"] = new SolidColorBrush(color);
+        app.Resources["AccentTextFillColorPrimaryBrush"] = new SolidColorBrush(Lighten(color, 0.25f));
     }
 
     private void NotifyAccentChanged(Color color)

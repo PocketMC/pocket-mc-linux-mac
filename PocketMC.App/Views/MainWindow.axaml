@@ -11,7 +11,7 @@
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="PreferSystemChrome"
         ExtendClientAreaTitleBarHeightHint="40"
-        MinWidth="960" MinHeight="640" Width="1100" Height="740">
+        MinWidth="1024" MinHeight="680" Width="1100" Height="740">
 
   <Grid x:Name="RootGrid">
     <!-- Blurred wallpaper fallback layer -->
@@ -28,10 +28,48 @@
             Background="#D9121214"
             IsHitTestVisible="False"/>
 
-    <!-- Root shell grid -->
-    <Grid RowDefinitions="40, *">
-      <!-- Title bar drag region -->
+    <!-- Root shell grid: Update banner, TitleBar, Client area -->
+    <Grid RowDefinitions="Auto, 40, *">
+      <!-- Update notification banner (collapsible) -->
       <Border Grid.Row="0"
+              IsVisible="{Binding IsUpdateBannerVisible}"
+              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="0,0,0,1"
+              Padding="12,8">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <ProgressBar Width="120" Height="6" Minimum="0" Maximum="100"
+                         Value="{Binding UpdateDownloadPercent}"
+                         Margin="0,0,10,0"
+                         IsVisible="{Binding IsUpdateDownloading}"/>
+            <TextBlock VerticalAlignment="Center"
+                       Text="{Binding UpdateStatusMessage}"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                       FontSize="13"
+                       FontWeight="Medium"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+            <Button Content="Restart to update"
+                    Background="{DynamicResource AccentPrimaryBrush}"
+                    Foreground="White"
+                    Padding="10,4"
+                    CornerRadius="6"
+                    Command="{Binding RestartAndApplyUpdateCommand}"
+                    IsVisible="{Binding IsUpdateReadyToApply}"
+                    Cursor="Hand"/>
+            <Button Content="Dismiss"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="6,4"
+                    Command="{Binding DismissUpdateBannerCommand}"
+                    Cursor="Hand"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Title bar drag region -->
+      <Border Grid.Row="1"
               PointerPressed="TitleBar_OnPointerPressed"
               Background="Transparent"
               Height="40">
@@ -74,6 +112,10 @@
                          FontSize="12" FontWeight="SemiBold"
                          Foreground="{DynamicResource TextPrimaryBrush}"
                          VerticalAlignment="Center"/>
+              <TextBlock Text="  •  "
+                         FontSize="12"
+                         Foreground="{DynamicResource TextFillColorDisabledBrush}"
+                         VerticalAlignment="Center"/>
               <Ellipse Width="7" Height="7" Fill="{Binding TitleBarStatusColor}" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding TitleBarStatusText}"
                          FontSize="12" FontWeight="Medium"
@@ -103,7 +145,7 @@
       </Border>
 
       <!-- Client Area with Left Sidebar Navigation -->
-      <Grid Grid.Row="1" ColumnDefinitions="220, *">
+      <Grid Grid.Row="2" ColumnDefinitions="240, *">
         <!-- Sidebar Navigation -->
         <Border Grid.Column="0"
                 Background="#10FFFFFF"
@@ -150,6 +192,32 @@
                   <lucide:LucideIcon Kind="Smartphone" Size="18" Foreground="#9B59B6"/>
                   <TextBlock Text="Remote Control" FontWeight="Medium" VerticalAlignment="Center"/>
                 </StackPanel>
+              </Button>
+
+              <!-- News -->
+              <Button Command="{Binding NavigateNewsCommand}"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Left"
+                      Background="Transparent"
+                      Foreground="{DynamicResource TextPrimaryBrush}"
+                      Padding="12,10" CornerRadius="8" Cursor="Hand">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                  <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <lucide:LucideIcon Kind="Megaphone" Size="18" Foreground="#E67E22"/>
+                    <TextBlock Text="News" FontWeight="Medium" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <Border Grid.Column="2"
+                          MinWidth="16" Height="16"
+                          CornerRadius="8"
+                          Background="#C42B1C"
+                          Padding="4,0"
+                          IsVisible="{Binding UnreadNewsCount}"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="{Binding UnreadNewsCount}"
+                               FontSize="9" FontWeight="Bold" Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
               </Button>
             </StackPanel>
 

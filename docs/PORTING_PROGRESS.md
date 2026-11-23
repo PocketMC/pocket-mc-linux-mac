@@ -164,3 +164,18 @@ This log tracks architectural decisions, ported capabilities, and verification s
 - [x] Enhanced GitHub Actions release pipeline (`.github/workflows/release.yml`) to compile and package artifacts for Linux (`.tar.gz`, `.deb`, `.AppImage`) and macOS (`.dmg`).
 - [x] Automated tests verified in `PosixFilePermissionServiceTests`.
 
+---
+
+## Phase 19: High-Fidelity UI/UX Parity & Linux Runtime Hardening (Completed & Verified)
+- [x] **Design Tokens & Theme Resources**: Registered all Windows WPF-UI theme tokens (`CardBackgroundFillColorDefaultBrush`, `ControlFillColorSecondaryBrush`, `TextFillColorPrimaryBrush`, `AccentFillColorDefaultBrush`, etc.) across Light and Dark themes in `App.axaml`.
+- [x] **Shell & Navigation Alignment**: Updated `MainWindow.axaml` to 240px navigation rail, collapsible top update banner with restart button, dynamic TitleBar server context pill, and Lucide icon parity.
+- [x] **Instance Cards & Dashboard**: Added 4-card pulsing skeleton loader, centered empty state with creation button, version badges, cross-play and voice chat indicators, 3-column metadata grid (`Last Played`, `Created`, `Platform`), metrics grid (`CPU`, `RAM`, `PLAYERS`), running IP pills, and 2x2 action buttons.
+- [x] **New Instance Wizard**: Replicated top header with Back button, "Import Modpack" (with BETA badge), and "Import Instance". Aligned sticky footer action bar with EULA checkbox and download progress.
+- [x] **Server Console**: Cascadia Code monospace terminal, action toolbar with Auto-scroll, Copy, regex search toggle (`.*`), level filters (`Chat`, `Info`, `Warn`, `Error`, `Sys`), and high-contrast "AI Summary" button (`Button.ai-action`).
+- [x] **News & Announcements Page**: Implemented `NewsPage.axaml`, `NewsViewModel.cs`, and `NewsService.cs` matching Windows 2-column layout (300px list + article detail surface), unread indicators, priority badges, and `Ctrl+7` shortcut.
+- [x] **Linux VM Runtime Stabilization**:
+  - Eliminated ambiguous `DashboardViewModel` DI constructor crash during first-run storage root directory setup.
+  - Resolved `InvalidCastException` on two-way compiled bindings by enforcing `control.DataContext = data` in `ViewLocator.cs` and adding ViewModel constructors to views.
+  - Centralized all view and detail navigation through `IAppNavigationService`.
+- [x] **Automated Regression Suite**: 214 automated tests passing across core, infrastructure, platform, remote control, and UI hosting/navigation.
+
