@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:PocketMC.Core.Models;assembly=PocketMC.Core"
+        x:Class="PocketMC.App.Views.Dialogs.OllamaModelManagerDialog"
+        Title="Ollama Model Manager"
+        Width="740" Height="560"
+        MinWidth="600" MinHeight="440"
+        WindowStartupLocation="CenterOwner"
+        Background="#18181B">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Ollama Model Manager" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+            <TextBlock Text="Manage local Ollama intelligence models for server crash triage and logs diagnostics." FontSize="13" Foreground="#A1A1AA" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="2">
+            <TabItem Header="Installed Models">
+                <Grid RowDefinitions="Auto, *" Margin="0,12,0,0">
+                    <TextBlock x:Name="TxtStatus" Grid.Row="0" Text="Checking daemon status..." FontSize="12" Foreground="#A1A1AA" Margin="0,0,0,10"/>
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl x:Name="InstalledModelsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:OllamaModelInfo">
+                                    <Border Background="#27272A" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
+                                                <TextBlock Text="{Binding FormattedSize}" FontSize="12" Foreground="#A1A1AA"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="Select" Background="#3B82F6" Foreground="#FFFFFF" CornerRadius="6" Padding="14,6" Tag="{Binding Name}" Click="SelectModel_Click" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Download Model">
+                <StackPanel Spacing="16" Margin="0,16,0,0">
+                    <TextBlock Text="Enter model tag from Ollama library (e.g. llama3.2, mistral, qwen2.5-coder:7b):" FontSize="13" Foreground="#FFFFFF"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBox x:Name="TxtPullModelTag" Watermark="e.g. llama3.2" Background="#27272A" BorderBrush="#3F3F46" Foreground="#FFFFFF" CornerRadius="6" Padding="10,8" Margin="0,0,10,0"/>
+                        <Button x:Name="BtnPull" Grid.Column="1" Content="Pull Model" Background="#3B82F6" Foreground="#FFFFFF" CornerRadius="6" Padding="16,8"/>
+                    </Grid>
+                    <ProgressBar x:Name="PullProgressBar" Height="6" Minimum="0" Maximum="100" Value="0" IsVisible="False"/>
+                    <TextBlock x:Name="TxtPullStatus" FontSize="12" Foreground="#A1A1AA" IsVisible="False"/>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Setup Guide">
+                <ScrollViewer Margin="0,16,0,0">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Local Ollama Setup for Linux &amp; macOS" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="1. Install Ollama via terminal:" FontSize="13" Foreground="#E4E4E7"/>
+                        <Border Background="#09090B" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="6" Padding="10">
+                            <SelectableTextBlock Text="curl -fsSL https://ollama.com/install.sh | sh" FontFamily="Consolas, monospace" Foreground="#10B981"/>
+                        </Border>
+                        <TextBlock Text="2. Ensure Ollama service is active:" FontSize="13" Foreground="#E4E4E7"/>
+                        <Border Background="#09090B" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="6" Padding="10">
+                            <SelectableTextBlock Text="systemctl --user start ollama (Linux) or launch Ollama.app (macOS)" FontFamily="Consolas, monospace" Foreground="#10B981"/>
+                        </Border>
+                        <TextBlock Text="3. Pull a lightweight model:" FontSize="13" Foreground="#E4E4E7"/>
+                        <Border Background="#09090B" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="6" Padding="10">
+                            <SelectableTextBlock Text="ollama run llama3.2" FontFamily="Consolas, monospace" Foreground="#10B981"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Close Button -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button x:Name="BtnClose" Content="Close" Background="#27272A" BorderBrush="#3F3F46" Foreground="#FFFFFF" CornerRadius="6" Padding="16,8" MinWidth="80" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

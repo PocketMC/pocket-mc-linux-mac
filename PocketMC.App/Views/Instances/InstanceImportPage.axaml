@@ -1,0 +1,135 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels.Instances"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.Instances.InstanceImportPage"
+             x:DataType="vm:InstanceImportViewModel"
+             x:CompileBindings="True"
+             Margin="24">
+
+    <UserControl.Styles>
+        <Style Selector="Border.import-card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="24,18"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+        <Style Selector="TextBlock.import-title">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.import-description">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, 20, *, Auto">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, 16, *">
+            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
+                    Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
+                <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Button>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="Import Server Instance" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Restore a server from a PocketMC export ZIP package or external backup archive." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Body -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="0" HorizontalAlignment="Stretch">
+                
+                <!-- PACKAGE SELECTION -->
+                <Border Classes="import-card">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,16,0">
+                            <TextBlock Text="Export Package Archive" Classes="import-title" />
+                            <TextBlock Text="Select a .zip package exported from PocketMC on any platform." Classes="import-description" />
+                            <TextBox Text="{Binding ZipPath, Mode=TwoWay}" Watermark="/path/to/server-export.zip" CornerRadius="8" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding BrowseZipCommand}" Content="Browse..."
+                                Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
+                                VerticalAlignment="Bottom" Cursor="Hand" Margin="0,0,0,2"/>
+                    </Grid>
+                </Border>
+
+                <!-- TARGET INSTANCE NAME -->
+                <Border Classes="import-card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="New Instance Name" Classes="import-title" />
+                        <TextBlock Text="The display name for the imported server instance." Classes="import-description" />
+                        <TextBox Text="{Binding RequestedName, Mode=TwoWay}" Watermark="e.g. My Imported Server" CornerRadius="8" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- DETECTED ENGINE BADGE -->
+                <Border Classes="import-card" IsVisible="{Binding DetectedEngineType, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Package Software Manifest" Classes="import-title" />
+                            <TextBlock Text="{Binding CurrentStep}" FontSize="13" Foreground="#1E90FF" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#261E90FF" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DetectedEngineType}" Foreground="#1E90FF" FontSize="12" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- PROGRESS & STATUS -->
+                <Border Classes="import-card" IsVisible="{Binding IsImporting}">
+                    <StackPanel Spacing="8">
+                        <ProgressBar Value="{Binding OverallProgress}" Minimum="0" Maximum="100" Height="8" CornerRadius="4"/>
+                        <TextBlock Text="{Binding CurrentStep}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- COMPLETE BANNER -->
+                <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,14" IsVisible="{Binding IsComplete}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <lucide:LucideIcon Kind="Check" Size="18" Foreground="#2ECC71" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentStep}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ERROR BANNER -->
+                <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,14" IsVisible="{Binding HasError}">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <lucide:LucideIcon Kind="Info" Size="18" Foreground="#E74C3C" VerticalAlignment="Center"/>
+                            <TextBlock Text="Import Failed" Foreground="#E74C3C" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Sticky Footer -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="20,14">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Download" Size="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Importing extracts worlds, configs, and provisions missing binaries." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Command="{Binding GoBackCommand}" Content="Cancel" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,8" Cursor="Hand"/>
+                    <Button Command="{Binding ImportCommand}" Content="Import Instance" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="18,8" Cursor="Hand" FontWeight="SemiBold" IsEnabled="{Binding CanImport}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

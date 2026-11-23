@@ -5,85 +5,131 @@
              x:Class="PocketMC.App.Views.ServerConsolePage"
              x:DataType="vm:ServerConsoleViewModel"
              x:CompileBindings="True"
-             Margin="24">
+             Margin="16">
 
     <Grid RowDefinitions="Auto, *, Auto">
-        <!-- Top Action & Filter Bar -->
-        <Grid Grid.Row="0" Margin="0,0,0,16" ColumnDefinitions="*, Auto">
-            <!-- Left Info Section -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <Button Command="{Binding GoBackCommand}"
-                        Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
-                    <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2"/>
-                </Button>
-                <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Console - {0}'}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" />
+        <!-- Top Toolbar: Console actions matching Windows ServerConsolePage.xaml -->
+        <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto">
+            <!-- Back Button -->
+            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Padding="10,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"
+                    ToolTip.Tip="Back to Dashboard (Escape)">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="ArrowLeft" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Auto-scroll Toggle -->
+            <ToggleButton Grid.Column="1" IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+                          Content="Auto-scroll" FontSize="12" FontWeight="Medium"
+                          Padding="12,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"/>
+
+            <!-- Copy Logs -->
+            <Button Grid.Column="2" Command="{Binding CopyLogsCommand}"
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Padding="10,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"
+                    ToolTip.Tip="Copy logs to clipboard">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Check" Size="14" Foreground="#10b981" VerticalAlignment="Center" IsVisible="{Binding IsCopied}"/>
+                    <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsCopied}"/>
+                    <TextBlock Text="{Binding CopyButtonText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Search Logs Input -->
+            <TextBox Grid.Column="3" Text="{Binding SearchQuery, Mode=TwoWay}"
+                     Watermark="Search logs..." FontSize="12"
+                     Margin="0,0,6,0" MinWidth="160" Height="32" CornerRadius="6"
+                     VerticalContentAlignment="Center"/>
+
+            <!-- Regex ToggleButton -->
+            <ToggleButton Grid.Column="4" IsChecked="{Binding IsRegexEnabled, Mode=TwoWay}"
+                          Content=".*" FontSize="12" FontWeight="Bold"
+                          Width="32" Height="32" Padding="0" Margin="0,0,12,0" CornerRadius="6"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                          Cursor="Hand" ToolTip.Tip="Use Regular Expressions"/>
+
+            <!-- Log Filter ToggleButtons -->
+            <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="0,0,12,0">
+                <ToggleButton Content="Chat" IsChecked="{Binding IsFilterChat, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+                <ToggleButton Content="Info" IsChecked="{Binding IsFilterInfo, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+                <ToggleButton Content="Warn" IsChecked="{Binding IsFilterWarn, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+                <ToggleButton Content="Error" IsChecked="{Binding IsFilterError, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+                <ToggleButton Content="Sys" IsChecked="{Binding IsFilterSystem, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
             </StackPanel>
 
-            <!-- Right Filters -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <TextBox Width="220" Height="34" Text="{Binding SearchQuery, Mode=TwoWay}" Watermark="Search logs..." VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-                <CheckBox IsChecked="{Binding AutoScroll, Mode=TwoWay}" VerticalAlignment="Center">
-                    <TextBlock Text="Auto Scroll" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                </CheckBox>
-            </StackPanel>
+            <!-- AI Summary Action Button -->
+            <Button Grid.Column="6" Command="{Binding NavigateToAiDiagnosticCommand}"
+                    Classes="ai-action"
+                    Padding="10,6" CornerRadius="6" Cursor="Hand"
+                    ToolTip.Tip="Generate AI session summary">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Sparkles" Size="14" Foreground="White" VerticalAlignment="Center"/>
+                    <TextBlock Text="AI Summary" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- Main Console Terminal Area -->
         <Border Grid.Row="1" 
-                Background="{DynamicResource ConsoleBackgroundBrush}" 
+                Background="#1E1E1E" 
                 CornerRadius="8" 
-                BorderBrush="{DynamicResource CardBorderBrush}" 
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
                 BorderThickness="1" 
-                Padding="16"
-                BoxShadow="0 8 24 0 #15000000">
+                Padding="12">
             <Grid RowDefinitions="Auto, Auto, *">
-                <!-- Terminal Header -->
+                <!-- Terminal Header Bar -->
                 <Border Grid.Row="0" 
-                        Background="{DynamicResource ConsoleHeaderBackgroundBrush}" 
+                        Background="{DynamicResource ControlFillColorDefaultBrush}" 
                         CornerRadius="6" 
                         Padding="12,8" 
-                        Margin="0,0,0,12"
-                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        Margin="0,0,0,10"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" 
                         BorderThickness="1">
-                    <Grid ColumnDefinitions="*, Auto, Auto">
+                    <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                             <Ellipse Width="8" Height="8" Fill="#4CAF50" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Active Terminal: {0}'}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Active Terminal: {0}'}"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </StackPanel>
-                        <TextBlock Text="{Binding LogEntryCount, StringFormat='{}{0} entries'}" Grid.Column="1" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.6" FontSize="11" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                        <Button Grid.Column="2" Command="{Binding CopyLogsCommand}" Background="Transparent" BorderThickness="0" Padding="6" ToolTip.Tip="Copy Terminal Logs to Clipboard" Cursor="Hand">
-                            <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        </Button>
+                        <TextBlock Text="{Binding LogEntryCount, StringFormat='{}{0} entries'}" Grid.Column="1"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontSize="11" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
 
                 <!-- Crash Diagnostics Warning Banner -->
                 <Border Grid.Row="1" 
-                        Background="#2a1616" 
-                        BorderBrush="#501616" 
-                        BorderThickness="1" 
-                        CornerRadius="6" 
+                        Background="#EE1A1A1A" 
+                        BorderBrush="#FF4444" 
+                        BorderThickness="1,1,1,2" 
+                        CornerRadius="8" 
                         Padding="12,8" 
                         Margin="0,0,0,12" 
                         IsVisible="{Binding IsCrashed}">
                     <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <lucide:LucideIcon Kind="ShieldAlert" Size="16" Foreground="#e74c3c" VerticalAlignment="Center"/>
-                            <TextBlock Text="Server crashed or stopped unexpectedly! Run diagnostics helper to troubleshoot." 
-                                       Foreground="#f5b0a7" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <lucide:LucideIcon Kind="ShieldAlert" Size="16" Foreground="#FF6B6B" VerticalAlignment="Center"/>
+                            <TextBlock Text="Critical Crash Detected! Run AI Diagnostics to analyze root causes and fix errors." 
+                                       Foreground="#FF6B6B" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding NavigateToAiDiagnosticCommand}" 
-                                Background="#1e90ff" Foreground="White" CornerRadius="4" Padding="10,4" Cursor="Hand">
+                                Classes="ai-action" CornerRadius="4" Padding="10,4" Cursor="Hand">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <lucide:LucideIcon Kind="Sparkles" Size="12" VerticalAlignment="Center"/>
-                                <TextBlock Text="Analyze with AI" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <lucide:LucideIcon Kind="Sparkles" Size="12" Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock Text="Analyze with AI" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </Grid>
                 </Border>
 
                 <!-- Scrollable Log Container -->
-                <ScrollViewer Grid.Row="2" Name="LogScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                <ScrollViewer Grid.Row="2" Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding LogLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:LogLine">
@@ -101,38 +147,28 @@
             </Grid>
         </Border>
 
-        <!-- Quick Commands & Command Input Box -->
-        <StackPanel Grid.Row="2" Margin="0,12,0,0" Spacing="8">
-            <!-- Quick Command Pills -->
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Quick Actions:" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Opacity="0.8" Margin="0,0,4,0"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="stop" Content="/stop" CornerRadius="12" Padding="10,4" FontSize="12" Background="#20DC3545" Foreground="#DC3545" BorderBrush="#30DC3545" BorderThickness="1"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="say Server notice!" Content="/say notice" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="gamemode creative @a" Content="/gamemode creative" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="gamemode survival @a" Content="/gamemode survival" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="time set day" Content="/time set day" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
-                    <Button Command="{Binding SendQuickCommandCommand}" CommandParameter="weather clear" Content="/weather clear" CornerRadius="12" Padding="10,4" FontSize="12" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"/>
+        <!-- Command Input Box -->
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,8,0,0">
+            <TextBox Grid.Column="0" 
+                     Text="{Binding CommandInput, Mode=TwoWay}" 
+                     KeyDown="OnCommandBoxKeyDown" 
+                     Watermark="Type a command..." 
+                     FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" 
+                     FontSize="13" 
+                     Padding="12,8"
+                     VerticalContentAlignment="Center"
+                     Height="38"
+                     CornerRadius="6"
+                     Margin="0,0,8,0"/>
+            <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Cursor="Hand"
+                    Padding="16,0" Height="38"
+                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Send" Size="14" Foreground="White" VerticalAlignment="Center"/>
+                    <TextBlock Text="Send" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </StackPanel>
-            </ScrollViewer>
-
-            <Grid ColumnDefinitions="*, Auto">
-                <TextBox Grid.Column="0" 
-                         Text="{Binding CommandInput, Mode=TwoWay}" 
-                         KeyDown="OnCommandBoxKeyDown" 
-                         Watermark="Type server command (e.g., say Hello, op Player, stop)..." 
-                         FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" 
-                         FontSize="13" 
-                         Padding="12,10"
-                         VerticalContentAlignment="Center"
-                         Height="40"/>
-                <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Cursor="Hand" Margin="12,0,0,0" Padding="20,0" Height="40" Background="#1E90FF" Foreground="White" CornerRadius="6">
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <lucide:LucideIcon Kind="Send" Size="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="Send" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </StackPanel>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>

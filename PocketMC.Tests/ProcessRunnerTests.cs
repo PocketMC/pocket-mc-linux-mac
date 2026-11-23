@@ -107,6 +107,39 @@ namespace PocketMC.Tests
 
         [Fact]
         [Trait("Category", "Unit")]
+        public async Task StartAsync_DoesNotDeleteSessionLockFile()
+        {
+            var instance = new ServerInstance
+            {
+                Id = Guid.NewGuid(),
+                Name = "Lock Server",
+                Slug = "lock-server",
+                Path = _testTempDir,
+                EngineType = EngineType.VanillaJava,
+                EngineVersion = "mock:nonexistent-command-that-fails-fast"
+            };
+
+            string worldDir = Path.Combine(_testTempDir, "world");
+            Directory.CreateDirectory(worldDir);
+            string lockPath = Path.Combine(worldDir, "session.lock");
+            File.WriteAllText(lockPath, "ACTIVE_WORLD_LOCK");
+
+            await _runner.StartAsync(instance);
+
+            Assert.True(File.Exists(lockPath), "session.lock file should NEVER be blindly deleted by PocketMC.");
+            Assert.Equal("ACTIVE_WORLD_LOCK", File.ReadAllText(lockPath));
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task StopAllAsync_WhenNoInstancesRunning_CompletesCleanly()
+        {
+            await _runner.StopAllAsync();
+            Assert.Empty(_runner.GetRunningSlugs());
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
         public async Task Crash_TriggersAutoRestartLoop()
         {
             if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
@@ -119,7 +152,9 @@ namespace PocketMC.Tests
                     Slug = "crash-server",
                     Path = _testTempDir,
                     EngineType = EngineType.VanillaJava,
-                    EngineVersion = "mock:false"
+                    EngineVersion = "mock:false",
+                    EnableAutoRestart = true,
+                    AutoRestartDelaySeconds = 0
                 };
 
                 File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
@@ -144,6 +179,46 @@ namespace PocketMC.Tests
                 // Verify it triggered restart attempts (should be 3 crashes and restarts)
                 Assert.True(crashTransitions >= 1);
                 Assert.True(startTransitions >= 1);
+            }
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task Crash_WhenAutoRestartDisabled_DoesNotTriggerRestart()
+        {
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                var instance = new ServerInstance
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Crash Server No Restart",
+                    Slug = "crash-server-no-restart",
+                    Path = _testTempDir,
+                    EngineType = EngineType.VanillaJava,
+                    EngineVersion = "mock:false",
+                    EnableAutoRestart = false
+                };
+
+                File.WriteAllText(Path.Combine(_testTempDir, "server.jar"), "");
+
+                int crashTransitions = 0;
+                int startTransitions = 0;
+
+                _runner.StateChanged += (slug, state) =>
+                {
+                    if (slug == instance.Slug)
+                    {
+                        if (state == "Crashed") crashTransitions++;
+                        if (state == "Starting") startTransitions++;
+                    }
+                };
+
+                await _runner.StartAsync(instance);
+                await Task.Delay(1500);
+
+                // Initial start transitioned to Starting once and Crashed once; no restart attempts occurred
+                Assert.Equal(1, crashTransitions);
+                Assert.Equal(1, startTransitions);
             }
         }
     }

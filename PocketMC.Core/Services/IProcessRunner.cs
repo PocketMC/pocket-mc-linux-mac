@@ -8,8 +8,11 @@ namespace PocketMC.Core.Services
     {
         Task StartAsync(ServerInstance instance, bool isAutoRestart = false);
         Task StopAsync(ServerInstance instance);
+        Task StopAllAsync();
+        System.Collections.Generic.IReadOnlyList<string> GetRunningSlugs();
         Task SendCommandAsync(ServerInstance instance, string command);
         bool TryGetRunningInfo(string slug, out int pgid, out string state);
+        DateTime? GetSessionStartTime(string slug);
         event Action<string, string> StateChanged; // Instance slug, state string
     }
 }

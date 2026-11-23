@@ -18,6 +18,8 @@ public class CloudflaredQuickTunnelProvider : IRemoteTunnelProvider
 
     public string ProviderId => "cloudflared-quick";
     public string DisplayName => "Cloudflared Quick Tunnel";
+    public string PublicUrl => _publicUrl;
+    public bool IsRunning => _processManager.IsRunning;
 
     public CloudflaredQuickTunnelProvider(ISettingsService settingsService)
     {

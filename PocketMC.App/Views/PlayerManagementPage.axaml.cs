@@ -8,5 +8,10 @@ namespace PocketMC.App.Views
         {
             InitializeComponent();
         }
+
+        public PlayerManagementPage(PocketMC.App.ViewModels.PlayerManagementViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
+        }
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.pocketmc.app</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>PocketMC</name>
+  <summary>Modern native desktop application for Minecraft server hosting and management</summary>
+  <description>
+    <p>
+      PocketMC is a modern native desktop application for managing Minecraft Java,
+      Bedrock Dedicated Server, and PocketMine (PHP) servers with unified process
+      monitoring and playit.gg cross-platform network tunnels.
+    </p>
+  </description>
+  <launchable type="desktop-id">pocketmc.desktop</launchable>
+  <url type="homepage">https://pocketmc.net</url>
+  <url type="bugtracker">https://github.com/PocketMC/pocket-mc-linux-mac/issues</url>
+  <developer_name>DS Labs</developer_name>
+</component>

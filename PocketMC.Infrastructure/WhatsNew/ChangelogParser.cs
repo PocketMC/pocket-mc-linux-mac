@@ -1,0 +1,110 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace PocketMC.Infrastructure.WhatsNew
+{
+    public sealed class ChangelogSection
+    {
+        public string Name { get; }
+        public IReadOnlyList<string> Items { get; }
+
+        public ChangelogSection(string name, IReadOnlyList<string> items)
+        {
+            Name = name;
+            Items = items;
+        }
+    }
+
+    public sealed class ChangelogEntry
+    {
+        public string Version { get; }
+        public IReadOnlyList<ChangelogSection> Sections { get; }
+
+        public ChangelogEntry(string version, IReadOnlyList<ChangelogSection> sections)
+        {
+            Version = version;
+            Sections = sections;
+        }
+    }
+
+    public static class ChangelogParser
+    {
+        private const string VersionPrefix = "VERSION=";
+
+        public static ChangelogEntry? Parse(string? content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return null;
+            }
+
+            var lines = content
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.None)
+                .Select(l => l.Trim())
+                .ToList();
+
+            string? version = null;
+            foreach (var line in lines)
+            {
+                if (line.StartsWith(VersionPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    version = line.Substring(VersionPrefix.Length).Trim();
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                return null;
+            }
+
+            var sections = new List<ChangelogSection>();
+            string? currentSectionName = null;
+            var currentItems = new List<string>();
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("[", StringComparison.Ordinal) &&
+                    line.EndsWith("]", StringComparison.Ordinal) &&
+                    line.Length > 2)
+                {
+                    if (currentSectionName != null && currentItems.Count > 0)
+                    {
+                        sections.Add(new ChangelogSection(currentSectionName, currentItems.ToList()));
+                    }
+
+                    currentSectionName = line.Substring(1, line.Length - 2).Trim();
+                    currentItems = new List<string>();
+                    continue;
+                }
+
+                if (currentSectionName != null && !string.IsNullOrWhiteSpace(line) &&
+                    !line.StartsWith(VersionPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    string itemText = line.Trim();
+                    if (itemText.StartsWith("- ") || itemText.StartsWith("* ") || itemText.StartsWith("• "))
+                    {
+                        itemText = itemText.Substring(2).Trim();
+                    }
+                    else if (itemText.StartsWith("-") || itemText.StartsWith("•"))
+                    {
+                        itemText = itemText.Substring(1).Trim();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(itemText))
+                    {
+                        currentItems.Add(itemText);
+                    }
+                }
+            }
+
+            if (currentSectionName != null && currentItems.Count > 0)
+            {
+                sections.Add(new ChangelogSection(currentSectionName, currentItems.ToList()));
+            }
+
+            return new ChangelogEntry(version, sections);
+        }
+    }
+}

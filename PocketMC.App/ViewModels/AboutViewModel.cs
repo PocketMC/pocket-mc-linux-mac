@@ -9,6 +9,9 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Configuration;
+using PocketMC.Infrastructure.WhatsNew;
+using PocketMC.App.Views;
 
 namespace PocketMC.App.ViewModels;
 
@@ -16,8 +19,9 @@ public partial class AboutViewModel : ObservableObject
 {
     private readonly ISettingsService _settingsService;
     private readonly IInstanceService _instanceService;
+    private readonly WhatsNewService? _whatsNewService;
 
-    public string AppVersion => "Version 1.0.2 (Linux & macOS Native)";
+    public string AppVersion => "Version 1.0.4-beta (Linux & macOS Native)";
 
     [ObservableProperty]
     private string _currentDataRoot = string.Empty;
@@ -26,6 +30,13 @@ public partial class AboutViewModel : ObservableObject
     private string _changeRootStatus = string.Empty;
 
     public IRelayCommand OpenGitHubCommand { get; }
+    public IRelayCommand OpenWebsiteCommand { get; }
+    public IRelayCommand OpenStudioCommand { get; }
+    public IRelayCommand OpenWhatsNewCommand { get; }
+    public IRelayCommand OpenDivyCommand { get; }
+    public IRelayCommand OpenSahajCommand { get; }
+    public IRelayCommand OpenJohndinglesinCommand { get; }
+    public IRelayCommand OpenNexViceCommand { get; }
     public IRelayCommand OpenDiscordCommand { get; }
     public IRelayCommand CopyDiscordInviteCommand { get; }
     public IRelayCommand OpenInstagramCommand { get; }
@@ -37,23 +48,41 @@ public partial class AboutViewModel : ObservableObject
     public IAsyncRelayCommand ChangeDataRootCommand { get; }
     public IRelayCommand OpenDataRootFolderCommand { get; }
 
-    public AboutViewModel(ISettingsService settingsService, IInstanceService instanceService)
+    public AboutViewModel(ISettingsService settingsService, IInstanceService instanceService, WhatsNewService? whatsNewService = null)
     {
         _settingsService = settingsService;
         _instanceService = instanceService;
+        _whatsNewService = whatsNewService;
         _currentDataRoot = _settingsService.GetDataRoot();
 
-        OpenGitHubCommand = new RelayCommand(() => OpenUrl("https://github.com/PocketMC/pocket-mc-linux-mac"));
-        OpenDiscordCommand = new RelayCommand(() => OpenUrl("https://discord.gg/pocketmc"));
+        OpenGitHubCommand = new RelayCommand(() => OpenUrl(AppUrls.GitHub));
+        OpenWebsiteCommand = new RelayCommand(() => OpenUrl(AppUrls.Website));
+        OpenStudioCommand = new RelayCommand(() => OpenUrl(AppUrls.Studio));
+        OpenWhatsNewCommand = new RelayCommand(OpenWhatsNew);
+        OpenDivyCommand = new RelayCommand(() => OpenUrl(AppUrls.DivyGitHub));
+        OpenSahajCommand = new RelayCommand(() => OpenUrl(AppUrls.SahajGitHub));
+        OpenJohndinglesinCommand = new RelayCommand(() => OpenUrl(AppUrls.JohndinglesinGitHub));
+        OpenNexViceCommand = new RelayCommand(() => OpenUrl(AppUrls.NexViceDiscord));
+        OpenDiscordCommand = new RelayCommand(() => OpenUrl(AppUrls.DiscordInvite));
         CopyDiscordInviteCommand = new RelayCommand(CopyDiscordInvite);
-        OpenInstagramCommand = new RelayCommand(() => OpenUrl("https://instagram.com/pocketmc"));
-        OpenYouTubeCommand = new RelayCommand(() => OpenUrl("https://youtube.com/@pocketmc"));
-        OpenRedditCommand = new RelayCommand(() => OpenUrl("https://reddit.com/r/pocketmc"));
-        OpenFeedbackCommand = new RelayCommand(() => OpenUrl("https://github.com/PocketMC/pocket-mc-linux-mac/issues"));
-        OpenDonationCommand = new RelayCommand(() => OpenUrl("https://buymeacoffee.com/pocketmc"));
+        OpenInstagramCommand = new RelayCommand(() => OpenUrl(AppUrls.Instagram));
+        OpenYouTubeCommand = new RelayCommand(() => OpenUrl(AppUrls.YouTube));
+        OpenRedditCommand = new RelayCommand(() => OpenUrl(AppUrls.Reddit));
+        OpenFeedbackCommand = new RelayCommand(() => OpenUrl(AppUrls.Feedback));
+        OpenDonationCommand = new RelayCommand(() => OpenUrl(AppUrls.Donation));
         NavigateBackCommand = new RelayCommand(NavigateBack);
         ChangeDataRootCommand = new AsyncRelayCommand(ChangeDataRootAsync);
         OpenDataRootFolderCommand = new RelayCommand(OpenDataRootFolder);
+    }
+
+    private void OpenWhatsNew()
+    {
+        var whatsNewSvc = _whatsNewService ?? App.Services.GetService(typeof(WhatsNewService)) as WhatsNewService;
+        if (whatsNewSvc != null && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            var win = new WhatsNewWindow(whatsNewSvc);
+            win.ShowDialog(desktop.MainWindow);
+        }
     }
 
     private async Task ChangeDataRootAsync()
@@ -132,18 +161,27 @@ public partial class AboutViewModel : ObservableObject
             var topLevel = TopLevel.GetTopLevel(desktop.MainWindow);
             if (topLevel?.Clipboard != null)
             {
-                await topLevel.Clipboard.SetTextAsync("https://discord.gg/pocketmc");
+                await topLevel.Clipboard.SetTextAsync(AppUrls.DiscordInvite);
             }
         }
     }
 
     private void NavigateBack()
     {
-        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-        if (mainVM != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        if (navService?.CanNavigateBack == true)
         {
-            var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
-            if (dashVM != null)
+            navService.NavigateBack();
+        }
+        else if (navService != null)
+        {
+            navService.NavigateToDashboard();
+        }
+        else
+        {
+            var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            var dashVM = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+            if (mainVM != null && dashVM != null)
             {
                 mainVM.CurrentViewModel = dashVM;
             }

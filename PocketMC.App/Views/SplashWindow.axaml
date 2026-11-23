@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PocketMC.App.Views.SplashWindow"
+        Title="PocketMC"
+        Width="500" Height="280"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+  <Border CornerRadius="12" ClipToBounds="True" Background="#121214"
+          BorderBrush="#2D2D30" BorderThickness="1">
+    <Grid>
+      <Image Source="/Assets/splash.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <ProgressBar IsIndeterminate="True" Height="3" VerticalAlignment="Bottom"
+                   Foreground="{DynamicResource AccentBrush}" Background="Transparent" BorderThickness="0"/>
+    </Grid>
+  </Border>
+</Window>

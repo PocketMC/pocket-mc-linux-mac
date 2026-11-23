@@ -1,0 +1,141 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PocketMC.App.Views.Networking.PortConflictWindow"
+        Title="Port Conflict"
+        Width="480"
+        SizeToContent="Height"
+        MinWidth="420" MaxWidth="540"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#1E1E22">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header: icon + title -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <PathIcon Data="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"
+                      Width="24" Height="24"
+                      Foreground="#F59E0B"
+                      VerticalAlignment="Center"
+                      Margin="0,0,12,0"/>
+            <TextBlock x:Name="TxtTitle"
+                       Text="Port Conflict Detected"
+                       FontSize="18" FontWeight="SemiBold"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Error message -->
+        <ScrollViewer Grid.Row="1"
+                      MaxHeight="120"
+                      VerticalScrollBarVisibility="Auto"
+                      Margin="0,0,0,16">
+            <TextBlock x:Name="TxtMessage"
+                       Foreground="#A1A1AA"
+                       FontSize="13"
+                       TextWrapping="Wrap"
+                       LineHeight="20"/>
+        </ScrollViewer>
+
+        <!-- Suggested Port Action Card -->
+        <Border x:Name="BorderSuggestedPort"
+                Grid.Row="2"
+                Background="#27272A"
+                BorderBrush="#3F3F46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12,10"
+                Margin="0,0,0,16"
+                IsVisible="False">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="RECOMMENDED REPLACEMENT"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="#A1A1AA"/>
+                    <TextBlock x:Name="TxtSuggestedPortDescription"
+                               Text="Port 25566 is verified available"
+                               FontSize="13"
+                               FontWeight="Bold"
+                               Foreground="#FFFFFF"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+                <Button x:Name="BtnApplySuggested"
+                        Grid.Column="1"
+                        Content="Use Port"
+                        Background="#3B82F6"
+                        Foreground="#FFFFFF"
+                        CornerRadius="6"
+                        Padding="14,6"
+                        Cursor="Hand"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Port input section -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,16">
+            <TextBlock Text="Enter or modify port:"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Foreground="#FFFFFF"
+                       Margin="0,0,0,8"/>
+
+            <TextBox x:Name="TxtPortInput"
+                     Watermark="e.g. 25566"
+                     FontSize="14"
+                     MaxLength="5"
+                     CornerRadius="6"
+                     Background="#27272A"
+                     BorderBrush="#3F3F46"
+                     Foreground="#FFFFFF"
+                     Padding="10,8"/>
+
+            <!-- Validation message -->
+            <TextBlock x:Name="TxtValidation"
+                       FontSize="12"
+                       Foreground="#EF4444"
+                       Margin="0,6,0,0"
+                       TextWrapping="Wrap"
+                       IsVisible="False"/>
+
+            <!-- Success message -->
+            <TextBlock x:Name="TxtSuccess"
+                       FontSize="12"
+                       Foreground="#10B981"
+                       Margin="0,6,0,0"
+                       TextWrapping="Wrap"
+                       IsVisible="False"/>
+        </StackPanel>
+
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BtnCancel"
+                    Content="Cancel"
+                    Background="#27272A"
+                    BorderBrush="#3F3F46"
+                    Foreground="#FFFFFF"
+                    CornerRadius="6"
+                    Padding="16,8"
+                    MinWidth="80"
+                    Margin="0,0,8,0"
+                    Cursor="Hand"/>
+            <Button x:Name="BtnConfirm"
+                    Content="Change Port &amp; Start"
+                    Background="#3B82F6"
+                    Foreground="#FFFFFF"
+                    CornerRadius="6"
+                    Padding="16,8"
+                    MinWidth="140"
+                    Cursor="Hand"
+                    IsEnabled="False"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,6 +1,7 @@
 name: Release Pipeline
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Continuous Integration"]
     types:
@@ -13,12 +14,15 @@ permissions:
 
 jobs:
   release-build:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             rid: linux-x64
+            archive_ext: tar.gz
+          - os: ubuntu-latest
+            rid: linux-arm64
             archive_ext: tar.gz
           - os: macos-latest
             rid: osx-x64
@@ -94,6 +98,12 @@ jobs:
         run: |
           tar -czf PocketMC-${{ matrix.rid }}.tar.gz -C publish .
 
+      - name: Package Linux Debian Package (.deb)
+        if: steps.check_channel.outputs.skip == 'false' && matrix.os == 'ubuntu-latest'
+        run: |
+          chmod +x scripts/build-deb.sh
+          ./scripts/build-deb.sh ${{ matrix.rid }} ${{ steps.config.outputs.version }} publish
+
       - name: Package Release Archive (zip)
         if: steps.check_channel.outputs.skip == 'false' && matrix.archive_ext == 'zip'
         run: |
@@ -114,6 +124,7 @@ jobs:
           path: |
             PocketMC-${{ matrix.rid }}.${{ matrix.archive_ext }}
             PocketMC-*.dmg
+            pocketmc_*.deb
 
   create-release:
     needs: release-build
@@ -171,11 +182,13 @@ jobs:
           body: "Official cross-platform production release of PocketMC for Linux and macOS."
           files: |
             artifacts/PocketMC-linux-x64.tar.gz
+            artifacts/PocketMC-linux-arm64.tar.gz
+            artifacts/pocketmc_*.deb
             artifacts/PocketMC-osx-x64.zip
             artifacts/PocketMC-osx-arm64.zip
             artifacts/PocketMC-osx-x64.dmg
             artifacts/PocketMC-osx-arm64.dmg
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(steps.config.outputs.version, 'beta') || contains(steps.config.outputs.version, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

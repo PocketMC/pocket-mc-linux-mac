@@ -251,6 +251,37 @@ public partial class TunnelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenConsoleAsync()
+    {
+        if (_tunnelManager.GetProvider<PlayitHttpsTunnelProvider>("playit-https") is { } provider)
+        {
+            var consoleWin = new Views.Tunnel.PlayitConsoleWindow(provider.ProcessManager);
+            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                await consoleWin.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                consoleWin.Show();
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenCreateTunnelDialogAsync()
+    {
+        var dialog = new Views.Tunnel.CreateTunnelDialog(_playitApiClient);
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        {
+            await dialog.ShowDialog(desktop.MainWindow);
+            if (dialog.TunnelCreated)
+            {
+                await RefreshAllAsync();
+            }
+        }
+    }
+
+    [RelayCommand]
     private async Task UnlinkAccountAsync()
     {
         _settingsService.Settings.PlayitPartnerConnection = null;
@@ -259,12 +290,46 @@ public partial class TunnelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenPortsMap()
+    {
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        var portsMapVM = App.Services?.GetService(typeof(PortsMapViewModel)) as PortsMapViewModel;
+        if (portsMapVM != null)
+        {
+            if (navService != null)
+            {
+                navService.NavigateToDetailPage(portsMapVM, "Ports Map", PocketMC.App.Navigation.DetailRouteKind.PortsMap, PocketMC.App.Navigation.DetailBackNavigation.Dashboard);
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                if (mainVM != null)
+                {
+                    mainVM.CurrentViewModel = portsMapVM;
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
     private void GoBack()
     {
-        var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-        if (mainVM != null)
+        var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+        if (navService?.CanNavigateBack == true)
         {
-            mainVM.CurrentViewModel = App.Services.GetRequiredService<DashboardViewModel>();
+            navService.NavigateBack();
+        }
+        else if (navService != null)
+        {
+            navService.NavigateToDashboard();
+        }
+        else
+        {
+            var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+            if (mainVM != null)
+            {
+                mainVM.CurrentViewModel = App.Services?.GetRequiredService<DashboardViewModel>()!;
+            }
         }
     }
 }

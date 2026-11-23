@@ -30,4 +30,9 @@ public class LocalNetworkAddressService
 
         return addresses.Distinct();
     }
+
+    public IReadOnlyList<string> GetLocalUrls(int port, string scheme = "http")
+    {
+        return GetLocalIPv4Addresses().Select(ip => $"{scheme}://{ip}:{port}").ToList();
+    }
 }

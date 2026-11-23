@@ -11,7 +11,7 @@
         <!-- HEADER BAR -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,20">
             <Button Grid.Column="0" Command="{Binding NavigateBackCommand}" 
-                    Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="6" VerticalAlignment="Center">
+                    Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="6" VerticalAlignment="Center" Cursor="Hand">
                 <lucide:LucideIcon Kind="ArrowLeft" Size="20" Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Button>
             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
@@ -30,24 +30,140 @@
                         CornerRadius="12"
                         Padding="24">
                     <Grid ColumnDefinitions="Auto, *">
-                        <Border Grid.Column="0" Width="100" Height="100" CornerRadius="16" Margin="0,0,24,0" VerticalAlignment="Center" ClipToBounds="True" Background="#1E90FF">
-                            <Image Source="avares://PocketMC.App/Assets/icon.png" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Grid.Column="0" Width="108" Height="108" CornerRadius="16" Margin="0,0,24,0" VerticalAlignment="Center" ClipToBounds="True">
+                            <Image Source="avares://PocketMC.App/Assets/logo_highres.png" Width="108" Height="108" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
-                            <TextBlock Text="PocketMC Desktop" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="10">
+                            <TextBlock Text="PocketMC Desktop" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <TextBlock Text="A modern native desktop application for managing Minecraft Java, Bedrock Dedicated Server, and PocketMine (PHP) servers with unified process monitoring and playit.gg cross-platform network tunnels." 
                                        TextWrapping="Wrap" Opacity="0.8" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
                             
-                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
-                                <Button Command="{Binding OpenGitHubCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6">
+                            <!-- Studio Attribution -->
+                            <Border Background="{DynamicResource CardBorderBrush}"
+                                    CornerRadius="8"
+                                    Padding="12,8">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <lucide:LucideIcon Grid.Column="0" Kind="Building2" Size="20" Foreground="#1E90FF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="Crafted by " FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.7"/>
+                                            <TextBlock Text="DS Labs" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Selective Digital Studio · Building Software That Works" 
+                                                   FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.6"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Quick Action Buttons -->
+                            <WrapPanel Orientation="Horizontal">
+                                <Button Command="{Binding OpenWebsiteCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:LucideIcon Kind="Globe" Size="16" VerticalAlignment="Center" Foreground="#1E90FF"/>
+                                        <TextBlock Text="Visit Website" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding OpenGitHubCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <lucide:LucideIcon Kind="Github" Size="16" VerticalAlignment="Center"/>
                                         <TextBlock Text="GitHub Repo" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                            </StackPanel>
+                                <Button Command="{Binding OpenWhatsNewCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:LucideIcon Kind="Sparkles" Size="16" VerticalAlignment="Center"/>
+                                        <TextBlock Text="View What's New" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding OpenStudioCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:LucideIcon Kind="Building" Size="16" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Visit Studio" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
                         </StackPanel>
                     </Grid>
+                </Border>
+
+                <!-- TEAM & CONTRIBUTORS SECTION -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="20">
+                    <StackPanel Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <lucide:LucideIcon Kind="Users" Size="20" Foreground="#1E90FF" VerticalAlignment="Center"/>
+                            <TextBlock Text="Team &amp; Contributors" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="The creators, maintainers, and community members building and supporting PocketMC." 
+                                   FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+
+                        <!-- Subsection: Co-Founders & Core Team -->
+                        <TextBlock Text="Co-Founders &amp; Core Team" FontSize="13" FontWeight="SemiBold" Opacity="0.8" Margin="0,4,0,0"/>
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- Divy Viradiya -->
+                            <Button Command="{Binding OpenDivyCommand}" Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,10,10" Width="210" Cursor="Hand" ToolTip.Tip="Divy Viradiya · Co-Founder (github.com/divyviradiya2)">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" ClipToBounds="True" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Image Source="avares://PocketMC.App/Assets/avatar_divyviradiya.png" Width="38" Height="38" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="Divy Viradiya" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="Co-Founder" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- Sahaj Italiya -->
+                            <Button Command="{Binding OpenSahajCommand}" Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,10,10" Width="210" Cursor="Hand" ToolTip.Tip="Sahaj Italiya · Co-Founder (github.com/SizWinz)">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" ClipToBounds="True" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Image Source="avares://PocketMC.App/Assets/avatar_sahajitaliya.png" Width="38" Height="38" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="Sahaj Italiya" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="Co-Founder" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- Subsection: Contributors & Helpers -->
+                        <TextBlock Text="Contributors &amp; Helpers" FontSize="13" FontWeight="SemiBold" Opacity="0.8" Margin="0,4,0,0"/>
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- Johndinglesin -->
+                            <Button Command="{Binding OpenJohndinglesinCommand}" Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,10,10" Width="210" Cursor="Hand" ToolTip.Tip="Johndinglesin · Helper (Testing, Dev &amp; Social Media)">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" ClipToBounds="True" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Image Source="avares://PocketMC.App/Assets/avatar_johndinglesin.png" Width="38" Height="38" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="Johndinglesin" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="Helper" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- Subsection: Donators -->
+                        <TextBlock Text="Donators" FontSize="13" FontWeight="SemiBold" Opacity="0.8" Margin="0,4,0,0"/>
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- NexVice -->
+                            <Button Command="{Binding OpenNexViceCommand}" Background="{DynamicResource CardBorderBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,10,10" Width="210" Cursor="Hand" ToolTip.Tip="NexVice (@nexvice) · Donator">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" ClipToBounds="True" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Image Source="avares://PocketMC.App/Assets/avatar_nexvice.png" Width="38" Height="38" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="NexVice" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="Donator" FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
                 </Border>
 
                 <!-- STORAGE ROOT DIRECTORY CARD -->
@@ -71,23 +187,25 @@
                                      CornerRadius="8"
                                      VerticalAlignment="Center"/>
                             <Button Grid.Column="2" 
-                                    Command="{Binding ChangeDataRootCommand}" 
-                                    Background="#1E90FF" 
-                                    Foreground="White" 
-                                    CornerRadius="8" 
-                                    Padding="12,8">
+                                     Command="{Binding ChangeDataRootCommand}" 
+                                     Background="#1E90FF" 
+                                     Foreground="White" 
+                                     CornerRadius="8" 
+                                     Padding="12,8"
+                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <lucide:LucideIcon Kind="FolderOpen" Size="14" VerticalAlignment="Center"/>
                                     <TextBlock Text="Change Location" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                             <Button Grid.Column="4" 
-                                    Command="{Binding OpenDataRootFolderCommand}" 
-                                    Background="Transparent" 
-                                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                                    BorderThickness="1" 
-                                    CornerRadius="8" 
-                                    Padding="12,8">
+                                     Command="{Binding OpenDataRootFolderCommand}" 
+                                     Background="Transparent" 
+                                     BorderBrush="{DynamicResource CardBorderBrush}" 
+                                     BorderThickness="1" 
+                                     CornerRadius="8" 
+                                     Padding="12,8"
+                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <lucide:LucideIcon Kind="ExternalLink" Size="14" VerticalAlignment="Center"/>
                                     <TextBlock Text="Open in Files" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
@@ -118,22 +236,22 @@
                                    FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                         
                         <WrapPanel Orientation="Horizontal">
-                            <Button Command="{Binding OpenDiscordCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                            <Button Command="{Binding OpenDiscordCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <lucide:LucideIcon Kind="MessageSquare" Size="14" VerticalAlignment="Center"/>
                                     <TextBlock Text="Join Discord" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding CopyDiscordInviteCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                            <Button Command="{Binding CopyDiscordInviteCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                 <TextBlock Text="Copy Invite" FontSize="12" FontWeight="Medium"/>
                             </Button>
-                            <Button Command="{Binding OpenInstagramCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                            <Button Command="{Binding OpenInstagramCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                 <TextBlock Text="Instagram" FontSize="12" FontWeight="Medium"/>
                             </Button>
-                            <Button Command="{Binding OpenYouTubeCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                            <Button Command="{Binding OpenYouTubeCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                 <TextBlock Text="YouTube" FontSize="12" FontWeight="Medium"/>
                             </Button>
-                            <Button Command="{Binding OpenRedditCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8">
+                            <Button Command="{Binding OpenRedditCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,8,8" Cursor="Hand">
                                 <TextBlock Text="Reddit" FontSize="12" FontWeight="Medium"/>
                             </Button>
                         </WrapPanel>
@@ -155,7 +273,7 @@
                                    FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                         
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Button Command="{Binding OpenFeedbackCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6">
+                            <Button Command="{Binding OpenFeedbackCommand}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="12,6" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <lucide:LucideIcon Kind="ExternalLink" Size="14" VerticalAlignment="Center"/>
                                     <TextBlock Text="Submit Feedback / Issue" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -180,7 +298,7 @@
                                    FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                         
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Button Command="{Binding OpenDonationCommand}" Background="#FF4D4D" Foreground="White" CornerRadius="8" Padding="14,6">
+                            <Button Command="{Binding OpenDonationCommand}" Background="#FF4D4D" Foreground="White" CornerRadius="8" Padding="14,6" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <lucide:LucideIcon Kind="Coffee" Size="14" VerticalAlignment="Center"/>
                                     <TextBlock Text="Buy Me a Coffee" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>

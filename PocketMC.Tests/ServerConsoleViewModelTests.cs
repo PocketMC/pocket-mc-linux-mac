@@ -58,7 +58,7 @@ namespace PocketMC.Tests
             // Trigger log for inst2 (not selected)
             logService.TriggerLogReceived("server-2", "Inst 2 Log Message");
 
-            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            try { Avalonia.Threading.Dispatcher.UIThread.RunJobs(); } catch { }
 
             Assert.Contains(vm.LogLines, l => l.Text == "Inst 1 Log Message");
             Assert.DoesNotContain(vm.LogLines, l => l.Text == "Inst 2 Log Message");
@@ -121,6 +121,47 @@ namespace PocketMC.Tests
             Assert.Equal("command 2", vm.CycleHistory(false));
             Assert.Equal("command 3", vm.CycleHistory(false));
             Assert.Equal("", vm.CycleHistory(false));
+        }
+
+        [Fact]
+        public async Task ServerConsoleViewModel_CopyLogsAsync_SetsCopiedFeedbackState()
+        {
+            var instService = new FakeInstanceService();
+            var inst = new ServerInstance { Name = "Server 1", Slug = "server-1" };
+            instService.Instances.Add(inst);
+
+            var logService = new FakeConsoleLogService();
+            logService.Logs.Add("Line 1");
+            logService.Logs.Add("Line 2");
+
+            var processRunner = new FakeProcessRunner();
+
+            using var vm = new ServerConsoleViewModel(instService, logService, processRunner);
+            vm.SelectedInstance = inst;
+
+            string copiedText = "";
+            PocketMC.App.Services.AppClipboard.OverrideHandler = text =>
+            {
+                copiedText = text;
+                return Task.FromResult(true);
+            };
+
+            try
+            {
+                Assert.Equal("Copy Logs", vm.CopyButtonText);
+                Assert.False(vm.IsCopied);
+
+                await vm.CopyLogsAsync();
+
+                Assert.Contains("Line 1", copiedText);
+                Assert.Contains("Line 2", copiedText);
+                Assert.Equal("Copied!", vm.CopyButtonText);
+                Assert.True(vm.IsCopied);
+            }
+            finally
+            {
+                PocketMC.App.Services.AppClipboard.OverrideHandler = null;
+            }
         }
     }
 }

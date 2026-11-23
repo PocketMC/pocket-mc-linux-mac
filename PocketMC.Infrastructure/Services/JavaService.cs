@@ -283,13 +283,33 @@ namespace PocketMC.Infrastructure.Services
                     candidatePaths.Add(javaHome);
                 }
 
+                var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     candidatePaths.Add("/usr/bin/java");
                     candidatePaths.Add("/usr/local/bin/java");
+                    candidatePaths.Add("/run/current-system/sw/bin/java");
+                    candidatePaths.Add(Path.Combine(userHome, ".nix-profile", "bin", "java"));
+
+                    // Standard distro JVMs
                     if (Directory.Exists("/usr/lib/jvm"))
                     {
                         foreach (var dir in Directory.GetDirectories("/usr/lib/jvm"))
+                        {
+                            candidatePaths.Add(Path.Combine(dir, "bin", "java"));
+                        }
+                    }
+
+                    // Homebrew on Linux
+                    candidatePaths.Add("/home/linuxbrew/.linuxbrew/opt/openjdk/bin/java");
+                    candidatePaths.Add($"/home/linuxbrew/.linuxbrew/opt/openjdk@{version}/bin/java");
+
+                    // SDKMAN
+                    string sdkmanPath = Path.Combine(userHome, ".sdkman", "candidates", "java");
+                    if (Directory.Exists(sdkmanPath))
+                    {
+                        foreach (var dir in Directory.GetDirectories(sdkmanPath))
                         {
                             candidatePaths.Add(Path.Combine(dir, "bin", "java"));
                         }
@@ -298,11 +318,31 @@ namespace PocketMC.Infrastructure.Services
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
                     candidatePaths.Add("/usr/bin/java");
+
+                    // macOS standard JVMs
                     if (Directory.Exists("/Library/Java/JavaVirtualMachines"))
                     {
                         foreach (var dir in Directory.GetDirectories("/Library/Java/JavaVirtualMachines"))
                         {
                             candidatePaths.Add(Path.Combine(dir, "Contents", "Home", "bin", "java"));
+                        }
+                    }
+
+                    // Homebrew Apple Silicon
+                    candidatePaths.Add("/opt/homebrew/opt/openjdk/bin/java");
+                    candidatePaths.Add($"/opt/homebrew/opt/openjdk@{version}/bin/java");
+
+                    // Homebrew Intel
+                    candidatePaths.Add("/usr/local/opt/openjdk/bin/java");
+                    candidatePaths.Add($"/usr/local/opt/openjdk@{version}/bin/java");
+
+                    // SDKMAN
+                    string macSdkman = Path.Combine(userHome, ".sdkman", "candidates", "java");
+                    if (Directory.Exists(macSdkman))
+                    {
+                        foreach (var dir in Directory.GetDirectories(macSdkman))
+                        {
+                            candidatePaths.Add(Path.Combine(dir, "bin", "java"));
                         }
                     }
                 }

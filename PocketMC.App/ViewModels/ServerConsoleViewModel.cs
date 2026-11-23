@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
+using PocketMC.App.Services.Console;
 
 namespace PocketMC.App.ViewModels
 {
@@ -17,24 +18,13 @@ namespace PocketMC.App.ViewModels
     {
         public string Text { get; }
         public string ColorBrush { get; }
+        public ConsoleLogLevel Level { get; }
 
-        public LogLine(string text)
+        public LogLine(string text, ConsoleLogLevel previousLevel = ConsoleLogLevel.Info)
         {
             Text = text;
-            ColorBrush = Classify(text);
-        }
-
-        private string Classify(string text)
-        {
-            if (text.Contains("[WARN]") || text.Contains("WARN") || text.Contains("Warning"))
-                return "#FFEB3B"; // Yellow
-            if (text.Contains("[ERROR]") || text.Contains("ERROR") || text.Contains("Exception") || text.Contains("Failed"))
-                return "#F44336"; // Red
-            if (text.Contains("[System]") || text.Contains("System"))
-                return "#9C27B0"; // Purple
-            if (text.Contains("joined the game") || text.Contains("left the game") || (text.Contains("<") && text.Contains(">")))
-                return "#8BC34A"; // Green (Chat / Player events)
-            return "#E5E5E5"; // Light Gray / default
+            Level = LogLineClassifier.Classify(text, previousLevel);
+            ColorBrush = LogLineClassifier.GetHexColor(Level);
         }
     }
 
@@ -63,10 +53,34 @@ namespace PocketMC.App.ViewModels
         private string _searchQuery = string.Empty;
 
         [ObservableProperty]
+        private bool _isRegexEnabled;
+
+        [ObservableProperty]
+        private bool _isFilterChat = true;
+
+        [ObservableProperty]
+        private bool _isFilterInfo = true;
+
+        [ObservableProperty]
+        private bool _isFilterWarn = true;
+
+        [ObservableProperty]
+        private bool _isFilterError = true;
+
+        [ObservableProperty]
+        private bool _isFilterSystem = true;
+
+        [ObservableProperty]
         private int _logEntryCount;
 
         [ObservableProperty]
         private bool _isCrashed;
+
+        [ObservableProperty]
+        private string _copyButtonText = "Copy Logs";
+
+        [ObservableProperty]
+        private bool _isCopied;
 
         public IAsyncRelayCommand SendCommandCommand { get; }
         public IRelayCommand RefreshInstancesCommand { get; }
@@ -149,14 +163,28 @@ namespace PocketMC.App.ViewModels
         [RelayCommand]
         public async Task CopyLogsAsync()
         {
-            if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            var textToCopy = LogLines.Count > 0
+                ? string.Join(Environment.NewLine, LogLines.Select(l => l.Text))
+                : string.Join(Environment.NewLine, _consoleLogService.GetLogs(SelectedInstance?.Slug ?? string.Empty));
+
+            if (string.IsNullOrEmpty(textToCopy))
             {
-                var clipboard = desktop.MainWindow?.Clipboard;
-                if (clipboard != null)
+                return;
+            }
+
+            bool success = await PocketMC.App.Services.AppClipboard.SetTextAsync(textToCopy);
+            if (success)
+            {
+                CopyButtonText = "Copied!";
+                IsCopied = true;
+                _ = Task.Delay(2000).ContinueWith(_ =>
                 {
-                    var fullText = string.Join(Environment.NewLine, LogLines.Select(l => l.Text));
-                    await clipboard.SetTextAsync(fullText);
-                }
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        CopyButtonText = "Copy Logs";
+                        IsCopied = false;
+                    });
+                });
             }
         }
 
@@ -166,10 +194,23 @@ namespace PocketMC.App.ViewModels
             UpdateCrashedState();
         }
 
-        partial void OnSearchQueryChanged(string value)
+        partial void OnSearchQueryChanged(string value) => ReloadLogs();
+        partial void OnIsRegexEnabledChanged(bool value) => ReloadLogs();
+        partial void OnIsFilterChatChanged(bool value) => ReloadLogs();
+        partial void OnIsFilterInfoChanged(bool value) => ReloadLogs();
+        partial void OnIsFilterWarnChanged(bool value) => ReloadLogs();
+        partial void OnIsFilterErrorChanged(bool value) => ReloadLogs();
+        partial void OnIsFilterSystemChanged(bool value) => ReloadLogs();
+
+        private bool MatchesFilter(ConsoleLogLevel level) => level switch
         {
-            ReloadLogs();
-        }
+            ConsoleLogLevel.Chat => IsFilterChat,
+            ConsoleLogLevel.Info => IsFilterInfo,
+            ConsoleLogLevel.Warn => IsFilterWarn,
+            ConsoleLogLevel.Error => IsFilterError,
+            ConsoleLogLevel.System => IsFilterSystem,
+            _ => true
+        };
 
         private void ReloadLogs()
         {
@@ -180,19 +221,19 @@ namespace PocketMC.App.ViewModels
                 return;
             }
 
-            IReadOnlyList<string> logs;
-            if (string.IsNullOrWhiteSpace(SearchQuery))
+            var allLogs = _consoleLogService.GetLogs(SelectedInstance.Slug);
+            ConsoleLogLevel prevLevel = ConsoleLogLevel.Info;
+            foreach (var log in allLogs)
             {
-                logs = _consoleLogService.GetLogs(SelectedInstance.Slug);
-            }
-            else
-            {
-                logs = _consoleLogService.SearchLogs(SelectedInstance.Slug, SearchQuery);
-            }
-
-            foreach (var log in logs)
-            {
-                LogLines.Add(new LogLine(log));
+                if (string.IsNullOrWhiteSpace(SearchQuery) || ConsoleLogFilter.MatchesSearch(log, SearchQuery, IsRegexEnabled))
+                {
+                    var line = new LogLine(log, prevLevel);
+                    prevLevel = line.Level;
+                    if (MatchesFilter(line.Level))
+                    {
+                        LogLines.Add(line);
+                    }
+                }
             }
             LogEntryCount = LogLines.Count;
         }
@@ -201,14 +242,28 @@ namespace PocketMC.App.ViewModels
         {
             if (SelectedInstance != null && SelectedInstance.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(SearchQuery) || line.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(SearchQuery) || ConsoleLogFilter.MatchesSearch(line, SearchQuery, IsRegexEnabled))
                 {
-                    Dispatcher.UIThread.Post(() =>
+                    void AddLine()
                     {
-                        LogLines.Add(new LogLine(line));
-                        LogEntryCount = LogLines.Count;
+                        var prevLevel = LogLines.Count > 0 ? LogLines[^1].Level : ConsoleLogLevel.Info;
+                        var logLine = new LogLine(line, prevLevel);
+                        if (MatchesFilter(logLine.Level))
+                        {
+                            LogLines.Add(logLine);
+                            LogEntryCount = LogLines.Count;
+                        }
                         UpdateCrashedState();
-                    });
+                    }
+
+                    if (Dispatcher.UIThread.CheckAccess())
+                    {
+                        AddLine();
+                    }
+                    else
+                    {
+                        Dispatcher.UIThread.Post(AddLine);
+                    }
                 }
             }
         }
@@ -304,22 +359,43 @@ namespace PocketMC.App.ViewModels
         private void NavigateToAiDiagnostic()
         {
             if (SelectedInstance == null) return;
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            var diagnosticVM = App.Services?.GetRequiredService<AiDiagnosticViewModel>();
+            if (diagnosticVM != null)
             {
-                var diagnosticVM = App.Services.GetRequiredService<AiDiagnosticViewModel>();
                 diagnosticVM.Initialize(SelectedInstance);
-                mainVM.CurrentViewModel = diagnosticVM;
+                if (navService != null)
+                {
+                    navService.NavigateToDetailPage(
+                        diagnosticVM,
+                        $"{SelectedInstance.Name} AI Diagnostics",
+                        PocketMC.App.Navigation.DetailRouteKind.AiDiagnostic,
+                        PocketMC.App.Navigation.DetailBackNavigation.PreviousDetail);
+                }
+                else
+                {
+                    var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                    if (mainVM != null) mainVM.CurrentViewModel = diagnosticVM;
+                }
             }
         }
 
         private void GoBack()
         {
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            if (navService?.CanNavigateBack == true)
             {
-                var dashVM = App.Services.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
-                if (dashVM != null)
+                navService.NavigateBack();
+            }
+            else if (navService != null)
+            {
+                navService.NavigateToDashboard();
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+                var dashVM = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+                if (mainVM != null && dashVM != null)
                 {
                     mainVM.CurrentViewModel = dashVM;
                 }

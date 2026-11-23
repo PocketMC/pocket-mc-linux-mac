@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=PocketMC
+Comment=Modern native desktop application for Minecraft server hosting and management
+Exec=PocketMC.App %u
+Icon=pocketmc
+Terminal=false
+Type=Application
+Categories=Game;Utility;Network;
+MimeType=application/x-pocketmc-backup;x-scheme-handler/pocketmc;
+Keywords=minecraft;server;bedrock;pocketmine;java;host;
+StartupNotify=true
+StartupWMClass=PocketMC.App

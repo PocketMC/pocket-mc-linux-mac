@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels.Instances"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.Instances.InstanceExportPage"
+             x:DataType="vm:InstanceExportViewModel"
+             x:CompileBindings="True"
+             Margin="24">
+
+    <UserControl.Styles>
+        <Style Selector="Border.export-card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="24,18"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+        <Style Selector="TextBlock.export-title">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.export-description">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, 20, *, Auto">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, 16, *">
+            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
+                    Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
+                <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Button>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="{Binding InstanceName, StringFormat='{}Export Instance: {0}'}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Create a lightweight, cross-platform ZIP package with world data, settings, and an engine manifest." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Body -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="0" HorizontalAlignment="Stretch">
+                
+                <!-- SERVER SUMMARY CARD -->
+                <Border Classes="export-card">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Instance Information" Classes="export-title" />
+                            <TextBlock Text="{Binding ServerSummary}" FontSize="13" Foreground="#1E90FF" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#261E90FF" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ServerType}" Foreground="#1E90FF" FontSize="12" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- DESTINATION PATH -->
+                <Border Classes="export-card">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,16,0">
+                            <TextBlock Text="Destination Archive" Classes="export-title" />
+                            <TextBlock Text="Target file path where the export ZIP will be created." Classes="export-description" />
+                            <TextBox Text="{Binding DestinationZipPath, Mode=TwoWay}" Watermark="/path/to/server-export.zip" CornerRadius="8" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding BrowseDestinationCommand}" Content="Browse..."
+                                Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
+                                VerticalAlignment="Bottom" Cursor="Hand" Margin="0,0,0,2"/>
+                    </Grid>
+                </Border>
+
+                <!-- EXPORT OPTIONS -->
+                <Border Classes="export-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Export Options" Classes="export-title" />
+
+                        <Grid ColumnDefinitions="*, 100">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Include World Saves" FontWeight="Medium" FontSize="13"/>
+                                <TextBlock Text="Include world regions, playerdata, and dimension data." Classes="export-description" />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding IncludeWorlds, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Border Height="1" Background="{DynamicResource CardBorderBrush}"/>
+
+                        <Grid ColumnDefinitions="*, 100">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Include Sensitive Configuration" FontWeight="Medium" FontSize="13"/>
+                                <TextBlock Text="Include RCON passwords, auth secrets, and whitelist data." Classes="export-description" />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding IncludeSensitiveConfiguration, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- PROGRESS & STATUS -->
+                <Border Classes="export-card" IsVisible="{Binding IsExporting}">
+                    <StackPanel Spacing="8">
+                        <ProgressBar Value="{Binding OverallProgress}" Minimum="0" Maximum="100" Height="8" CornerRadius="4"/>
+                        <TextBlock Text="{Binding CurrentStep}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- COMPLETE BANNER -->
+                <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,14" IsVisible="{Binding IsComplete}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <lucide:LucideIcon Kind="Check" Size="18" Foreground="#2ECC71" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentStep}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ERROR BANNER -->
+                <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,14" IsVisible="{Binding HasError}">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <lucide:LucideIcon Kind="Info" Size="18" Foreground="#E74C3C" VerticalAlignment="Center"/>
+                            <TextBlock Text="Export Failed" Foreground="#E74C3C" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Sticky Footer -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="20,14">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <lucide:LucideIcon Kind="Archive" Size="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Exports can be imported on Windows, Linux, and macOS." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Command="{Binding GoBackCommand}" Content="Cancel" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,8" Cursor="Hand"/>
+                    <Button Command="{Binding ExportCommand}" Content="Export Archive" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="18,8" Cursor="Hand" FontWeight="SemiBold" IsEnabled="{Binding !IsExporting}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

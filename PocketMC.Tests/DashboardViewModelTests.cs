@@ -8,6 +8,7 @@ using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
 using PocketMC.RemoteControl.Tunnels;
 using PocketMC.RemoteControl.Services;
+using PocketMC.Platform.Metrics;
 using Xunit;
 
 namespace PocketMC.Tests
@@ -15,11 +16,14 @@ namespace PocketMC.Tests
     public class FakeInstanceService : IInstanceService
     {
         public List<ServerInstance> Instances { get; set; } = new();
+        public Func<string, EngineType, string, Task<ServerInstance>>? CreateInstanceDelegate { get; set; }
 
-        public Task<ServerInstance> CreateInstanceAsync(string name, EngineType engineType, string version) => Task.FromResult(new ServerInstance());
+        public Task<ServerInstance> CreateInstanceAsync(string name, EngineType engineType, string version) =>
+            CreateInstanceDelegate != null ? CreateInstanceDelegate(name, engineType, version) : Task.FromResult(new ServerInstance());
         public Task DeleteInstanceAsync(string slug) => Task.CompletedTask;
         public Task<ServerInstance> RenameInstanceAsync(string slug, string newName) => Task.FromResult(new ServerInstance());
         public Task<ServerInstance> CloneInstanceAsync(string slug, string newName) => Task.FromResult(new ServerInstance());
+        public Task SaveInstanceAsync(ServerInstance instance) => Task.CompletedTask;
         public Task ExportInstanceAsync(string slug, string targetZipPath) => Task.CompletedTask;
         public Task<ServerInstance> ImportInstanceAsync(string sourceZipPath, string name) => Task.FromResult(new ServerInstance());
         public Task<List<ServerInstance>> ListInstancesAsync() => Task.FromResult(Instances);
@@ -32,6 +36,8 @@ namespace PocketMC.Tests
 
         public Task StartAsync(ServerInstance instance, bool isAutoRestart = false) => Task.CompletedTask;
         public Task StopAsync(ServerInstance instance) => Task.CompletedTask;
+        public Task StopAllAsync() => Task.CompletedTask;
+        public IReadOnlyList<string> GetRunningSlugs() => RunningInfo.Keys.ToList();
         public Task SendCommandAsync(ServerInstance instance, string command) => Task.CompletedTask;
 
         public bool TryGetRunningInfo(string slug, out int pgid, out string state)
@@ -46,6 +52,8 @@ namespace PocketMC.Tests
             state = "Stopped";
             return false;
         }
+
+        public DateTime? GetSessionStartTime(string slug) => null;
 
         public void TriggerStateChange(string slug, string state)
         {
@@ -84,7 +92,7 @@ namespace PocketMC.Tests
             var localNetworkAddressService = new LocalNetworkAddressService();
 
             var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, new NativeMetricsProvider(), playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -110,7 +118,7 @@ namespace PocketMC.Tests
             var localNetworkAddressService = new LocalNetworkAddressService();
 
             var tunnelManager = new RemoteTunnelManager(Enumerable.Empty<IRemoteTunnelProvider>());
-            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, themeManager, playitClient, localNetworkAddressService, settingsService, tunnelManager);
+            using var vm = new DashboardViewModel(instanceService, processRunner, playerService, metricsTracker, new NativeMetricsProvider(), playitClient, localNetworkAddressService, settingsService);
 
             await Task.Delay(100);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();

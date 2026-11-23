@@ -32,6 +32,11 @@ namespace PocketMC.App.Views
             };
         }
 
+        public ServerConsolePage(ServerConsoleViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
+        }
+
         private void OnLogLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (_boundViewModel != null && _boundViewModel.AutoScroll)

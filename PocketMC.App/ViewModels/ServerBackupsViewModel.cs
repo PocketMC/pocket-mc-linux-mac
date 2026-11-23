@@ -199,10 +199,22 @@ namespace PocketMC.App.ViewModels
         [RelayCommand]
         private void NavigateBack()
         {
-            var mainVM = App.Services.GetService<MainWindowViewModel>();
-            if (mainVM != null)
+            var navService = App.Services?.GetService(typeof(PocketMC.App.Navigation.IAppNavigationService)) as PocketMC.App.Navigation.IAppNavigationService;
+            if (navService?.CanNavigateBack == true)
             {
-                mainVM.CurrentViewModel = App.Services.GetRequiredService<DashboardViewModel>();
+                navService.NavigateBack();
+            }
+            else if (navService != null)
+            {
+                navService.NavigateToDashboard();
+            }
+            else
+            {
+                var mainVM = App.Services?.GetService<MainWindowViewModel>();
+                if (mainVM != null)
+                {
+                    mainVM.CurrentViewModel = App.Services?.GetRequiredService<DashboardViewModel>()!;
+                }
             }
         }
 
@@ -406,7 +418,7 @@ namespace PocketMC.App.ViewModels
             }
         }
 
-        private void UpdateTarget(Settings settings, CloudBackupProviderType provider, bool enabled, int retention)
+        private void UpdateTarget(PocketMC.Core.Models.Settings settings, CloudBackupProviderType provider, bool enabled, int retention)
         {
             var target = settings.CloudBackups.Targets.FirstOrDefault(t => t.Provider == provider);
             if (target == null)
