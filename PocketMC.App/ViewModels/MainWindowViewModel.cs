@@ -11,6 +11,8 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     private readonly IAppNavigationService _navigationService;
     private readonly IServiceProvider _serviceProvider;
     private readonly ISettingsService _settingsService;
+    private readonly INativeMetricsProvider? _metricsProvider;
+    private readonly System.Timers.Timer? _metricsTimer;
 
     [ObservableProperty]
     private object _currentViewModel;
@@ -37,7 +39,10 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     private bool _isTitleBarContextVisible;
 
     [ObservableProperty]
-    private string? _globalHealthStatusText = "Host Healthy";
+    private string? _globalHealthStatusText = "System RAM: Calculating...";
+
+    [ObservableProperty]
+    private string _globalHealthStatusColor = "#D4D4D8";
 
     [ObservableProperty]
     private bool _isGlobalHealthVisible = true;
@@ -86,16 +91,47 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
         IAppNavigationService navigationService,
         IServiceProvider serviceProvider,
         ISettingsService settingsService,
-        DashboardViewModel dashboardViewModel)
+        DashboardViewModel dashboardViewModel,
+        INativeMetricsProvider? metricsProvider = null)
     {
         _navigationService = navigationService;
         _serviceProvider = serviceProvider;
         _settingsService = settingsService;
         _currentViewModel = dashboardViewModel;
+        _metricsProvider = metricsProvider ?? serviceProvider.GetService(typeof(INativeMetricsProvider)) as INativeMetricsProvider;
 
         _navigationService.Initialize(this);
         _navigationService.NavigationChanged += OnNavigationChanged;
         _navigationService.NavigateToDetailPage(dashboardViewModel, "Dashboard", DetailRouteKind.Dashboard, DetailBackNavigation.Dashboard, clearDetailStack: true);
+
+        UpdateSystemMemoryMetrics();
+        _metricsTimer = new System.Timers.Timer(2500);
+        _metricsTimer.Elapsed += (s, e) => UpdateSystemMemoryMetrics();
+        _metricsTimer.AutoReset = true;
+        _metricsTimer.Start();
+    }
+
+    private void UpdateSystemMemoryMetrics()
+    {
+        if (_metricsProvider == null) return;
+        try
+        {
+            var (totalBytes, availBytes) = _metricsProvider.GetSystemMemoryMetrics();
+            long usedBytes = Math.Max(0, totalBytes - availBytes);
+            double usedGb = Math.Round(usedBytes / (1024.0 * 1024.0 * 1024.0), 1);
+            double totalGb = Math.Round(totalBytes / (1024.0 * 1024.0 * 1024.0), 1);
+            bool isHighUsage = totalBytes > 0 && ((double)usedBytes / totalBytes) > 0.9;
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                GlobalHealthStatusText = $"System RAM: {usedGb:0.0} / {totalGb:0.0} GB";
+                GlobalHealthStatusColor = isHighUsage ? "#C42B1C" : "#D4D4D8";
+            });
+        }
+        catch
+        {
+            // Ignore metrics sampling exception
+        }
     }
 
     private void OnNavigationChanged()
@@ -111,8 +147,10 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
             {
                 DetailRouteKind.Dashboard => "Dashboard",
                 DetailRouteKind.Tunnel => "Tunnel",
+                DetailRouteKind.RemoteControl => "RemoteControl",
                 DetailRouteKind.News => "News",
                 DetailRouteKind.Settings => "Settings",
+                DetailRouteKind.Runtimes => "Runtimes",
                 DetailRouteKind.About => "About",
                 _ => SelectedNavSection
             };
@@ -163,7 +201,7 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
         var vm = _serviceProvider.GetService(typeof(RemoteControlViewModel));
         if (vm != null)
         {
-            _navigationService.NavigateToDetailPage(vm, "Remote Control", DetailRouteKind.Tunnel, DetailBackNavigation.Dashboard, clearDetailStack: true);
+            _navigationService.NavigateToDetailPage(vm, "Remote Control", DetailRouteKind.RemoteControl, DetailBackNavigation.Dashboard, clearDetailStack: true);
         }
     }
 
@@ -185,7 +223,7 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
         var vm = _serviceProvider.GetService(typeof(JavaManagementViewModel));
         if (vm != null)
         {
-            _navigationService.NavigateToDetailPage(vm, "Runtimes", DetailRouteKind.Settings, DetailBackNavigation.Dashboard);
+            _navigationService.NavigateToDetailPage(vm, "Runtimes", DetailRouteKind.Runtimes, DetailBackNavigation.Dashboard);
         }
     }
 

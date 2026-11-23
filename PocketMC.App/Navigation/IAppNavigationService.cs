@@ -6,6 +6,7 @@ public enum DetailRouteKind
 {
     Dashboard,
     Tunnel,
+    RemoteControl,
     News,
     NewInstance,
     ServerSettings,
@@ -21,6 +22,7 @@ public enum DetailRouteKind
     AiDiagnostic,
     WhatsNew,
     Settings,
+    Runtimes,
     About
 }
 

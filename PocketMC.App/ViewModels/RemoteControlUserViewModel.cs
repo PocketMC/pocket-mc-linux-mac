@@ -6,7 +6,16 @@ namespace PocketMC.App.ViewModels;
 
 public partial class RemoteControlUserViewModel : ObservableObject
 {
+    private readonly Action? _onModified;
     public RemoteControlUser Model { get; }
+
+    public string SavedUsername { get; set; } = string.Empty;
+
+    public string PasswordHash
+    {
+        get => Model.PasswordHash ?? string.Empty;
+        set => Model.PasswordHash = value;
+    }
 
     [ObservableProperty]
     private string _username = string.Empty;
@@ -36,12 +45,17 @@ public partial class RemoteControlUserViewModel : ObservableObject
     private bool _allowAllInstances = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotEditing))]
     private bool _isEditing;
 
-    public RemoteControlUserViewModel(RemoteControlUser model)
+    public bool IsNotEditing => !IsEditing;
+
+    public RemoteControlUserViewModel(RemoteControlUser model, Action? onModified = null)
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
+        _onModified = onModified;
         _username = model.Username ?? string.Empty;
+        SavedUsername = _username;
         _allowRemoteConsoleCommands = model.AllowRemoteConsoleCommands;
         _allowRemotePlayerActions = model.AllowRemotePlayerActions;
         _allowRemoteServerSettings = model.AllowRemoteServerSettings;
@@ -61,5 +75,6 @@ public partial class RemoteControlUserViewModel : ObservableObject
         Model.AllowRemoteFileManager = AllowRemoteFileManager;
         Model.AllowRemoteServerBackups = AllowRemoteServerBackups;
         Model.AllowAllInstances = AllowAllInstances;
+        _onModified?.Invoke();
     }
 }

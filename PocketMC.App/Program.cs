@@ -142,6 +142,7 @@ namespace PocketMC.App
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.IRemoteTunnelProvider, PocketMC.RemoteControl.Tunnels.PlayitHttpsTunnelProvider>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.PlayitApiClient>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.RemoteTunnelManager>();
+                    services.AddSingleton<PocketMC.RemoteControl.Services.RemoteControlCoordinator>();
 
                     services.AddSingleton<INativeMetricsProvider, PocketMC.Platform.Metrics.NativeMetricsProvider>();
                     services.AddSingleton<DashboardMetricsViewModel>();

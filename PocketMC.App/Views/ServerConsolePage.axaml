@@ -128,7 +128,7 @@
                 </Border>
 
                 <!-- Scrollable Log Container -->
-                <ScrollViewer Grid.Row="2" Name="LogScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Row="2" Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding LogLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:LogLine">

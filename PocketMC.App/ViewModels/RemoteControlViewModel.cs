@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -10,27 +11,52 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
 using PocketMC.Core.Models;
 using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Configuration;
-using PocketMC.RemoteControl.Hosting;
+using PocketMC.RemoteControl.Models;
 using PocketMC.RemoteControl.Services;
 using QRCoder;
 
 namespace PocketMC.App.ViewModels;
 
-public partial class RemoteControlViewModel : ObservableObject
+public sealed partial class RemoteControlViewModel : ObservableObject, IDisposable
 {
+    public sealed record RemoteAccessModeOption(RemoteAccessMode Mode, string Label);
+
+    public static IReadOnlyList<RemoteAccessModeOption> RemoteAccessModeOptions { get; } =
+    [
+        new(RemoteAccessMode.CloudflaredQuickTunnel, "Cloudflare Quick Tunnel"),
+        new(RemoteAccessMode.PlayitHttpsTunnel, "PlayIt Premium HTTPS")
+    ];
+
+    public IReadOnlyList<RemoteAccessModeOption> AccessModes => RemoteAccessModeOptions;
+
+    public RemoteAccessModeOption? SelectedAccessModeOption
+    {
+        get => AccessModes.FirstOrDefault(m => m.Mode == AccessMode);
+        set
+        {
+            if (value != null && value.Mode != AccessMode)
+            {
+                AccessMode = value.Mode;
+                OnPropertyChanged(nameof(SelectedAccessModeOption));
+            }
+        }
+    }
+
     private readonly ISettingsService _settingsService;
+    private readonly RemoteControlCoordinator _coordinator;
     private readonly RemoteAuthenticationService _authService;
     private readonly LocalNetworkAddressService _networkAddressService;
-    private readonly RemoteDashboardHost? _dashboardHost;
+    private readonly IDialogService? _dialogService;
+    private CancellationTokenSource? _statusCts;
+    private bool _isRestarting;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsGeneralTab))]
     [NotifyPropertyChangedFor(nameof(IsUsersTab))]
-    private int _selectedTab;
+    private int _selectedTab = 0;
 
     public bool IsGeneralTab
     {
@@ -57,46 +83,30 @@ public partial class RemoteControlViewModel : ObservableObject
     private bool _requireAuthentication;
 
     [ObservableProperty]
+    private string? _username;
+
+    [ObservableProperty]
     private string _password = string.Empty;
 
     [ObservableProperty]
-    private bool _allowRemoteConsoleCommands;
+    private bool _isAdminCredentialsExpanded;
+
+    public bool IsPasswordSet => !string.IsNullOrEmpty(_settingsService.Settings.RemoteControl.PasswordHash);
+    public bool IsPasswordNotSet => string.IsNullOrEmpty(_settingsService.Settings.RemoteControl.PasswordHash);
+    public bool IsUsernameNotSet => string.IsNullOrEmpty(_settingsService.Settings.RemoteControl.Username);
+    public bool IsOwnerSetupVisible => RequireAuthentication && IsPasswordNotSet;
 
     [ObservableProperty]
-    private bool _allowRemotePlayerActions;
+    [NotifyPropertyChangedFor(nameof(IsDiscordNotLinked))]
+    private bool _isDiscordLinked;
+
+    public bool IsDiscordNotLinked => !IsDiscordLinked;
 
     [ObservableProperty]
-    private string _localUrl = string.Empty;
-
-    public bool HasLocalUrl => !string.IsNullOrWhiteSpace(LocalUrl);
+    private bool _enableDiscordNotifications;
 
     [ObservableProperty]
-    private bool _isLocalQrVisible;
-
-    [ObservableProperty]
-    private Bitmap? _localQrImage;
-
-    [ObservableProperty]
-    private string _publicUrl = string.Empty;
-
-    public bool HasPublicUrl => !string.IsNullOrWhiteSpace(PublicUrl);
-
-    [ObservableProperty]
-    private bool _isLoadingPublicUrl;
-
-    [ObservableProperty]
-    private bool _hasPublicUrlError;
-
-    [ObservableProperty]
-    private string _publicUrlErrorText = string.Empty;
-
-    [ObservableProperty]
-    private bool _isPublicQrVisible;
-
-    [ObservableProperty]
-    private Bitmap? _publicQrImage;
-
-    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasStatusText))]
     private string _statusText = string.Empty;
 
     public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
@@ -105,179 +115,534 @@ public partial class RemoteControlViewModel : ObservableObject
     private bool _isStatusError;
 
     [ObservableProperty]
-    private bool _isDiscordLinked;
+    [NotifyPropertyChangedFor(nameof(HasLocalUrl))]
+    private string? _localUrl;
+
+    public bool HasLocalUrl => !string.IsNullOrEmpty(LocalUrl);
 
     [ObservableProperty]
-    private bool _enableDiscordNotifications;
+    [NotifyPropertyChangedFor(nameof(HasPublicUrl))]
+    [NotifyPropertyChangedFor(nameof(IsPublicUrlCardVisible))]
+    private string? _publicUrl;
+
+    public bool HasPublicUrl => !string.IsNullOrEmpty(PublicUrl);
 
     [ObservableProperty]
-    private Bitmap? _pairingQrCode;
+    private string _publicUrlProviderName = "Cloudflare";
 
     [ObservableProperty]
-    private string _pairingUrl = string.Empty;
+    [NotifyPropertyChangedFor(nameof(IsPublicUrlCardVisible))]
+    private bool _isLoadingPublicUrl;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPublicUrlError))]
+    [NotifyPropertyChangedFor(nameof(IsPublicUrlCardVisible))]
+    private string? _publicUrlErrorText;
+
+    public bool HasPublicUrlError => !string.IsNullOrEmpty(PublicUrlErrorText);
+
+    public bool IsPublicUrlCardVisible => HasPublicUrl || IsLoadingPublicUrl || HasPublicUrlError;
+
+    [ObservableProperty]
+    private Bitmap? _localQrImage;
+
+    [ObservableProperty]
+    private Bitmap? _publicQrImage;
+
+    [ObservableProperty]
+    private bool _isLocalQrVisible;
+
+    [ObservableProperty]
+    private bool _isPublicQrVisible;
 
     public ObservableCollection<RemoteControlUserViewModel> Users { get; } = new();
 
     [ObservableProperty]
     private RemoteControlUserViewModel? _selectedUser;
 
-    public IRelayCommand AddUserCommand { get; }
-    public IRelayCommand<RemoteControlUserViewModel> RemoveUserCommand { get; }
-    public IRelayCommand<RemoteControlUserViewModel> SaveUserCommand { get; }
-    public IRelayCommand ToggleLocalQrCommand { get; }
-    public IAsyncRelayCommand CopyLocalUrlCommand { get; }
-    public IRelayCommand TogglePublicQrCommand { get; }
-    public IAsyncRelayCommand CopyPublicUrlCommand { get; }
-    public IRelayCommand JoinDiscordCommand { get; }
-
     public RemoteControlViewModel(
         ISettingsService settingsService,
+        RemoteControlCoordinator coordinator,
         RemoteAuthenticationService authService,
         LocalNetworkAddressService networkAddressService,
-        RemoteDashboardHost? dashboardHost = null)
+        IDialogService? dialogService = null)
     {
         _settingsService = settingsService;
+        _coordinator = coordinator;
         _authService = authService;
         _networkAddressService = networkAddressService;
-        _dashboardHost = dashboardHost;
+        _dialogService = dialogService;
 
-        AddUserCommand = new RelayCommand(AddUser);
-        RemoveUserCommand = new RelayCommand<RemoteControlUserViewModel>(RemoveUser);
-        SaveUserCommand = new RelayCommand<RemoteControlUserViewModel>(SaveUser);
-        ToggleLocalQrCommand = new RelayCommand(() => IsLocalQrVisible = !IsLocalQrVisible);
-        CopyLocalUrlCommand = new AsyncRelayCommand(CopyLocalUrlAsync);
-        TogglePublicQrCommand = new RelayCommand(() => IsPublicQrVisible = !IsPublicQrVisible);
-        CopyPublicUrlCommand = new AsyncRelayCommand(CopyPublicUrlAsync);
-        JoinDiscordCommand = new RelayCommand(() => OpenUrl(AppUrls.DiscordInvite));
+        var remote = _settingsService.Settings.RemoteControl;
+        _isEnabled = remote.Enabled;
+        _port = remote.Port <= 0 ? 25580 : remote.Port;
+        _requireAuthentication = remote.RequireAuthentication;
+        _username = remote.Username;
+        _accessMode = remote.AccessMode == RemoteAccessMode.LanOnly
+            ? RemoteAccessMode.CloudflaredQuickTunnel
+            : remote.AccessMode;
 
-        LoadSettings();
-        GenerateQrCode();
+        _isDiscordLinked = !string.IsNullOrEmpty(_settingsService.Settings.DiscordUserId);
+        _enableDiscordNotifications = _settingsService.Settings.EnableDiscordNotifications;
+
+        if (remote.Users != null)
+        {
+            foreach (var user in remote.Users)
+            {
+                Users.Add(new RemoteControlUserViewModel(user, () => SaveSettings()));
+            }
+        }
+
+        UpdateStatus();
     }
 
-    private void LoadSettings()
+    partial void OnIsEnabledChanged(bool value)
     {
-        var settings = _settingsService.Settings.RemoteControl;
-        IsEnabled = settings.Enabled;
-        Port = settings.Port == 0 ? 25580 : settings.Port;
-        AccessMode = settings.AccessMode;
-        RequireAuthentication = settings.RequireAuthentication;
-        AllowRemoteConsoleCommands = settings.AllowRemoteConsoleCommands;
-        AllowRemotePlayerActions = settings.AllowRemotePlayerActions;
-
-        IsDiscordLinked = !string.IsNullOrEmpty(_settingsService.Settings.DiscordUserId);
-        EnableDiscordNotifications = _settingsService.Settings.EnableDiscordNotifications;
-
-        Users.Clear();
-        if (settings.Users != null)
+        if (value && RequireAuthentication && (IsPasswordNotSet || IsUsernameNotSet))
         {
-            foreach (var user in settings.Users)
-            {
-                Users.Add(new RemoteControlUserViewModel(user));
-            }
+            _ = HandleEnableWithCredentialsPromptAsync();
+        }
+        else
+        {
+            SaveAndRestart();
         }
     }
 
+    private async Task HandleEnableWithCredentialsPromptAsync()
+    {
+        if (_dialogService == null)
+        {
+            SaveAndRestart();
+            return;
+        }
+
+        bool askUsername = IsUsernameNotSet;
+        bool askPassword = IsPasswordNotSet;
+
+        while (true)
+        {
+            var result = await _dialogService.PromptCredentialsAsync(
+                "Setup Admin Credentials",
+                "Remote Control requires authentication to be secure. Please set up the primary admin account, or turn off authentication to continue without it.",
+                askUsername,
+                askPassword);
+
+            if (result.Username == null && result.Password == null)
+            {
+                RequireAuthentication = false;
+                SaveAndRestart();
+                break;
+            }
+
+            if ((askUsername && string.IsNullOrWhiteSpace(result.Username)) ||
+                (askPassword && string.IsNullOrWhiteSpace(result.Password)))
+            {
+                _dialogService.ShowMessage("Invalid Input", "Username and password cannot be empty. Please enter valid credentials.", DialogType.Warning);
+                continue;
+            }
+
+            if (askUsername) Username = result.Username;
+            if (askPassword) Password = result.Password!;
+            SaveCredentials();
+            SaveAndRestart();
+            break;
+        }
+    }
+
+    partial void OnPortChanged(int value)
+    {
+        SaveAndRestart();
+    }
+
+    partial void OnAccessModeChanged(RemoteAccessMode value)
+    {
+        OnPropertyChanged(nameof(SelectedAccessModeOption));
+        SaveAndRestart();
+    }
+
+    partial void OnRequireAuthenticationChanged(bool value)
+    {
+        if (value)
+        {
+            _settingsService.Settings.RemoteControl.SecurityStamp = Guid.NewGuid().ToString();
+        }
+        SaveSettings();
+        OnPropertyChanged(nameof(IsOwnerSetupVisible));
+    }
+
+    partial void OnEnableDiscordNotificationsChanged(bool value)
+    {
+        _settingsService.Settings.EnableDiscordNotifications = value;
+        _settingsService.Save();
+    }
+
+    [RelayCommand]
+    private void SaveCredentials()
+    {
+        if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Password))
+        {
+            Username = string.Empty;
+            Password = string.Empty;
+            _settingsService.Settings.RemoteControl.Username = null;
+            _settingsService.Settings.RemoteControl.PasswordHash = null;
+
+            _settingsService.Save();
+            OnPropertyChanged(nameof(IsPasswordSet));
+            OnPropertyChanged(nameof(IsPasswordNotSet));
+            OnPropertyChanged(nameof(IsOwnerSetupVisible));
+            SetStatus("Admin credentials cleared successfully.", false);
+            IsAdminCredentialsExpanded = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            SetStatus("Username cannot be empty.", true);
+            Username = _settingsService.Settings.RemoteControl.Username ?? "";
+            return;
+        }
+
+        var trimmedAdminUsername = Username.Trim();
+
+        if (Users.Any(u => string.Equals(u.Username?.Trim(), trimmedAdminUsername, StringComparison.OrdinalIgnoreCase)))
+        {
+            SetStatus("Admin username cannot be the same as an existing sub-user username.", true);
+            Username = _settingsService.Settings.RemoteControl.Username ?? "";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            if (!string.IsNullOrEmpty(_settingsService.Settings.RemoteControl.PasswordHash))
+            {
+                Username = trimmedAdminUsername;
+                _settingsService.Settings.RemoteControl.Username = trimmedAdminUsername;
+                _settingsService.Settings.RemoteControl.SecurityStamp = Guid.NewGuid().ToString();
+                _settingsService.Save();
+                OnPropertyChanged(nameof(IsPasswordSet));
+                OnPropertyChanged(nameof(IsPasswordNotSet));
+                OnPropertyChanged(nameof(IsOwnerSetupVisible));
+                SetStatus("Admin username updated successfully.", false);
+                IsAdminCredentialsExpanded = false;
+                return;
+            }
+
+            SetStatus("Password cannot be empty.", true);
+            return;
+        }
+
+        Username = trimmedAdminUsername;
+        _settingsService.Settings.RemoteControl.Username = trimmedAdminUsername;
+        _settingsService.Settings.RemoteControl.PasswordHash = _authService.HashPassword(Password);
+        _settingsService.Settings.RemoteControl.SecurityStamp = Guid.NewGuid().ToString();
+
+        _settingsService.Save();
+        OnPropertyChanged(nameof(IsPasswordSet));
+        OnPropertyChanged(nameof(IsPasswordNotSet));
+        OnPropertyChanged(nameof(IsOwnerSetupVisible));
+        SetStatus("Admin credentials saved successfully.", false);
+        IsAdminCredentialsExpanded = false;
+    }
+
+    [RelayCommand]
     private void AddUser()
     {
         var user = new RemoteControlUser
         {
             Username = $"User_{Users.Count + 1}"
         };
-        var vm = new RemoteControlUserViewModel(user) { IsEditing = true };
-        Users.Add(vm);
-        SelectedUser = vm;
+        var userVm = new RemoteControlUserViewModel(user, () => SaveSettings()) { IsEditing = true };
+        Users.Add(userVm);
+        SelectedUser = userVm;
     }
 
-    private void RemoveUser(RemoteControlUserViewModel? user)
+    [RelayCommand]
+    private async Task RemoveUser(RemoteControlUserViewModel? user)
     {
-        if (user != null)
+        if (user == null) return;
+
+        if (_dialogService != null)
         {
-            Users.Remove(user);
-            SaveUsersToSettings();
+            var result = await _dialogService.ShowDialogAsync(
+                "Remove User",
+                $"Are you sure you want to remove the user '{user.Username}'? This action cannot be undone.",
+                DialogType.Warning,
+                true,
+                "Remove",
+                "Cancel");
+
+            if (result != DialogResult.Ok && result != DialogResult.Yes)
+            {
+                return;
+            }
         }
+
+        Users.Remove(user);
+        SaveSettings();
+        SetStatus($"User '{user.Username}' removed successfully.", false);
     }
 
+    [RelayCommand]
     private void SaveUser(RemoteControlUserViewModel? user)
     {
-        if (user != null)
+        if (user == null) return;
+
+        if (string.IsNullOrWhiteSpace(user.Username))
         {
-            user.ApplyToModel();
-            if (!string.IsNullOrWhiteSpace(user.Password))
+            SetStatus("Username cannot be empty.", true);
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                user.Model.PasswordHash = _authService.HashPassword(user.Password);
+                Users.Remove(user);
             }
-            user.IsEditing = false;
-            SaveUsersToSettings();
+            else
+            {
+                user.Username = user.SavedUsername;
+                user.Model.Username = user.SavedUsername;
+            }
+            return;
+        }
+
+        var trimmedUsername = user.Username.Trim();
+
+        var adminUser = _settingsService.Settings.RemoteControl.Username;
+        if (!string.IsNullOrEmpty(adminUser) && string.Equals(trimmedUsername, adminUser.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            SetStatus("Sub-user username cannot be the same as the admin username.", true);
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                Users.Remove(user);
+            }
+            else
+            {
+                user.Username = user.SavedUsername;
+                user.Model.Username = user.SavedUsername;
+            }
+            return;
+        }
+
+        if (Users.Any(u => u != user && string.Equals(u.Username?.Trim(), trimmedUsername, StringComparison.OrdinalIgnoreCase)))
+        {
+            SetStatus($"User '{trimmedUsername}' already exists.", true);
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                Users.Remove(user);
+            }
+            else
+            {
+                user.Username = user.SavedUsername;
+                user.Model.Username = user.SavedUsername;
+            }
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.Password))
+        {
+            if (!string.IsNullOrEmpty(user.PasswordHash))
+            {
+                user.Username = trimmedUsername;
+                user.SavedUsername = trimmedUsername;
+                user.Model.Username = trimmedUsername;
+                user.IsEditing = false;
+                if (!SaveSettings()) return;
+                SetStatus($"User '{user.Username}' updated successfully.", false);
+                return;
+            }
+
+            SetStatus("Password is required to save credentials.", true);
+            return;
+        }
+
+        var hashed = _authService.HashPassword(user.Password);
+        user.Username = trimmedUsername;
+        user.SavedUsername = trimmedUsername;
+        user.PasswordHash = hashed;
+        user.IsEditing = false;
+
+        if (!SaveSettings()) return;
+        SetStatus($"User '{user.Username}' credentials saved successfully.", false);
+    }
+
+    public bool SaveSettings()
+    {
+        var settings = _settingsService.Settings;
+        if (Port <= 0 || Port > 65535)
+        {
+            SetStatus("Remote Control port must be between 1 and 65535.", true);
+            return false;
+        }
+
+        settings.RemoteControl.Enabled = IsEnabled;
+        settings.RemoteControl.Port = Port;
+        settings.RemoteControl.AccessMode = AccessMode;
+        settings.RemoteControl.TunnelProviderId = AccessMode switch
+        {
+            RemoteAccessMode.CloudflaredQuickTunnel => "cloudflared-quick",
+            RemoteAccessMode.PlayitHttpsTunnel => "playit-https",
+            _ => "none"
+        };
+        settings.RemoteControl.RequireAuthentication = RequireAuthentication;
+
+        if (!string.IsNullOrWhiteSpace(Username))
+        {
+            settings.RemoteControl.Username = Username.Trim();
+        }
+
+        settings.RemoteControl.Users = Users.Select(u => u.Model).ToList();
+        _settingsService.Save();
+
+        OnPropertyChanged(nameof(IsPasswordSet));
+        OnPropertyChanged(nameof(IsPasswordNotSet));
+        OnPropertyChanged(nameof(IsOwnerSetupVisible));
+        return true;
+    }
+
+    public async void SaveAndRestart()
+    {
+        if (_isRestarting) return;
+        if (!SaveSettings()) return;
+
+        _isRestarting = true;
+        SetStatus(string.Empty, false);
+
+        try
+        {
+            if (IsEnabled)
+            {
+                IsLoadingPublicUrl = true;
+                PublicUrlErrorText = null;
+                PublicUrl = null;
+                PublicUrlProviderName = AccessMode switch
+                {
+                    RemoteAccessMode.CloudflaredQuickTunnel => "Cloudflare",
+                    RemoteAccessMode.PlayitHttpsTunnel => "PlayIt",
+                    _ => "Remote"
+                };
+                await _coordinator.RestartAllAsync();
+            }
+            else
+            {
+                await _coordinator.StopAllAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            SetStatus(ex.Message, true);
+        }
+        finally
+        {
+            _isRestarting = false;
+            UpdateStatus();
         }
     }
 
-    private void SaveUsersToSettings()
+    private void UpdateStatus()
     {
-        var settings = _settingsService.Settings.RemoteControl;
-        settings.Users = Users.Select(u => u.Model).ToList();
-        _settingsService.Save();
+        RemoteDashboardStatus status = _coordinator.GetStatus();
+        LocalUrl = status.LocalUrls.FirstOrDefault();
+
+        PublicUrlProviderName = AccessMode switch
+        {
+            RemoteAccessMode.CloudflaredQuickTunnel => "Cloudflare",
+            RemoteAccessMode.PlayitHttpsTunnel => "PlayIt",
+            _ => "Remote"
+        };
+        PublicUrl = status.PublicUrl;
+        PublicUrlErrorText = status.TunnelError;
+        IsLoadingPublicUrl = false;
+
+        LocalQrImage = GenerateQrCode(LocalUrl);
+        PublicQrImage = GenerateQrCode(PublicUrl);
+
+        if (string.IsNullOrEmpty(LocalUrl))
+        {
+            IsLocalQrVisible = false;
+        }
+        if (string.IsNullOrEmpty(PublicUrl))
+        {
+            IsPublicQrVisible = false;
+        }
+    }
+
+    private static Bitmap? GenerateQrCode(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        try
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            byte[] qrCodeBytes = qrCode.GetGraphic(10);
+
+            using var ms = new MemoryStream(qrCodeBytes);
+            return new Bitmap(ms);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void SetStatus(string message, bool isError, int autoDismissSeconds = 5)
+    {
+        _statusCts?.Cancel();
+        _statusCts?.Dispose();
+        _statusCts = null;
+
+        StatusText = message;
+        IsStatusError = isError;
+
+        if (!string.IsNullOrEmpty(message) && autoDismissSeconds > 0)
+        {
+            var cts = new CancellationTokenSource();
+            _statusCts = cts;
+            _ = ClearStatusAfterDelayAsync(cts.Token, autoDismissSeconds);
+        }
+    }
+
+    private async Task ClearStatusAfterDelayAsync(CancellationToken token, int seconds)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(seconds), token);
+            if (!token.IsCancellationRequested)
+            {
+                StatusText = string.Empty;
+                IsStatusError = false;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     [RelayCommand]
-    private async Task SaveSettingsAsync()
+    private void ToggleLocalQr()
     {
-        var settings = _settingsService.Settings.RemoteControl;
-        settings.Enabled = IsEnabled;
-        settings.Port = Port;
-        settings.AccessMode = AccessMode;
-        settings.RequireAuthentication = RequireAuthentication;
-        settings.AllowRemoteConsoleCommands = AllowRemoteConsoleCommands;
-        settings.AllowRemotePlayerActions = AllowRemotePlayerActions;
-        settings.Users = Users.Select(u => u.Model).ToList();
-
-        if (!string.IsNullOrWhiteSpace(Password))
-        {
-            settings.PasswordHash = _authService.HashPassword(Password);
-        }
-
-        _settingsService.Settings.EnableDiscordNotifications = EnableDiscordNotifications;
-        _settingsService.Save();
-        GenerateQrCode();
-
-        if (_dashboardHost != null)
-        {
-            try
-            {
-                if (IsEnabled)
-                {
-                    await _dashboardHost.StartServerAsync(Port);
-                    StatusText = $"Remote dashboard online on port {Port}";
-                    IsStatusError = false;
-                }
-                else
-                {
-                    await _dashboardHost.StopAsync(CancellationToken.None);
-                    StatusText = "Remote dashboard stopped";
-                    IsStatusError = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"Failed to update host: {ex.Message}";
-                IsStatusError = true;
-            }
-        }
+        IsLocalQrVisible = !IsLocalQrVisible;
     }
 
     [RelayCommand]
-    private async Task CopyUrlAsync()
+    private void TogglePublicQr()
     {
-        await SetClipboardTextAsync(PairingUrl);
+        IsPublicQrVisible = !IsPublicQrVisible;
     }
 
+    [RelayCommand]
     private async Task CopyLocalUrlAsync()
     {
-        await SetClipboardTextAsync(LocalUrl);
+        if (!string.IsNullOrEmpty(LocalUrl))
+        {
+            await SetClipboardTextAsync(LocalUrl);
+        }
     }
 
+    [RelayCommand]
     private async Task CopyPublicUrlAsync()
     {
-        await SetClipboardTextAsync(PublicUrl);
+        if (!string.IsNullOrEmpty(PublicUrl))
+        {
+            await SetClipboardTextAsync(PublicUrl);
+        }
     }
 
     private static async Task SetClipboardTextAsync(string text)
@@ -288,17 +653,20 @@ public partial class RemoteControlViewModel : ObservableObject
         }
     }
 
-    private void OpenUrl(string url)
+    [RelayCommand]
+    private void JoinDiscord()
     {
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = url,
+                FileName = AppUrls.DiscordInvite,
                 UseShellExecute = true
             });
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     [RelayCommand]
@@ -313,38 +681,12 @@ public partial class RemoteControlViewModel : ObservableObject
         {
             navService.NavigateToDashboard();
         }
-        else if (App.Services != null)
-        {
-            var mainVM = App.Services.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
-            if (mainVM != null)
-            {
-                mainVM.CurrentViewModel = App.Services.GetRequiredService<DashboardViewModel>();
-            }
-        }
     }
 
-    private void GenerateQrCode()
+    public void Dispose()
     {
-        var ip = _networkAddressService.GetLocalIPv4Addresses().FirstOrDefault() ?? "127.0.0.1";
-        LocalUrl = $"http://{ip}:{Port}/";
-        PairingUrl = LocalUrl;
-
-        try
-        {
-            using var qrGenerator = new QRCodeGenerator();
-            using var qrCodeData = qrGenerator.CreateQrCode(PairingUrl, QRCodeGenerator.ECCLevel.Q);
-            using var qrCode = new PngByteQRCode(qrCodeData);
-            var qrCodeImage = qrCode.GetGraphic(20);
-
-            using var stream = new MemoryStream(qrCodeImage);
-            PairingQrCode = new Bitmap(stream);
-            LocalQrImage = PairingQrCode;
-        }
-        catch (InvalidOperationException)
-        {
-            // Headless / non-UI unit test runner
-            PairingQrCode = null;
-            LocalQrImage = null;
-        }
+        _statusCts?.Cancel();
+        _statusCts?.Dispose();
+        _statusCts = null;
     }
 }

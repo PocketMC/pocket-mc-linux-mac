@@ -16,6 +16,7 @@ public class PlayitHttpsTunnelProvider : IRemoteTunnelProvider
 
     public string ProviderId => "playit-https";
     public string DisplayName => "Playit.gg HTTPS Tunnel";
+    public bool IsRunning => _processManager.IsRunning;
     public TunnelProcessGroupManager ProcessManager => _processManager;
 
     public PlayitHttpsTunnelProvider(ISettingsService settingsService)

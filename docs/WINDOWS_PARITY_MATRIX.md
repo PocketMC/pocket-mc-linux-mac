@@ -166,9 +166,9 @@ This document provides an exhaustive, capability-by-capability parity assessment
 
 ## 13. Automated Test Suite Summary
 
-- Total Automated Tests: 212
-- Passing: 212
+- Total Automated Tests: 220
+- Passing: 220
 - Failed: 0
 - Skipped: 0
-- Test Duration: ~17s
-- Coverage Areas: Server update transactions, artifact integrity, POSIX process management, file security policies, reboot schedules, port reliability engine, native metrics, sleep prevention, notifications, Discord RPC, console filters, player log parsers, crash detector, about page, remote control user permissions, ViewLocator type resolution, and host container DI resolution.
+- Test Duration: ~22s
+- Coverage Areas: Server update transactions, artifact integrity, POSIX process management, file security policies, reboot schedules, port reliability engine, native metrics, sleep prevention, notifications, Discord RPC, console filters and scroll wrapping, player log parsers, crash detector, about page, remote control coordinator and user permissions, ViewLocator type resolution, and host container DI resolution.

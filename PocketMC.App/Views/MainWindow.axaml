@@ -164,7 +164,7 @@
             </StackPanel>
           </Border>
 
-          <!-- Right: Global Health Badge -->
+          <!-- Right: Global Health Badge (System RAM) -->
           <Border Grid.Column="3"
                   IsVisible="{Binding IsGlobalHealthVisible}"
                   Background="#18FFFFFF"
@@ -173,13 +173,10 @@
                   Padding="10,0"
                   Margin="0,0,16,0"
                   VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-              <lucide:LucideIcon Kind="Activity" Size="13" Foreground="#2ECC71" VerticalAlignment="Center"/>
-              <TextBlock Text="{Binding GlobalHealthStatusText}"
-                         FontSize="11" FontWeight="Medium"
-                         Foreground="{DynamicResource TextSecondaryBrush}"
-                         VerticalAlignment="Center"/>
-            </StackPanel>
+            <TextBlock Text="{Binding GlobalHealthStatusText}"
+                       FontSize="11" FontWeight="Medium"
+                       Foreground="{Binding GlobalHealthStatusColor}"
+                       VerticalAlignment="Center"/>
           </Border>
         </Grid>
       </Border>

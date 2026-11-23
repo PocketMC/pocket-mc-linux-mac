@@ -145,5 +145,23 @@ namespace PocketMC.Tests
             Assert.Equal("https://www.reddit.com/r/PocketMC/", AppUrls.Reddit);
             Assert.Equal("https://www.instagram.com/thepocketmc", AppUrls.Instagram);
         }
+
+        [Fact]
+        public void DetailRouteKind_ContainsRemoteControlAndRuntimes()
+        {
+            var host = new TestShellHost();
+            var nav = new AppNavigationService();
+            nav.Initialize(host);
+
+            var rcPage = new object();
+            nav.NavigateToDetailPage(rcPage, "Remote Control", DetailRouteKind.RemoteControl, DetailBackNavigation.Dashboard);
+            Assert.Equal(DetailRouteKind.RemoteControl, nav.CurrentRouteKind);
+            Assert.Equal("Remote Control", nav.CurrentBreadcrumb);
+
+            var runtimesPage = new object();
+            nav.NavigateToDetailPage(runtimesPage, "Runtimes", DetailRouteKind.Runtimes, DetailBackNavigation.Dashboard);
+            Assert.Equal(DetailRouteKind.Runtimes, nav.CurrentRouteKind);
+            Assert.Equal("Runtimes", nav.CurrentBreadcrumb);
+        }
     }
 }
