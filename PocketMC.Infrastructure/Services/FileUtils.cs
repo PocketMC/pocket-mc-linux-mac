@@ -115,6 +115,35 @@ namespace PocketMC.Infrastructure.Services
             if ((rootAttrs & FileAttributes.ReadOnly) != 0)
                 File.SetAttributes(dirPath, rootAttrs & ~FileAttributes.ReadOnly);
         }
+
+        public static async Task CopyDirectoryAsync(string sourceDir, string destinationDir, CancellationToken cancellationToken = default)
+        {
+            Directory.CreateDirectory(destinationDir);
+            string fullSource = Path.GetFullPath(sourceDir);
+
+            await Task.Run(() =>
+            {
+                foreach (string dir in Directory.GetDirectories(fullSource, "*", SearchOption.AllDirectories))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    string relative = Path.GetRelativePath(fullSource, dir);
+                    Directory.CreateDirectory(Path.Combine(destinationDir, relative));
+                }
+
+                foreach (string file in Directory.GetFiles(fullSource, "*", SearchOption.AllDirectories))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    string relative = Path.GetRelativePath(fullSource, file);
+                    string target = Path.Combine(destinationDir, relative);
+                    string? parent = Path.GetDirectoryName(target);
+                    if (!string.IsNullOrEmpty(parent))
+                    {
+                        Directory.CreateDirectory(parent);
+                    }
+                    File.Copy(file, target, overwrite: true);
+                }
+            }, cancellationToken);
+        }
     }
 }
 

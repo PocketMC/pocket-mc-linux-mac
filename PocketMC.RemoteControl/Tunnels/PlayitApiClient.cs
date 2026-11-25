@@ -542,6 +542,9 @@ public class PlayitApiClient
         return GetAgentId();
     }
 
+    public Task<TunnelActionResult> RenameTunnelAsync(string tunnelId, string newName)
+        => PostActionAsync("/tunnels/rename", new { tunnel_id = tunnelId, name = newName });
+
     public Task<TunnelActionResult> DeleteTunnelAsync(string tunnelId)
         => PostActionAsync("/tunnels/delete", new { tunnel_id = tunnelId });
 

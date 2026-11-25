@@ -67,11 +67,8 @@ namespace PocketMC.Infrastructure.Services
 
         public SessionSummary? Read(string serverDir, string fileName)
         {
-            if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)
-                return null;
-
-            string filePath = Path.Combine(serverDir, SummariesFolder, fileName);
-            if (!File.Exists(filePath)) return null;
+            string? filePath = ResolveSummaryFilePath(serverDir, fileName);
+            if (filePath == null || !File.Exists(filePath)) return null;
 
             try
             {
@@ -86,11 +83,8 @@ namespace PocketMC.Infrastructure.Services
 
         public bool Delete(string serverDir, string fileName)
         {
-            if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)
-                return false;
-
-            string filePath = Path.Combine(serverDir, SummariesFolder, fileName);
-            if (!File.Exists(filePath)) return false;
+            string? filePath = ResolveSummaryFilePath(serverDir, fileName);
+            if (filePath == null || !File.Exists(filePath)) return false;
 
             try
             {
@@ -101,6 +95,15 @@ namespace PocketMC.Infrastructure.Services
             {
                 return false;
             }
+        }
+
+        private static string? ResolveSummaryFilePath(string serverDir, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)
+                return null;
+
+            string summaryDir = Path.Combine(serverDir, SummariesFolder);
+            return PathSafety.ValidateContainedPath(summaryDir, fileName);
         }
 
         public int GetCount(string serverDir)

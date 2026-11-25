@@ -100,6 +100,44 @@ namespace PocketMC.Tests
         }
 
         [Fact]
+        public void InstanceCardViewModel_ExposesRunningBorderSkeletonAndPortIssueBadges()
+        {
+            var instance = new ServerInstance
+            {
+                Id = Guid.NewGuid(),
+                Name = "Modpack CrossPlay",
+                EngineType = EngineType.Paper,
+                EngineVersion = "1.21.4",
+                IsImportedFromModpack = true,
+                ModpackName = "BetterMC"
+            };
+
+            var card = new InstanceCardViewModel(instance);
+
+            Assert.Equal("Pin to Top", card.PinMenuHeader);
+            Assert.True(card.IsImportedFromModpack);
+            Assert.Equal("Modpack", card.ModpackBadgeText);
+            Assert.False(card.ShowRunningBorder);
+
+            card.SetPinned(true);
+            Assert.Equal("Unpin from Top", card.PinMenuHeader);
+
+            card.UpdateState("Online", DateTime.UtcNow);
+            card.IsTunnelResolving = true;
+            Assert.True(card.ShowRunningBorder);
+            Assert.True(card.ShowPrimaryTunnelSkeleton);
+
+            card.SetPortIssue("Port Conflict", "Port 25565 already in use");
+            Assert.True(card.HasPortIssue);
+            Assert.Equal("Port Conflict", card.PortIssueBadgeText);
+            card.ClearPortIssue();
+            Assert.False(card.HasPortIssue);
+
+            card.UpdateVoiceChatTunnel("voice.playit.gg:19133");
+            Assert.True(card.HasVoiceChatTunnelAddress);
+        }
+
+        [Fact]
         public async Task DashboardInstanceListViewModel_LoadsAndSortsPinnedInstancesFirst()
         {
             var unpinnedOlder = new ServerInstance

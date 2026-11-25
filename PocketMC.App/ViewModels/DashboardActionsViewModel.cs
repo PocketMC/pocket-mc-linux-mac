@@ -17,6 +17,7 @@ namespace PocketMC.App.ViewModels
     {
         private readonly IProcessRunner _processRunner;
         private readonly IInstanceService _instanceService;
+        private readonly IServerLifecycleService? _lifecycleService;
         private readonly IDialogService? _dialogService;
         private readonly IAppNavigationService? _navigationService;
         private readonly IServiceProvider? _serviceProvider;
@@ -34,10 +35,12 @@ namespace PocketMC.App.ViewModels
             Action<InstanceCardViewModel>? onOpenPlayers = null,
             Action<InstanceCardViewModel>? onOpenExport = null,
             IAppNavigationService? navigationService = null,
-            IServiceProvider? serviceProvider = null)
+            IServiceProvider? serviceProvider = null,
+            IServerLifecycleService? lifecycleService = null)
         {
             _processRunner = processRunner;
             _instanceService = instanceService;
+            _lifecycleService = lifecycleService ?? serviceProvider?.GetService<IServerLifecycleService>();
             _dialogService = dialogService;
             _onOpenSettings = onOpenSettings;
             _onOpenConsole = onOpenConsole;
@@ -65,9 +68,23 @@ namespace PocketMC.App.ViewModels
 
             try
             {
+                vm.ClearPortIssue();
                 vm.UpdateState("Starting");
-                await _processRunner.StartAsync(vm.Instance);
+                if (_lifecycleService != null)
+                {
+                    await _lifecycleService.StartAsync(vm.Instance);
+                }
+                else
+                {
+                    await _processRunner.StartAsync(vm.Instance);
+                }
                 vm.UpdateState("Online", DateTime.UtcNow);
+            }
+            catch (PocketMC.Core.Models.Networking.PortReliabilityException portEx)
+            {
+                vm.UpdateState("Stopped");
+                vm.SetPortIssue("Port Conflict", portEx.Message);
+                _dialogService?.ShowMessage("Port Conflict", portEx.Message, DialogType.Warning);
             }
             catch (Exception ex)
             {
@@ -78,12 +95,27 @@ namespace PocketMC.App.ViewModels
 
         public async Task StopServerAsync(InstanceCardViewModel vm)
         {
+            if (vm.IsRestartCountdownActive)
+            {
+                _lifecycleService?.AbortRestartDelay(vm.Slug);
+                vm.UpdateRestartCountdown(0);
+                vm.UpdateState("Stopped");
+                return;
+            }
+
             if (!vm.IsRunning) return;
 
             try
             {
                 vm.UpdateState("Stopping");
-                await _processRunner.StopAsync(vm.Instance);
+                if (_lifecycleService != null)
+                {
+                    await _lifecycleService.StopAsync(vm.Instance);
+                }
+                else
+                {
+                    await _processRunner.StopAsync(vm.Instance);
+                }
                 vm.UpdateState("Stopped");
             }
             catch (Exception ex)
@@ -97,13 +129,25 @@ namespace PocketMC.App.ViewModels
             vm.IsWaitingToRestart = true;
             try
             {
-                await StopServerAsync(vm);
-                await Task.Delay(1000);
-                await StartServerAsync(vm);
+                if (_lifecycleService != null)
+                {
+                    await _lifecycleService.RestartAsync(vm.Instance);
+                }
+                else
+                {
+                    if (vm.IsRunning)
+                    {
+                        vm.UpdateState("Stopping");
+                        await _processRunner.StopAsync(vm.Instance);
+                        vm.UpdateState("Stopped");
+                    }
+                    await Task.Delay(1000);
+                    await StartServerAsync(vm);
+                }
             }
             finally
             {
-                vm.IsWaitingToRestart = false;
+                vm.UpdateRestartCountdown(0);
             }
         }
 

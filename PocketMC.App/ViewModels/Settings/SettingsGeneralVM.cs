@@ -98,12 +98,48 @@ namespace PocketMC.App.ViewModels.Settings
             var file = await _dialogService.OpenFileDialogAsync("Select Server Icon", "Image Files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp");
             if (!string.IsNullOrEmpty(file) && File.Exists(file))
             {
+                var nav = App.Services?.GetService(typeof(Navigation.IAppNavigationService)) as Navigation.IAppNavigationService;
+                if (nav != null && nav.CurrentRouteKind != null)
+                {
+                    var cropPage = new Views.Settings.ImageCropPage(
+                        file,
+                        nav,
+                        _imageProcessingService,
+                        async croppedBytes =>
+                        {
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(_serverDir))
+                                {
+                                    var targetPath = Path.Combine(_serverDir, "server-icon.png");
+                                    await File.WriteAllBytesAsync(targetPath, croppedBytes);
+                                }
+
+                                using var ms = new MemoryStream(croppedBytes);
+                                ServerIcon = new Bitmap(ms);
+                                _markDirty();
+                            }
+                            catch (Exception ex)
+                            {
+                                _dialogService.ShowMessage("Image Error", $"Failed to save icon: {ex.Message}", DialogType.Error);
+                            }
+                        });
+
+                    if (nav.NavigateToDetailPage(
+                        cropPage,
+                        "Crop Server Icon",
+                        Navigation.DetailRouteKind.ImageCrop,
+                        Navigation.DetailBackNavigation.PreviousDetail))
+                    {
+                        return;
+                    }
+                }
+
                 try
                 {
                     byte[] fileBytes = await File.ReadAllBytesAsync(file);
-                    // Crop and resize to 64x64 standard server icon
                     byte[] croppedBytes = _imageProcessingService.CropAndResizeImage(fileBytes, 0, 0, 0, 64);
-                    
+
                     if (!string.IsNullOrEmpty(_serverDir))
                     {
                         var targetPath = Path.Combine(_serverDir, "server-icon.png");

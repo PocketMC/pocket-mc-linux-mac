@@ -1,267 +1,536 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:settingsVm="using:PocketMC.App.ViewModels.Settings"
              xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.AppSettingsPage"
-             x:DataType="vm:AppSettingsViewModel"
-             Background="Transparent">
+             x:DataType="vm:AppSettingsViewModel">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,24,32,48">
-    <StackPanel MaxWidth="900" Spacing="24" Margin="0,0,0,48">
-      <!-- Page Header -->
-      <Grid ColumnDefinitions="*, Auto">
-        <StackPanel Grid.Column="0" Spacing="4">
-          <TextBlock Text="Application Settings" FontSize="24" FontWeight="Bold"
-                     Foreground="{DynamicResource TextPrimaryBrush}"/>
-          <TextBlock Text="Customize appearance, system power, Discord presence, and configurations."
-                     FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+  <Grid RowDefinitions="Auto, *, Auto">
+    <!-- Page Header -->
+    <Grid Grid.Row="0" Margin="28,20,28,14" ColumnDefinitions="*, Auto">
+      <StackPanel Grid.Column="0">
+        <TextBlock Text="App Settings" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+        <TextBlock Text="{Binding StatusMessage, FallbackValue='Configure PocketMC behavior, appearance, backups, AI summarization, and diagnostics.'}"
+                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+      </StackPanel>
+      <Button Grid.Column="1" Command="{Binding SaveSettingsCommand}" Classes="primary" Padding="18,9" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Save" Size="15"/>
+          <TextBlock Text="Save Settings"/>
         </StackPanel>
+      </Button>
+    </Grid>
 
-        <!-- Save button -->
-        <Button Grid.Column="1"
-                Content="Save Changes"
-                Command="{Binding SaveSettingsCommand}"
-                Background="{DynamicResource AccentBrush}"
-                Foreground="White"
-                FontWeight="SemiBold"
-                Padding="20,10"
-                CornerRadius="8"
-                Cursor="Hand"/>
-      </Grid>
+    <!-- 10+ Accordion Sections matching Windows AppSettingsPage.xaml -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="28,0,28,28" Spacing="12" MaxWidth="920" HorizontalAlignment="Left">
 
-      <!-- Status banner -->
-      <Border IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-              Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1"
-              CornerRadius="8" Padding="14,10">
-        <TextBlock Text="{Binding StatusMessage}" Foreground="#2ECC71" FontWeight="Medium" FontSize="13"/>
-      </Border>
-
-      <!-- Section: Appearance & Accent Color -->
-      <Border Background="{DynamicResource CardBackgroundBrush}"
-              BorderBrush="{DynamicResource CardBorderBrush}"
-              BorderThickness="1" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <lucide:LucideIcon Kind="Palette" Size="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-            <TextBlock Text="Appearance &amp; Wallpaper Backdrop" FontSize="16" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        <!-- 1. App Behavior -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="SlidersHorizontal" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="App Behavior" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Control tray minimization, sleep prevention, telemetry, and console buffer." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="14">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel>
+                <TextBlock Text="Start minimized to tray" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Keep the main window hidden on launch and run from the system tray." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding StartMinimizedToTray, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel>
+                <TextBlock Text="Minimize to tray on close" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Keep PocketMC and running servers active in the background when closed." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTrayOnClose, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel>
+                <TextBlock Text="Prevent system sleep while servers run" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Inhibits sleep via systemd-inhibit / caffeinate while any server is active." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding KeepComputerAwakeWhileServersRunning, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel>
+                <TextBlock Text="Anonymous usage telemetry" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Share non-identifying crash &amp; usage counters to improve PocketMC." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableTelemetry, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, 140">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Console log line limit" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Maximum live entries kept in console scrollback buffer." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <NumericUpDown Grid.Column="1" Value="{Binding ConsoleBufferSize, Mode=TwoWay}" Minimum="500" Maximum="50000" Increment="500"/>
+            </Grid>
           </StackPanel>
+        </Expander>
 
-          <!-- Accent Color Swatches -->
-          <StackPanel Spacing="8">
-            <TextBlock Text="Accent Color Preset" FontSize="13" FontWeight="Medium"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <WrapPanel Orientation="Horizontal">
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#008B00"
-                      Background="#008B00" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="PocketMC Green"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#10893E"
-                      Background="#10893E" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Emerald"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#0078D4"
-                      Background="#0078D4" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Blue"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#3498DB"
-                      Background="#3498DB" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Sky Blue"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#9B59B6"
-                      Background="#9B59B6" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Purple"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#E74C3C"
-                      Background="#E74C3C" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Red"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#E67E22"
-                      Background="#E67E22" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Orange"/>
-              <Button Command="{Binding ApplyPresetColorCommand}" CommandParameter="#F1C40F"
-                      Background="#F1C40F" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,10" Cursor="Hand" ToolTip.Tip="Gold"/>
+        <!-- 2. Storage & Data Root -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="HardDrive" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Storage &amp; Data Directory" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding DataRootPath}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="10">
+            <TextBlock Text="Instances, downloaded Java/PHP runtimes, backups, and logs live under this root folder."
+                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            <Grid ColumnDefinitions="*, 8, Auto, 8, Auto">
+              <TextBox Grid.Column="0" Text="{Binding DataRootPath}" IsReadOnly="True"/>
+              <Button Grid.Column="2" Content="Change..." Classes="secondary" Command="{Binding ChangeDataRootCommand}"/>
+              <Button Grid.Column="4" Content="Open Folder" Classes="secondary" Command="{Binding OpenDataRootFolderCommand}"/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+
+        <!-- 3. Appearance & Wallpaper Backdrop -->
+        <Expander Classes="card-expander" IsExpanded="True">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Palette" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Appearance" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Customize theme, accent colors, frosted wallpaper blur, and tint opacity." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="14">
+            <Grid ColumnDefinitions="*, 180">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="App Theme" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Match system appearance or force Dark / Light mode." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ComboBox Grid.Column="1" ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}" HorizontalAlignment="Stretch"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="*, 180">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Window Backdrop Style" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="BlurredWallpaper applies Windows FakeMica translucency." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ComboBox Grid.Column="1" ItemsSource="{Binding BackdropOptions}" SelectedItem="{Binding WindowBackdrop}" HorizontalAlignment="Stretch"/>
+            </Grid>
+
+            <!-- Custom Wallpaper Row -->
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Text="Custom Background Image" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="{Binding CustomBgDisplayName}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button Content="Browse Image" Classes="secondary" Command="{Binding BrowseCustomWallpaperCommand}"/>
+                <Button Content="Reset Default" Classes="secondary" Command="{Binding ResetWallpaperCommand}"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Blur Radius -->
+            <Grid ColumnDefinitions="*, 220">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Blur Intensity" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="{Binding WallpaperBlurRadius, StringFormat='{}{0:F0} px'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <Slider Grid.Column="1" Minimum="0" Maximum="120" Value="{Binding WallpaperBlurRadius, Mode=TwoWay}"/>
+            </Grid>
+
+            <!-- Tint Opacity -->
+            <Grid ColumnDefinitions="*, 220">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Backdrop Tint Darkness" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="{Binding WallpaperTintOpacity, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <Slider Grid.Column="1" Minimum="0.1" Maximum="0.95" Value="{Binding WallpaperTintOpacity, Mode=TwoWay}"/>
+            </Grid>
+
+            <!-- Accent Swatches + Custom Hex -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Accent Color" FontSize="14" FontWeight="Medium"/>
+              <ItemsControl ItemsSource="{Binding AccentColorPresets}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:AccentPresetOption">
+                    <Button Command="{Binding $parent[ItemsControl].((vm:AppSettingsViewModel)DataContext).ApplyPresetColorCommand}"
+                            CommandParameter="{Binding Hex}"
+                            Background="{Binding SwatchBrush}"
+                            Width="30" Height="30" CornerRadius="15" Margin="0,0,8,8"
+                            BorderBrush="#60FFFFFF" BorderThickness="1"
+                            ToolTip.Tip="{Binding Name}"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Grid ColumnDefinitions="*, 8, Auto" MaxWidth="340" HorizontalAlignment="Left">
+                <TextBox Grid.Column="0" Text="{Binding CustomAccentColor, Mode=TwoWay}" Watermark="#008B00"/>
+                <Button Grid.Column="2" Content="Apply Hex" Classes="primary" Command="{Binding SaveSettingsCommand}"/>
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+
+        <!-- 4. Notifications -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Bell" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Notifications" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Manage native desktop alerts for server events." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Server Online Notification" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableServerOnlineNotifications, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Playit Agent Connect Notification" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAgentConnectNotifications, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Remote Control Online Notification" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableRemoteControlNotifications, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="AI Summary Complete Notification" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAiSummaryNotifications, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+
+        <!-- 5. Discord Rich Presence + Live Profile Preview -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Gamepad2" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Discord Rich Presence" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Customize live Discord activity card while hosting servers." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="14">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel>
+                <TextBlock Text="Enable Discord Rich Presence" FontSize="14" FontWeight="Medium"/>
+                <TextBlock Text="Broadcast server activity on your Discord profile." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableDiscordRpc, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+
+            <!-- Live Side-by-Side Preview Cards -->
+            <TextBlock Text="Live Profile Preview" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <Grid ColumnDefinitions="*, 14, *">
+              <!-- Active Card -->
+              <Border Grid.Column="0" Classes="card-secondary" Padding="14">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Playing PocketMC" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <Grid ColumnDefinitions="Auto, 12, *">
+                    <Image Grid.Column="0" Source="avares://PocketMC.App/Assets/logo.png" Width="48" Height="48"/>
+                    <StackPanel Grid.Column="2" Spacing="2">
+                      <TextBlock Text="{Binding PreviewServerTitle}" FontWeight="Bold" FontSize="13"/>
+                      <TextBlock Text="{Binding PreviewActivityLine1}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <TextBlock Text="{Binding PreviewActivityLine2}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <TextBlock Text="02:30 elapsed" FontSize="11" Foreground="#23A55A" IsVisible="{Binding PreviewUptimeVisible}"/>
+                    </StackPanel>
+                  </Grid>
+                  <Button Content="Download PocketMC" Classes="secondary" HorizontalAlignment="Stretch"
+                          IsVisible="{Binding PreviewDownloadVisible}"/>
+                </StackPanel>
+              </Border>
+
+              <!-- Idle Card -->
+              <Border Grid.Column="2" Classes="card-secondary" Padding="14" Opacity="0.85">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Idle State" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Grid.Column="1" Text="Hidden when idle" FontSize="11" Foreground="#F87171"
+                               IsVisible="{Binding !PreviewIdleVisible}"/>
+                  </Grid>
+                  <Grid ColumnDefinitions="Auto, 12, *">
+                    <Image Grid.Column="0" Source="avares://PocketMC.App/Assets/logo.png" Width="48" Height="48"/>
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                      <TextBlock Text="PocketMC" FontWeight="Bold" FontSize="13"/>
+                      <TextBlock Text="Managing Servers" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <!-- Presence Toggles -->
+            <WrapPanel>
+              <CheckBox Content="Show when idle" IsChecked="{Binding DiscordRpcShowIdle, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show server name" IsChecked="{Binding DiscordRpcShowServerName, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show tunnel address" IsChecked="{Binding DiscordRpcShowServerAddress, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show player count" IsChecked="{Binding DiscordRpcShowPlayerCount, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show version &amp; engine" IsChecked="{Binding DiscordRpcShowVersion, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show uptime timer" IsChecked="{Binding DiscordRpcShowUptime, Mode=TwoWay}" Margin="0,0,18,6"/>
+              <CheckBox Content="Show download button" IsChecked="{Binding DiscordRpcShowDownloadButton, Mode=TwoWay}" Margin="0,0,18,6"/>
             </WrapPanel>
           </StackPanel>
+        </Expander>
 
-          <!-- Custom Hex Input -->
-          <Grid ColumnDefinitions="160, 16, 120" VerticalAlignment="Center">
-            <TextBox Grid.Column="0" Text="{Binding CustomAccentColor, Mode=TwoWay}"
-                     Watermark="#008B00" CornerRadius="6"
-                     Background="{DynamicResource InputBackgroundBrush}"
-                     Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <Border Grid.Column="2" Height="32" CornerRadius="6"
-                    Background="{DynamicResource AccentBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
-              <TextBlock Text="Preview" FontSize="11" FontWeight="SemiBold"
-                         Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
-          </Grid>
-
-          <!-- Wallpaper Blur Radius -->
-          <StackPanel Spacing="6" Margin="0,8,0,0">
-            <Grid ColumnDefinitions="*, Auto">
-              <TextBlock Grid.Column="0" Text="Wallpaper Blur Radius" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Grid.Column="1" Text="{Binding WallpaperBlurRadius, StringFormat='{}{0:F0} px'}"
-                         FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <!-- 6. Cloud Backups -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Cloud" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Cloud Backups" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Connect Google Drive, Dropbox, or OneDrive for off-site world sync." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
             </Grid>
-            <Slider Minimum="0" Maximum="100" Value="{Binding WallpaperBlurRadius, Mode=TwoWay}"/>
-          </StackPanel>
+          </Expander.Header>
+          <StackPanel Spacing="12" DataContext="{Binding CloudBackupsVm}">
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Enable Cloud Backup Synchronization" FontWeight="Medium" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableCloudBackups, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Auto-upload manual world backups" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding UploadOnManualBackup, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Auto-upload scheduled backups" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding UploadOnScheduledBackup, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
 
-          <!-- Wallpaper Tint Opacity -->
+            <ItemsControl ItemsSource="{Binding ProviderViewModels}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="settingsVm:CloudProviderViewModel">
+                  <Border Classes="card-secondary" Margin="0,6,0,0" Padding="12">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                      <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{Binding StatusDotBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding AccountInfo}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Content="Connect" Classes="primary" Command="{Binding ConnectCommand}" IsVisible="{Binding !IsConnected}"/>
+                        <Button Content="Disconnect" Classes="secondary" Command="{Binding DisconnectCommand}" IsVisible="{Binding IsConnected}"/>
+                        <Button Classes="secondary" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh Status">
+                          <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Expander>
+
+        <!-- 7. API Configuration -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="KeyRound" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="API Configuration" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Manage CurseForge Eternal API key for marketplace &amp; modpack installs." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
           <StackPanel Spacing="6">
-            <Grid ColumnDefinitions="*, Auto">
-              <TextBlock Grid.Column="0" Text="Dark Tint Opacity" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Grid.Column="1" Text="{Binding WallpaperTintOpacity, StringFormat='{}{0:P0}'}"
-                         FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Text="CurseForge API Key" FontSize="13" FontWeight="Medium"/>
+            <TextBox Text="{Binding CurseForgeApiKey, Mode=TwoWay}" PasswordChar="*" Watermark="Enter optional CurseForge API key"/>
+          </StackPanel>
+        </Expander>
+
+        <!-- 8. AI Session Summarization & Ollama -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Sparkles" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="AI Session Summarization &amp; Crash Analysis" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Configure Gemini, OpenAI, Anthropic, or Local/Cloud Ollama models." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
             </Grid>
-            <Slider Minimum="0.1" Maximum="0.95" Value="{Binding WallpaperTintOpacity, Mode=TwoWay}"/>
-          </StackPanel>
-        </StackPanel>
-      </Border>
+          </Expander.Header>
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Enable Automatic Session Summarization" FontWeight="Medium" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAiSummarization, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
 
-      <!-- Section: System & Power Management -->
-      <Border Background="{DynamicResource CardBackgroundBrush}"
-              BorderBrush="{DynamicResource CardBorderBrush}"
-              BorderThickness="1" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <lucide:LucideIcon Kind="Cpu" Size="20" Foreground="#3498DB" VerticalAlignment="Center"/>
-            <TextBlock Text="System &amp; Power Management" FontSize="16" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-          </StackPanel>
+            <Grid ColumnDefinitions="*, 14, *">
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="AI Provider" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <ComboBox ItemsSource="{Binding AiProviderOptions}" SelectedItem="{Binding AiProvider}" HorizontalAlignment="Stretch"/>
+              </StackPanel>
+              <StackPanel Grid.Column="2" Spacing="4">
+                <TextBlock Text="Model Name" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding AiModel, Mode=TwoWay}" Watermark="gemini-2.5-flash / llama3.2:3b"/>
+              </StackPanel>
+            </Grid>
 
-          <!-- Keep Awake Toggle -->
-          <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="Prevent System Sleep while Servers are Running" FontSize="13" FontWeight="Medium"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Text="Uses systemd-inhibit on Linux and caffeinate on macOS to keep machines active."
-                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <StackPanel Spacing="4">
+              <TextBlock Text="API Key" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              <TextBox Text="{Binding AiApiKey, Mode=TwoWay}" PasswordChar="*" Watermark="Required for cloud providers"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding KeepComputerAwakeWhileServersRunning, Mode=TwoWay}"/>
-          </Grid>
 
-          <!-- Tray Minimized Toggle -->
-          <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="Start Minimized to System Tray" FontSize="13" FontWeight="Medium"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Text="Launch PocketMC in the background without opening the main window."
-                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <StackPanel Spacing="4">
+              <TextBlock Text="Custom / Ollama Endpoint URL" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              <TextBox Text="{Binding AiEndpoint, Mode=TwoWay}" Watermark="http://localhost:11434"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding StartMinimizedToTray, Mode=TwoWay}"/>
-          </Grid>
 
-          <!-- Close to Tray Toggle -->
-          <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="Minimize to System Tray on Close" FontSize="13" FontWeight="Medium"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Text="Closing the window will keep background servers running in the tray."
-                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <!-- Ollama Management Controls -->
+            <Border Classes="card-secondary" IsVisible="{Binding IsOllamaProvider}" Padding="12">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*, 160">
+                  <TextBlock Text="Ollama Mode (Local Daemon vs Cloud)" VerticalAlignment="Center"/>
+                  <ComboBox Grid.Column="1" ItemsSource="{Binding OllamaModeOptions}" SelectedItem="{Binding OllamaMode}" HorizontalAlignment="Stretch"/>
+                </Grid>
+                <Grid ColumnDefinitions="*, Auto, 8, Auto">
+                  <TextBlock Grid.Column="0" Text="{Binding OllamaDaemonStatus}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                  <Button Grid.Column="1" Content="Check Daemon" Classes="secondary" Command="{Binding CheckOllamaDaemonCommand}"/>
+                  <Button Grid.Column="3" Content="Manage Models..." Classes="primary" Command="{Binding OpenOllamaModelManagerCommand}"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="18">
+              <CheckBox Content="Auto-summarize on clean Stop" IsChecked="{Binding AutoSummarizeOnStop, Mode=TwoWay}"/>
+              <CheckBox Content="Auto-summarize on Crash" IsChecked="{Binding AutoSummarizeOnCrash, Mode=TwoWay}"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTrayOnClose, Mode=TwoWay}"/>
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- Section: Discord Rich Presence -->
-      <Border Background="{DynamicResource CardBackgroundBrush}"
-              BorderBrush="{DynamicResource CardBorderBrush}"
-              BorderThickness="1" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <lucide:LucideIcon Kind="MessageSquare" Size="20" Foreground="#9B59B6" VerticalAlignment="Center"/>
-            <TextBlock Text="Discord Rich Presence" FontSize="16" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
           </StackPanel>
+        </Expander>
 
-          <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="Enable Discord Presence" FontSize="13" FontWeight="Medium"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Text="Broadcast live server status and player count on your Discord profile."
-                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <!-- 9. Software Updates -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="RefreshCw" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Software Updates" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding CurrentVersionLabel}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*, 180">
+              <TextBlock Text="Release Channel" VerticalAlignment="Center"/>
+              <ComboBox Grid.Column="1" ItemsSource="{Binding UpdateChannelOptions}" SelectedItem="{Binding UpdateChannel}" HorizontalAlignment="Stretch"/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Check for updates automatically on startup" VerticalAlignment="Center"/>
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAutoUpdates, Mode=TwoWay}" OnContent="" OffContent=""/>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button Content="Check for Updates" Classes="secondary" Command="{Binding CheckForUpdatesCommand}"/>
+              <TextBlock Text="{Binding UpdateCheckStatus}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableDiscordRpc, Mode=TwoWay}"/>
-          </Grid>
-
-          <StackPanel Spacing="10" IsVisible="{Binding EnableDiscordRpc}">
-            <CheckBox Content="Show Server Name" IsChecked="{Binding DiscordRpcShowServerName, Mode=TwoWay}"/>
-            <CheckBox Content="Show Player Count" IsChecked="{Binding DiscordRpcShowPlayerCount, Mode=TwoWay}"/>
-            <CheckBox Content="Show Loader Version &amp; Engine" IsChecked="{Binding DiscordRpcShowVersion, Mode=TwoWay}"/>
-            <CheckBox Content="Show Server Uptime Timer" IsChecked="{Binding DiscordRpcShowUptime, Mode=TwoWay}"/>
-            <CheckBox Content="Show 'Download PocketMC' Button" IsChecked="{Binding DiscordRpcShowDownloadButton, Mode=TwoWay}"/>
           </StackPanel>
-        </StackPanel>
-      </Border>
+        </Expander>
 
-      <!-- Section: AI Diagnostician -->
-      <Border Background="{DynamicResource CardBackgroundBrush}"
-              BorderBrush="{DynamicResource CardBorderBrush}"
-              BorderThickness="1" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <lucide:LucideIcon Kind="Sparkles" Size="20" Foreground="#F39C12" VerticalAlignment="Center"/>
-            <TextBlock Text="AI Diagnostician &amp; Crash Assistant" FontSize="16" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        <!-- 10. Keyboard Shortcuts -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Keyboard" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Keyboard Shortcuts" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Quick navigation &amp; console hotkeys matching PocketMC Windows." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Dashboard / Tunnel / Remote Control"/>
+              <TextBlock Grid.Column="1" Text="Ctrl+1 / Ctrl+2 / Ctrl+3" FontFamily="Monospace" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Runtimes / Settings / About / News"/>
+              <TextBlock Grid.Column="1" Text="Ctrl+4 / Ctrl+5 / Ctrl+6 / Ctrl+7" FontFamily="Monospace" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Toggle Navigation Pane"/>
+              <TextBlock Grid.Column="1" Text="Ctrl+B" FontFamily="Monospace" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Grid>
+            <Grid ColumnDefinitions="*, Auto">
+              <TextBlock Text="Navigate Back / Forward"/>
+              <TextBlock Grid.Column="1" Text="Esc / Alt+Left / Alt+Right" FontFamily="Monospace" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Grid>
           </StackPanel>
+        </Expander>
 
-          <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="Enable AI Log Summarization" FontSize="13" FontWeight="Medium"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-              <TextBlock Text="Automatically summarize server sessions and analyze server crash reports."
-                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <!-- 11. Backup & Restore Configuration -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Archive" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Backup &amp; Restore Configuration" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Export granular settings JSON or reset to defaults." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <WrapPanel Orientation="Horizontal">
+            <Button Content="Backup Settings..." Classes="primary" Click="BtnExportBackup_Click" Margin="0,0,8,8"/>
+            <Button Content="Restore from Backup..." Classes="secondary" Click="BtnRestoreBackup_Click" Margin="0,0,8,8"/>
+            <Button Content="Reset to Defaults" Classes="secondary" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,8,8"/>
+          </WrapPanel>
+        </Expander>
+
+        <!-- 12. Diagnostics & Support -->
+        <Expander Classes="card-expander" IsExpanded="False">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto, *">
+              <lucide:LucideIcon Grid.Column="0" Kind="Activity" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Diagnostics &amp; Off-site Disaster Recovery" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Verify upstream API reachability and set secondary backup mirror path." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+          </Expander.Header>
+          <StackPanel Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Content="Check Upstream Health" Classes="secondary" Command="{Binding CheckDependenciesCommand}"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAiSummarization, Mode=TwoWay}"/>
-          </Grid>
 
-          <Grid ColumnDefinitions="140, 16, *" VerticalAlignment="Center">
-            <TextBlock Grid.Column="0" Text="AI Provider" FontSize="13" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <ComboBox Grid.Column="2" SelectedItem="{Binding AiProvider, Mode=TwoWay}" HorizontalAlignment="Stretch">
-              <x:String>Gemini</x:String>
-              <x:String>OpenAI</x:String>
-              <x:String>Anthropic</x:String>
-              <x:String>Ollama</x:String>
-            </ComboBox>
-          </Grid>
+            <ItemsControl ItemsSource="{Binding DependencyHealthItems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DependencyHealthRow">
+                  <Grid ColumnDefinitions="140, 100, *" Margin="0,3">
+                    <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{Binding StatusBrush}" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Details}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-          <Grid ColumnDefinitions="140, 16, *" VerticalAlignment="Center">
-            <TextBlock Grid.Column="0" Text="API Key" FontSize="13" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBox Grid.Column="2" Text="{Binding AiApiKey, Mode=TwoWay}"
-                     PasswordChar="*" Watermark="Enter provider API key"
-                     CornerRadius="6" Background="{DynamicResource InputBackgroundBrush}"/>
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- Section: Configuration Backup & Restore -->
-      <Border Background="{DynamicResource CardBackgroundBrush}"
-              BorderBrush="{DynamicResource CardBorderBrush}"
-              BorderThickness="1" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <lucide:LucideIcon Kind="Archive" Size="20" Foreground="#2ECC71" VerticalAlignment="Center"/>
-            <TextBlock Text="Configuration Backup &amp; Migration" FontSize="16" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            <StackPanel Spacing="4">
+              <TextBlock Text="External Off-site Backup Directory" FontSize="13" FontWeight="Medium"/>
+              <Grid ColumnDefinitions="*, 8, Auto">
+                <TextBox Grid.Column="0" Text="{Binding ExternalBackupDirectory, Mode=TwoWay}" Watermark="Optional local mirror / NAS mount"/>
+                <Button Grid.Column="2" Content="Browse..." Classes="secondary" Command="{Binding BrowseExternalBackupCommand}"/>
+              </Grid>
+            </StackPanel>
           </StackPanel>
+        </Expander>
 
-          <TextBlock Text="Export your settings, credentials, and configurations to a portable JSON backup file, or restore an existing backup from Windows, Linux, or macOS."
-                     FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-
-          <StackPanel Orientation="Horizontal" Spacing="12">
-            <Button Content="Export Settings Backup..."
-                    Click="BtnExportBackup_Click"
-                    Background="{DynamicResource InputBackgroundBrush}"
-                    Foreground="{DynamicResource TextPrimaryBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}"
-                    BorderThickness="1"
-                    Padding="16,8" CornerRadius="6" Cursor="Hand"/>
-
-            <Button Content="Restore Settings Backup..."
-                    Click="BtnRestoreBackup_Click"
-                    Background="{DynamicResource InputBackgroundBrush}"
-                    Foreground="{DynamicResource TextPrimaryBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}"
-                    BorderThickness="1"
-                    Padding="16,8" CornerRadius="6" Cursor="Hand"/>
-          </StackPanel>
-        </StackPanel>
-      </Border>
-
-      <!-- Bottom scroll margin spacer -->
-      <Border Height="32"/>
-    </StackPanel>
-  </ScrollViewer>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
 </UserControl>

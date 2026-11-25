@@ -43,7 +43,7 @@
                 <StackPanel Spacing="16" IsVisible="{Binding IsGeneralTab}">
 
                     <!-- CARD 1: ENABLE REMOTE CONTROL -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <Border Classes="card" Padding="20">
                         <StackPanel Spacing="14">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel VerticalAlignment="Center">
@@ -116,7 +116,7 @@
                                         CornerRadius="6" Padding="14,10" IsVisible="{Binding HasLocalUrl}">
                                     <Grid RowDefinitions="Auto, Auto">
                                         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
-                                            <lucide:LucideIcon Grid.Column="0" Kind="Network" Size="20" Foreground="#1E90FF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <lucide:LucideIcon Grid.Column="0" Kind="Network" Size="20" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
                                                 <TextBlock Text="Local Network (LAN)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold"/>
                                                 <TextBlock Text="{Binding LocalUrl}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
@@ -143,10 +143,10 @@
                     </Border>
 
                     <!-- CARD 2: GLOBAL AUTHENTICATION -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <Border Classes="card" Padding="20">
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="Auto, *, Auto">
-                                <lucide:LucideIcon Grid.Column="0" Kind="Key" Size="20" Foreground="#2ECC71" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <lucide:LucideIcon Grid.Column="0" Kind="Key" Size="20" Foreground="#10B981" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="Global Authentication" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="Enable or disable password requirement for the dashboard." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
@@ -203,10 +203,10 @@
                     </Border>
 
                     <!-- Admin Credentials Card -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <Border Classes="card" Padding="20">
                         <StackPanel Spacing="14">
                             <Grid ColumnDefinitions="Auto, *">
-                                <lucide:LucideIcon Grid.Column="0" Kind="ShieldCheck" Size="20" Foreground="#1E90FF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <lucide:LucideIcon Grid.Column="0" Kind="ShieldCheck" Size="20" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Admin Credentials" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="Manage the primary admin account used for dashboard login." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
@@ -234,10 +234,10 @@
                     <ItemsControl ItemsSource="{Binding Users}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:RemoteControlUserViewModel">
-                                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,12">
+                                <Border Classes="card" Padding="18" Margin="0,0,0,12">
                                     <StackPanel Spacing="12">
                                         <Grid ColumnDefinitions="Auto, *, Auto">
-                                            <lucide:LucideIcon Grid.Column="0" Kind="User" Size="20" Foreground="#1E90FF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <lucide:LucideIcon Grid.Column="0" Kind="User" Size="20" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                             <TextBox Grid.Column="1" Text="{Binding Username, Mode=TwoWay}" Watermark="Username" MaxWidth="280" HorizontalAlignment="Left"/>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                                                 <Button Command="{Binding $parent[UserControl].((vm:RemoteControlViewModel)DataContext).SaveUserCommand}" CommandParameter="{Binding}" Content="Save" Padding="12,5" CornerRadius="6" Cursor="Hand"/>

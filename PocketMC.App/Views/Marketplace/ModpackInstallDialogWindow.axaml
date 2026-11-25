@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PocketMC.App.ViewModels"
+        xmlns:lucide="using:Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.Marketplace.ModpackInstallDialogWindow"
+        x:DataType="vm:ModpackInstallViewModel"
+        Title="{Binding Title}"
+        Width="640" Height="540"
+        MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ExtendClientAreaToDecorationsHint="True"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+  <Grid Margin="22,38,22,22" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
+      <lucide:LucideIcon Kind="Package" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+      <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="Bold"
+                 Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Summary -->
+    <TextBlock Grid.Row="1" Text="{Binding SummaryText}"
+               FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+    <!-- Error/Warning Alert Banner (exact Windows AlertBorder parity) -->
+    <Border Grid.Row="2" IsVisible="{Binding HasAlert}"
+            Background="#2B1A1A" BorderBrush="#F38BA8" BorderThickness="1"
+            CornerRadius="6" Padding="12" Margin="0,0,0,10">
+      <TextBlock Text="{Binding AlertMessage}" Foreground="#F38BA8" TextWrapping="Wrap" FontSize="12"/>
+    </Border>
+
+    <!-- Concurrent Mod Items List -->
+    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+      <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ModpackDownloadItemViewModel">
+            <Border Classes="card-secondary" Margin="0,0,0,8" Padding="12">
+              <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                  <TextBlock Text="{Binding ProjectTitle}" FontWeight="SemiBold" FontSize="13"
+                             Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                  <TextBlock Text="{Binding FileName}" FontSize="11"
+                             Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StatusText}"
+                           Foreground="{Binding StatusColor}" FontSize="12" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+                <ProgressBar Grid.Row="1" Grid.ColumnSpan="2"
+                             Minimum="0" Maximum="100" Value="{Binding ProgressValue}"
+                             Height="4" Margin="0,8,0,0"
+                             IsVisible="{Binding IsDownloading}"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Overall Progress -->
+    <StackPanel Grid.Row="4" Spacing="6" Margin="0,0,0,14">
+      <TextBlock Text="{Binding OverallStatusText}" FontSize="12"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <ProgressBar Minimum="0" Maximum="100" Value="{Binding OverallProgress}"
+                   IsIndeterminate="{Binding IsIndeterminate}" Height="6" CornerRadius="3"/>
+    </StackPanel>
+
+    <!-- Footer Button -->
+    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Command="{Binding CancelOrCloseCommand}" Content="{Binding ActionButtonText}"
+              Classes="primary" MinWidth="100" Padding="16,8"/>
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:PocketMC.App.Views"
+        xmlns:lucide="using:Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.NewsPopupWindow"
+        Title="PocketMC Announcement"
+        Width="700"
+        MinWidth="520"
+        MaxWidth="780"
+        MaxHeight="720"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ApplicationBackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+    <!-- Header -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,14">
+      <Border Grid.Column="0"
+              Width="36" Height="36"
+              CornerRadius="8"
+              Background="{DynamicResource ControlFillColorSecondaryBrush}"
+              Margin="0,0,12,0">
+        <lucide:LucideIcon Kind="Megaphone" Size="18" Foreground="#E67E22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+      <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+        <TextBlock Text="PocketMC Announcement"
+                   FontSize="17"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <TextBlock Text="Important update from PocketMC"
+                   FontSize="12"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Article Body -->
+    <Border Grid.Row="1"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="18">
+      <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <views:NewsArticleView x:Name="ArticleView"/>
+      </ScrollViewer>
+    </Border>
+
+    <!-- Footer Actions -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,16,0,0">
+      <Button Content="Dismiss"
+              Click="BtnClose_Click"
+              Classes="secondary"/>
+      <Button Content="Got It, Mark as Read"
+              Click="BtnAcknowledge_Click"
+              Classes="primary"/>
+    </StackPanel>
+  </Grid>
+</Window>

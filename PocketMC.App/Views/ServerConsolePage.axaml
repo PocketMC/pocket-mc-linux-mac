@@ -1,174 +1,283 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
-             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.ServerConsolePage"
              x:DataType="vm:ServerConsoleViewModel"
-             x:CompileBindings="True"
-             Margin="16">
+             Background="Transparent">
 
-    <Grid RowDefinitions="Auto, *, Auto">
-        <!-- Top Toolbar: Console actions matching Windows ServerConsolePage.xaml -->
-        <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto">
-            <!-- Back Button -->
-            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
-                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    Padding="10,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"
-                    ToolTip.Tip="Back to Dashboard (Escape)">
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="ArrowLeft" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
+  <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20,16">
+
+    <!-- Row 0: TOOLBAR -->
+    <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto, Auto, Auto, Auto">
+
+      <Button Grid.Column="0" Command="{Binding GoBackCommand}" Classes="secondary" Padding="10,7" Margin="0,0,8,0">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="ArrowLeft" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <ToggleButton Grid.Column="1" IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+                    Padding="10,7" Margin="0,0,8,0" FontSize="12" CornerRadius="6" Cursor="Hand"
+                    ToolTip.Tip="Automatically scroll to newest console lines">
+        <TextBlock Text="Auto-scroll" FontSize="12" VerticalAlignment="Center"/>
+      </ToggleButton>
+
+      <Button Grid.Column="2" Command="{Binding CopyLogsCommand}" Classes="secondary" Padding="10,7" Margin="0,0,8,0">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Check" Size="14" Foreground="#10b981" VerticalAlignment="Center" IsVisible="{Binding IsCopied}"/>
+          <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsCopied}"/>
+          <TextBlock Text="{Binding CopyButtonText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <TextBox Grid.Column="3" Text="{Binding SearchQuery, Mode=TwoWay}"
+               Watermark="Search logs (use -term to exclude)..."
+               Padding="10,7" FontSize="12" CornerRadius="6" Margin="0,0,6,0" MinWidth="160"/>
+
+      <ToggleButton Grid.Column="4" IsChecked="{Binding IsRegexEnabled, Mode=TwoWay}"
+                    ToolTip.Tip="Toggle Regular Expression (Regex) Search"
+                    Padding="10,7" Margin="0,0,8,0" FontSize="12" FontWeight="Bold" CornerRadius="6" Cursor="Hand">
+        <TextBlock Text=".*" FontSize="12" VerticalAlignment="Center"/>
+      </ToggleButton>
+
+      <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0" VerticalAlignment="Center">
+        <ToggleButton Content="Chat" IsChecked="{Binding IsFilterChat, Mode=TwoWay}" Padding="8,5" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+        <ToggleButton Content="Info" IsChecked="{Binding IsFilterInfo, Mode=TwoWay}" Padding="8,5" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+        <ToggleButton Content="Warn" IsChecked="{Binding IsFilterWarn, Mode=TwoWay}" Padding="8,5" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+        <ToggleButton Content="Error" IsChecked="{Binding IsFilterError, Mode=TwoWay}" Padding="8,5" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+        <ToggleButton Content="Sys" IsChecked="{Binding IsFilterSystem, Mode=TwoWay}" Padding="8,5" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+      </StackPanel>
+
+      <Button Grid.Column="6" Command="{Binding NavigateToPlayersCommand}" Classes="secondary"
+              Padding="10,7" Margin="0,0,8,0"
+              ToolTip.Tip="View and manage players">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Users" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="Players" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="10" Padding="6,1">
+            <TextBlock Text="{Binding PlayerStatusText}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+          </Border>
+        </StackPanel>
+      </Button>
+
+      <Button Grid.Column="7" Command="{Binding StopServerCommand}" Classes="danger"
+              Padding="10,7" Margin="0,0,8,0" IsEnabled="{Binding IsServerOnline}"
+              ToolTip.Tip="Stop the running server gracefully">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Square" Size="12" Foreground="White" VerticalAlignment="Center"/>
+          <TextBlock Text="Stop" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <Button Grid.Column="8" Command="{Binding RestartServerCommand}" Classes="secondary"
+              Padding="10,7" Margin="0,0,8,0" IsEnabled="{Binding IsServerOnline}"
+              ToolTip.Tip="Restart the server">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="RotateCw" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="Restart" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <Button Grid.Column="9" Command="{Binding ToggleAiSummaryCommand}" Classes="primary" Padding="12,7">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Sparkles" Size="14" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="AI Summary" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <!-- Row 1: BANNERS (ReadOnly, RAM Resource Warning, Crash Report) -->
+    <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,10">
+
+      <!-- Read-Only Historical Log InfoBar -->
+      <Border IsVisible="{Binding IsReadOnlySessionLog}"
+              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+              BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" Padding="14,10">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <lucide:LucideIcon Kind="Info" Size="16" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+          <StackPanel Spacing="1">
+            <TextBlock Text="Historical Session Log (Read-Only)" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <TextBlock Text="The server is currently offline. Showing last recorded session output. Start the server to run commands."
+                       FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- High Resource Warning Bar -->
+      <Border IsVisible="{Binding IsResourceWarningVisible}"
+              Background="#1AF59E0B"
+              BorderBrush="#66F59E0B"
+              BorderThickness="1" CornerRadius="8" Padding="14,10">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <lucide:LucideIcon Grid.Column="0" Kind="TriangleAlert" Size="16" Foreground="#F59E0B" VerticalAlignment="Center" Margin="0,0,10,0"/>
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="{Binding ResourceWarningTitle}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <TextBlock Text="{Binding ResourceWarningMessage}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+          </StackPanel>
+          <Button Grid.Column="2" Command="{Binding OptimizeServerCommand}" Classes="primary"
+                  Content="Optimize" Padding="12,6" FontSize="12" IsVisible="{Binding !IsResourceWarningSuccess}"/>
+        </Grid>
+      </Border>
+
+      <!-- Expandable Crash Banner -->
+      <Border IsVisible="{Binding IsCrashBannerVisible}"
+              Background="#E81E1416"
+              BorderBrush="#FF4444"
+              BorderThickness="1,1,1,2" CornerRadius="8" Padding="14,12">
+        <StackPanel Spacing="10">
+          <Grid ColumnDefinitions="Auto, *, Auto, Auto, Auto">
+            <lucide:LucideIcon Grid.Column="0" Kind="ShieldAlert" Size="18" Foreground="#FF5555" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="Server Process Crashed" FontSize="13" FontWeight="Bold" Foreground="#FF6B6B"/>
+              <TextBlock Text="The server exited unexpectedly. Analyze inline with AI or copy the crash context below."
+                         FontSize="11" Foreground="#D4D4D8" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Button Grid.Column="2" Command="{Binding AnalyzeCrashCommand}" Classes="primary" Padding="10,6" Margin="0,0,8,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <lucide:LucideIcon Kind="Sparkles" Size="13" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="AI Analyze" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              </StackPanel>
             </Button>
-
-            <!-- Auto-scroll Toggle -->
-            <ToggleButton Grid.Column="1" IsChecked="{Binding AutoScroll, Mode=TwoWay}"
-                          Content="Auto-scroll" FontSize="12" FontWeight="Medium"
-                          Padding="12,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"/>
-
-            <!-- Copy Logs -->
-            <Button Grid.Column="2" Command="{Binding CopyLogsCommand}"
-                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    Padding="10,6" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"
-                    ToolTip.Tip="Copy logs to clipboard">
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="Check" Size="14" Foreground="#10b981" VerticalAlignment="Center" IsVisible="{Binding IsCopied}"/>
-                    <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsCopied}"/>
-                    <TextBlock Text="{Binding CopyButtonText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
+            <Button Grid.Column="3" Command="{Binding CopyCrashReportCommand}" Classes="secondary" Padding="10,6" Margin="0,0,8,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <lucide:LucideIcon Kind="Copy" Size="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="Copy Report" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              </StackPanel>
             </Button>
+            <Button Grid.Column="4" Command="{Binding DismissCrashBannerCommand}" Classes="subtle" Padding="6" ToolTip.Tip="Dismiss crash banner">
+              <lucide:LucideIcon Kind="X" Size="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </Button>
+          </Grid>
 
-            <!-- Search Logs Input -->
-            <TextBox Grid.Column="3" Text="{Binding SearchQuery, Mode=TwoWay}"
-                     Watermark="Search logs..." FontSize="12"
-                     Margin="0,0,6,0" MinWidth="160" Height="32" CornerRadius="6"
-                     VerticalContentAlignment="Center"/>
+          <Border Background="#99000000" BorderBrush="#40FF5555" BorderThickness="1" CornerRadius="6" Padding="10,8" MaxHeight="140">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <SelectableTextBlock Text="{Binding CrashLogText}"
+                                   FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace"
+                                   FontSize="11" Foreground="#FCA5A5" TextWrapping="Wrap"/>
+            </ScrollViewer>
+          </Border>
+        </StackPanel>
+      </Border>
+    </StackPanel>
 
-            <!-- Regex ToggleButton -->
-            <ToggleButton Grid.Column="4" IsChecked="{Binding IsRegexEnabled, Mode=TwoWay}"
-                          Content=".*" FontSize="12" FontWeight="Bold"
-                          Width="32" Height="32" Padding="0" Margin="0,0,12,0" CornerRadius="6"
-                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                          Cursor="Hand" ToolTip.Tip="Use Regular Expressions"/>
+    <!-- Row 2: TERMINAL + COLLAPSIBLE AI INTELLIGENCE SIDE DRAWER -->
+    <Grid Grid.Row="2" ColumnDefinitions="*, Auto">
 
-            <!-- Log Filter ToggleButtons -->
-            <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="0,0,12,0">
-                <ToggleButton Content="Chat" IsChecked="{Binding IsFilterChat, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
-                <ToggleButton Content="Info" IsChecked="{Binding IsFilterInfo, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
-                <ToggleButton Content="Warn" IsChecked="{Binding IsFilterWarn, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
-                <ToggleButton Content="Error" IsChecked="{Binding IsFilterError, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
-                <ToggleButton Content="Sys" IsChecked="{Binding IsFilterSystem, Mode=TwoWay}" Padding="8,4" FontSize="11" CornerRadius="4" Cursor="Hand"/>
+      <!-- Left: Terminal Output Area -->
+      <Border Grid.Column="0"
+              Background="#D916161B"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" Padding="12">
+        <Grid RowDefinitions="Auto, *">
+          <Border Grid.Row="0" Background="{DynamicResource ControlFillColorDefaultBrush}"
+                  CornerRadius="6" Padding="12,8" Margin="0,0,0,10"
+                  BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Ellipse Width="8" Height="8" Fill="{Binding StatusDotBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Console: {0}'}"
+                           FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}" CornerRadius="4" Padding="6,2">
+                  <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </Border>
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding LogEntryCount, StringFormat='{}{0} entries'}"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
+          <ScrollViewer Grid.Row="1" Name="LogScrollViewer"
+                        HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding LogLines}" HorizontalAlignment="Stretch">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LogLine">
+                  <SelectableTextBlock Text="{Binding Text}"
+                                       Foreground="{Binding ColorBrush}"
+                                       FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace"
+                                       FontSize="12.5"
+                                       LineHeight="19"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Stretch"
+                                       Margin="0,1">
+                    <SelectableTextBlock.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="AI Analyze Selection" Click="OnAnalyzeLogLineClick"/>
+                        <MenuItem Header="Copy Line" Click="OnCopyLogLineClick"/>
+                      </ContextMenu>
+                    </SelectableTextBlock.ContextMenu>
+                  </SelectableTextBlock>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
+      <!-- Right: Collapsible AI Intelligence Side Panel -->
+      <Border Grid.Column="1"
+              Width="390"
+              Margin="12,0,0,0"
+              IsVisible="{Binding IsAiPanelOpen}"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" Padding="14">
+        <Grid RowDefinitions="Auto, Auto, *">
+
+          <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,10">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <lucide:LucideIcon Kind="Sparkles" Size="16" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+              <TextBlock Text="AI Intelligence" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <Button Grid.Column="1" Command="{Binding SummarizeNowCommand}" Classes="subtle" Padding="6,4" Margin="0,0,4,0"
+                    ToolTip.Tip="Regenerate session summary from current log">
+              <lucide:LucideIcon Kind="RefreshCw" Size="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </Button>
+            <Button Grid.Column="2" Command="{Binding CloseAiPanelCommand}" Classes="subtle" Padding="6,4" ToolTip.Tip="Close AI panel">
+              <lucide:LucideIcon Kind="X" Size="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </Button>
+          </Grid>
+
+          <!-- Action / Loading Subheader -->
+          <StackPanel Grid.Row="1" Spacing="6" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Button Command="{Binding SummarizeNowCommand}" Classes="secondary" Padding="10,5" FontSize="11" Content="Summarize Session"/>
+              <Button Command="{Binding NavigateToAiDiagnosticCommand}" Classes="secondary" Padding="10,5" FontSize="11" Content="Full AI Diagnostics"/>
             </StackPanel>
 
-            <!-- AI Summary Action Button -->
-            <Button Grid.Column="6" Command="{Binding NavigateToAiDiagnosticCommand}"
-                    Classes="ai-action"
-                    Padding="10,6" CornerRadius="6" Cursor="Hand"
-                    ToolTip.Tip="Generate AI session summary">
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="Sparkles" Size="14" Foreground="White" VerticalAlignment="Center"/>
-                    <TextBlock Text="AI Summary" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
+            <StackPanel IsVisible="{Binding IsAiLoading}" Spacing="6" Margin="0,4,0,0">
+              <TextBlock Text="{Binding AiStatusText}" FontSize="12" Foreground="{DynamicResource AccentPrimaryBrush}" FontWeight="SemiBold"/>
+              <ProgressBar IsIndeterminate="True" Height="4"/>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Rendered Markdown Summary / Analysis -->
+          <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ContentControl x:Name="AiMarkdownHost"/>
+          </ScrollViewer>
         </Grid>
-
-        <!-- Main Console Terminal Area -->
-        <Border Grid.Row="1" 
-                Background="#1E1E1E" 
-                CornerRadius="8" 
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
-                BorderThickness="1" 
-                Padding="12">
-            <Grid RowDefinitions="Auto, Auto, *">
-                <!-- Terminal Header Bar -->
-                <Border Grid.Row="0" 
-                        Background="{DynamicResource ControlFillColorDefaultBrush}" 
-                        CornerRadius="6" 
-                        Padding="12,8" 
-                        Margin="0,0,0,10"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" 
-                        BorderThickness="1">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                            <Ellipse Width="8" Height="8" Fill="#4CAF50" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Active Terminal: {0}'}"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock Text="{Binding LogEntryCount, StringFormat='{}{0} entries'}" Grid.Column="1"
-                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-
-                <!-- Crash Diagnostics Warning Banner -->
-                <Border Grid.Row="1" 
-                        Background="#EE1A1A1A" 
-                        BorderBrush="#FF4444" 
-                        BorderThickness="1,1,1,2" 
-                        CornerRadius="8" 
-                        Padding="12,8" 
-                        Margin="0,0,0,12" 
-                        IsVisible="{Binding IsCrashed}">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <lucide:LucideIcon Kind="ShieldAlert" Size="16" Foreground="#FF6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Critical Crash Detected! Run AI Diagnostics to analyze root causes and fix errors." 
-                                       Foreground="#FF6B6B" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <Button Grid.Column="1" Command="{Binding NavigateToAiDiagnosticCommand}" 
-                                Classes="ai-action" CornerRadius="4" Padding="10,4" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <lucide:LucideIcon Kind="Sparkles" Size="12" Foreground="White" VerticalAlignment="Center"/>
-                                <TextBlock Text="Analyze with AI" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </Border>
-
-                <!-- Scrollable Log Container -->
-                <ScrollViewer Grid.Row="2" Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding LogLines}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:LogLine">
-                                <SelectableTextBlock Text="{Binding Text}"
-                                                     Foreground="{Binding ColorBrush}"
-                                                     FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace"
-                                                     FontSize="13"
-                                                     LineHeight="20"
-                                                     TextWrapping="Wrap"
-                                                     Margin="0,0,0,2"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
-        </Border>
-
-        <!-- Command Input Box -->
-        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,8,0,0">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding CommandInput, Mode=TwoWay}" 
-                     KeyDown="OnCommandBoxKeyDown" 
-                     Watermark="Type a command..." 
-                     FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" 
-                     FontSize="13" 
-                     Padding="12,8"
-                     VerticalContentAlignment="Center"
-                     Height="38"
-                     CornerRadius="6"
-                     Margin="0,0,8,0"/>
-            <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Cursor="Hand"
-                    Padding="16,0" Height="38"
-                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                    CornerRadius="6">
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="Send" Size="14" Foreground="White" VerticalAlignment="Center"/>
-                    <TextBlock Text="Send" FontWeight="SemiBold" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-        </Grid>
+      </Border>
     </Grid>
+
+    <!-- Row 3: COMMAND INPUT BAR -->
+    <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Margin="0,12,0,0">
+      <TextBox Grid.Column="0" Name="CommandTextBox"
+               Text="{Binding CommandInput, Mode=TwoWay}"
+               Watermark="Type a server command (e.g., list, say Hello)..."
+               Padding="14,10" FontSize="13" CornerRadius="6"
+               FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace"
+               IsEnabled="{Binding IsServerOnline}"
+               KeyDown="OnCommandBoxKeyDown"/>
+
+      <Button Grid.Column="1" Command="{Binding SendCommandCommand}" Classes="primary"
+              Margin="10,0,0,0" Padding="20,10" IsEnabled="{Binding IsServerOnline}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Send" Size="14" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="Send" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+    </Grid>
+  </Grid>
 </UserControl>

@@ -20,10 +20,10 @@
         <Border Grid.Row="0" Margin="0,0,0,16" Padding="0,0,0,12" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource CardBorderBrush}">
             <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <lucide:LucideIcon Kind="Sparkles" Size="22" Foreground="#3b82f6"/>
-                    <TextBlock x:Name="TxtHeader" Text="What's New in PocketMC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <lucide:LucideIcon Kind="Sparkles" Size="22" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                    <TextBlock x:Name="TxtHeader" Text="What's New in PocketMC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </StackPanel>
-                <TextBlock x:Name="TxtSubheader" Text="Highlights, features, and platform enhancements." FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock x:Name="TxtSubheader" Text="Highlights, features, and platform enhancements." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
         </Border>
 
@@ -35,13 +35,13 @@
                         <DataTemplate x:DataType="wn:ChangelogSection">
                             <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,12">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold" Foreground="#3b82f6"/>
+                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
                                     <ItemsControl ItemsSource="{Binding Items}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="x:String">
                                                 <Grid ColumnDefinitions="Auto, *" Margin="0,4">
-                                                    <Border Grid.Column="0" Width="16" Height="16" CornerRadius="8" Background="#1e3a5f" Margin="0,2,10,0" VerticalAlignment="Top">
-                                                        <lucide:LucideIcon Kind="Check" Size="10" Foreground="#60a5fa" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="0" Width="16" Height="16" CornerRadius="8" Background="{DynamicResource ControlFillColorSecondaryBrush}" Margin="0,2,10,0" VerticalAlignment="Top">
+                                                        <lucide:LucideIcon Kind="Check" Size="10" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <TextBlock Grid.Column="1" Text="{Binding}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" LineHeight="18" VerticalAlignment="Center"/>
                                                 </Grid>
@@ -66,7 +66,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="1" Click="OnGotIt_Click" Background="#2563eb" Foreground="White" Padding="20,8" CornerRadius="8" HorizontalAlignment="Right">
+                <Button Grid.Column="1" Click="OnGotIt_Click" Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Padding="20,8" CornerRadius="8" HorizontalAlignment="Right">
                     <TextBlock Text="Got It" FontWeight="Bold" FontSize="13"/>
                 </Button>
             </Grid>

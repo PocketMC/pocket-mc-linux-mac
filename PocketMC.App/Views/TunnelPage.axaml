@@ -1,203 +1,359 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PocketMC.App.ViewModels"
              xmlns:lucide="using:Lucide.Avalonia"
-             xmlns:tunnels="using:PocketMC.RemoteControl.Tunnels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="PocketMC.App.Views.TunnelPage"
-             x:DataType="vm:TunnelViewModel">
+             x:DataType="vm:TunnelViewModel"
+             Background="Transparent">
 
-    <Grid RowDefinitions="Auto, *">
-        <!-- HEADER -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="16">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Background="Transparent" Padding="8" CornerRadius="8" Margin="0,0,12,0">
-                    <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                </Button>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Internet Tunnels" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="Expose server ports to the internet securely via Playit.gg" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                    <Button Command="{Binding OpenPortsMapCommand}" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,6" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <lucide:LucideIcon Kind="Network" Size="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="Interactive Ports Map" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding RefreshAllCommand}" Background="Transparent" Padding="8" CornerRadius="8" VerticalAlignment="Center">
-                        <lucide:LucideIcon Kind="RefreshCw" Size="18" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid Margin="36,20,36,28" MaxWidth="920" RowDefinitions="Auto, Auto, Auto, Auto">
+      <!-- HEADER BAR -->
+      <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,22">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+          <Button Command="{Binding GoBackCommand}" Classes="subtle" Padding="6" ToolTip.Tip="Back">
+            <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+          </Button>
+          <StackPanel VerticalAlignment="Center" Spacing="2">
+            <TextBlock Text="Internet Tunnels"
+                       FontSize="24" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <TextBlock Text="Expose server ports to the internet securely via Playit.gg"
+                       FontSize="13"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+          </StackPanel>
+        </StackPanel>
 
-        <!-- CONTENT -->
-        <ScrollViewer Grid.Row="1" Padding="24">
-            <StackPanel Spacing="16">
-                <!-- ERROR MESSAGE -->
-                <Border Background="#2a1818" BorderBrush="#ef4444" BorderThickness="1" CornerRadius="8" Padding="16" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <Grid ColumnDefinitions="Auto, *">
-                        <lucide:LucideIcon Grid.Column="0" Kind="ShieldAlert" Size="20" Foreground="#ef4444" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" Foreground="#fecaca" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                    </Grid>
-                </Border>
-
-                <Grid ColumnDefinitions="*, 20, 1.5*">
-                    <!-- LEFT COLUMN: AGENT & CREATE TUNNEL -->
-                    <StackPanel Grid.Column="0" Spacing="16">
-                        <!-- AGENT STATUS CARD -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                            <StackPanel Spacing="16">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <lucide:LucideIcon Kind="Activity" Size="20" Foreground="#1E90FF"/>
-                                    <TextBlock Text="Playit Agent Status" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-
-                                <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" Margin="4,0,0,0">
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Status:" FontWeight="Medium" Opacity="0.7" Margin="0,0,8,4"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AgentStatus}" FontWeight="Bold" Foreground="{Binding IsAgentRunning, Converter={x:Static ObjectConverters.IsNull}, ConverterParameter='#2ecc71'}"/>
-
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Agent ID:" FontWeight="Medium" Opacity="0.7" Margin="0,4,8,0"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AgentId}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0"/>
-                                </Grid>
-
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                                    <Button Command="{Binding StartAgentCommand}" IsEnabled="{Binding !IsAgentRunning}" Background="#2ecc71" Foreground="White" CornerRadius="8" Padding="12,6">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <lucide:LucideIcon Kind="Play" Size="14" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Start" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Command="{Binding StopAgentCommand}" IsEnabled="{Binding IsAgentRunning}" Background="#e74c3c" Foreground="White" CornerRadius="8" Padding="12,6">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <lucide:LucideIcon Kind="Square" Size="14" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Stop" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Command="{Binding OpenConsoleCommand}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="8" Padding="12,6">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <lucide:LucideIcon Kind="Terminal" Size="14" VerticalAlignment="Center"/>
-                                            <TextBlock Text="View Console" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Command="{Binding OpenSetupWizardCommand}" IsVisible="{Binding !IsLinked}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="8" Padding="12,6">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <lucide:LucideIcon Kind="Link" Size="14" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Link Account" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Command="{Binding UnlinkAccountCommand}" IsVisible="{Binding IsLinked}" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Foreground="#e74c3c" CornerRadius="8" Padding="12,6">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <lucide:LucideIcon Kind="Unlink" Size="14" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Unlink Account" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- CREATE TUNNEL CARD -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" IsVisible="{Binding IsLinked}">
-                            <StackPanel Spacing="16">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <lucide:LucideIcon Kind="Plus" Size="20" Foreground="#1E90FF"/>
-                                    <TextBlock Text="Create New Tunnel" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-
-                                <StackPanel Spacing="12">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Tunnel Name" FontSize="12" Opacity="0.7"/>
-                                        <TextBox Text="{Binding NewTunnelName}" Watermark="e.g. My Java Server" CornerRadius="8"/>
-                                    </StackPanel>
-
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Local Port" FontSize="12" Opacity="0.7"/>
-                                        <TextBox Text="{Binding NewTunnelPort}" Watermark="e.g. 25565" CornerRadius="8"/>
-                                    </StackPanel>
-
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Tunnel Type" FontSize="12" Opacity="0.7"/>
-                                        <ComboBox SelectedItem="{Binding NewTunnelType}" ItemsSource="{Binding TunnelTypes}" HorizontalAlignment="Stretch" CornerRadius="8"/>
-                                    </StackPanel>
-
-                                    <Button Command="{Binding CreateTunnelCommand}" IsEnabled="{Binding !IsCreatingTunnel}" Background="#1E90FF" Foreground="White" CornerRadius="8" HorizontalAlignment="Stretch" Padding="12" Margin="0,8,0,0">
-                                        <TextBlock Text="Create Tunnel" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    </Button>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- RIGHT COLUMN: ACTIVE TUNNELS LIST -->
-                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="16">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                    <lucide:LucideIcon Kind="Globe" Size="20" Foreground="#1E90FF"/>
-                                    <TextBlock Text="Active Tunnels" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding OpenCreateTunnelDialogCommand}" IsVisible="{Binding IsLinked}" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="10,6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <lucide:LucideIcon Kind="Plus" Size="14" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Create Tunnel" FontWeight="Medium" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-
-                            <!-- EMPTY STATE -->
-                            <StackPanel Spacing="12" Margin="0,24" HorizontalAlignment="Center" IsVisible="{Binding !Tunnels.Count}">
-                                <lucide:LucideIcon Kind="Network" Size="48" Opacity="0.3" HorizontalAlignment="Center"/>
-                                <TextBlock Text="No active tunnels found" FontSize="14" Opacity="0.7" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Create a tunnel or link your agent to expose your servers." FontSize="12" Opacity="0.5" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="280"/>
-                            </StackPanel>
-
-                            <!-- LIST -->
-                            <ItemsControl ItemsSource="{Binding Tunnels}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="tunnels:TunnelData">
-                                        <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,10">
-                                            <Grid ColumnDefinitions="*, Auto">
-                                                <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                        <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="4" Padding="6,2">
-                                                            <TextBlock Text="{Binding TunnelTypeDisplay}" FontSize="10" FontWeight="SemiBold" Opacity="0.8"/>
-                                                        </Border>
-                                                    </StackPanel>
-
-                                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                                        <TextBlock Text="Local Port:" FontSize="12" Opacity="0.7"/>
-                                                        <TextBlock Text="{Binding Port}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                    </StackPanel>
-
-                                                    <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasPublicAddress}">
-                                                        <TextBlock Text="Public IP:" FontSize="12" Opacity="0.7"/>
-                                                        <SelectableTextBlock Text="{Binding PublicAddress}" FontSize="12" FontWeight="Bold" Foreground="#1E90FF"/>
-                                                    </StackPanel>
-                                                    
-                                                    <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding !HasPublicAddress}">
-                                                        <TextBlock Text="Waiting for allocation..." FontSize="12" Opacity="0.5" FontStyle="Italic"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                    <ToggleSwitch IsChecked="{Binding IsEnabled}" Command="{Binding $parent[UserControl].((vm:TunnelViewModel)DataContext).ToggleTunnelCommand}" CommandParameter="{Binding}" OnContent="" OffContent="" VerticalAlignment="Center"/>
-                                                    <Button Command="{Binding $parent[UserControl].((vm:TunnelViewModel)DataContext).DeleteTunnelCommand}" CommandParameter="{Binding Id}" Background="Transparent" Foreground="#e74c3c" Padding="8" CornerRadius="8" VerticalAlignment="Center">
-                                                        <lucide:LucideIcon Kind="Trash2" Size="16"/>
-                                                    </Button>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Command="{Binding OpenPortsMapCommand}" Classes="secondary" Padding="12,7">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="Network" Size="15"/>
+              <TextBlock Text="Interactive Ports Map" VerticalAlignment="Center"/>
             </StackPanel>
-        </ScrollViewer>
+          </Button>
+          <Button Command="{Binding RefreshAllCommand}" Classes="subtle" Padding="8,7" ToolTip.Tip="Refresh">
+            <lucide:LucideIcon Kind="RefreshCw" Size="15" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- NETWORK STATUS CARD -->
+      <Border Grid.Row="1" Classes="card" Padding="20,16" Margin="0,0,0,14">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="Playit.gg Network Status"
+                         FontSize="16" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                         VerticalAlignment="Center"/>
+              <Border Background="{Binding NetworkStatusBg}"
+                      CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                <TextBlock Text="{Binding NetworkStatusBadgeText}"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="{Binding NetworkStatusFg}"/>
+              </Border>
+            </StackPanel>
+            <TextBlock Text="{Binding NetworkStatusSummary}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+          </StackPanel>
+
+          <Button Grid.Column="1"
+                  Command="{Binding ViewNetworkStatusCommand}"
+                  Classes="secondary"
+                  Padding="14,7"
+                  VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="Activity" Size="14"/>
+              <TextBlock Text="View Network Status" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- PLAYIT AGENT CARD (Gradient Thanks Card matching Windows) -->
+      <Border Grid.Row="2"
+              CornerRadius="10"
+              BorderThickness="1"
+              Padding="22,18"
+              Margin="0,0,0,16">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#1F10B981" Offset="0"/>
+            <GradientStop Color="#163B82F6" Offset="0.6"/>
+            <GradientStop Color="#1A1E293B" Offset="1"/>
+          </LinearGradientBrush>
+        </Border.Background>
+        <Border.BorderBrush>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#5510B981" Offset="0"/>
+            <GradientStop Color="#443B82F6" Offset="1"/>
+          </LinearGradientBrush>
+        </Border.BorderBrush>
+
+        <StackPanel Spacing="14">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Special Thanks to Playit.gg"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           VerticalAlignment="Center"/>
+                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                        CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding AgentStatus}"
+                             FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource AccentPrimaryBrush}"/>
+                </Border>
+              </StackPanel>
+              <TextBlock Text="{Binding AgentDetailText}"
+                         FontSize="12" TextWrapping="Wrap"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+              <TextBlock Text="{Binding AgentId, StringFormat='Agent ID: {0}'}"
+                         FontSize="11"
+                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+              <Button Command="{Binding StartAgentCommand}"
+                      IsVisible="{Binding !IsAgentRunning}"
+                      Classes="primary"
+                      Padding="14,7">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <lucide:LucideIcon Kind="Play" Size="14"/>
+                  <TextBlock Text="Connect" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding StopAgentCommand}"
+                      IsVisible="{Binding IsAgentRunning}"
+                      Classes="danger"
+                      Padding="14,7">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <lucide:LucideIcon Kind="Square" Size="14" Foreground="White"/>
+                  <TextBlock Text="Disconnect" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding OpenSetupWizardCommand}" Classes="secondary" Padding="12,7">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <lucide:LucideIcon Kind="Link" Size="14"/>
+                  <TextBlock Text="Setup Agent" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding OpenConsoleCommand}" Classes="secondary" Padding="10,7" ToolTip.Tip="Agent Console">
+                <lucide:LucideIcon Kind="Terminal" Size="15"/>
+              </Button>
+              <Button Command="{Binding UnlinkAccountCommand}"
+                      IsVisible="{Binding IsLinked}"
+                      Classes="subtle"
+                      Padding="10,7"
+                      ToolTip.Tip="Unlink Playit Account">
+                <lucide:LucideIcon Kind="Unlink" Size="15" Foreground="#EF4444"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- Error Strip -->
+          <Border Background="#22EF4444" BorderBrush="#55EF4444" BorderThickness="1" CornerRadius="6" Padding="10,8"
+                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#FCA5A5" TextWrapping="Wrap"/>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- FRAMED TUNNELS MANAGEMENT SECTION -->
+      <Border Grid.Row="3" Classes="card" Padding="20,16">
+        <StackPanel Spacing="14">
+          <!-- Title + Create Tunnel Row -->
+          <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0"
+                       Text="Active Tunnels"
+                       FontSize="17" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                       VerticalAlignment="Center"/>
+            <Button Grid.Column="1"
+                    Command="{Binding OpenCreateTunnelDialogCommand}"
+                    Classes="primary"
+                    Padding="12,7">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <lucide:LucideIcon Kind="Plus" Size="14"/>
+                <TextBlock Text="Create Tunnel" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- Quick Inline Create Form -->
+          <Border Classes="card-secondary" Padding="12" IsEnabled="{Binding !IsCreatingTunnel}">
+            <WrapPanel VerticalAlignment="Center">
+              <TextBox Text="{Binding NewTunnelName, Mode=TwoWay}"
+                       Watermark="Tunnel name (e.g. my-smp)"
+                       Width="210" Margin="0,4,10,4"/>
+              <ComboBox ItemsSource="{Binding TunnelTypes}"
+                        SelectedItem="{Binding NewTunnelType, Mode=TwoWay}"
+                        Width="190" Margin="0,4,10,4"/>
+              <NumericUpDown Value="{Binding NewTunnelPort, Mode=TwoWay}"
+                             Minimum="1" Maximum="65535" FormatString="F0"
+                             Width="120" Margin="0,4,10,4"/>
+              <Button Content="Quick Create"
+                      Command="{Binding CreateTunnelCommand}"
+                      Classes="secondary"
+                      Padding="14,7" Margin="0,4,0,4"/>
+            </WrapPanel>
+          </Border>
+
+          <!-- Skeleton Loader -->
+          <StackPanel Spacing="10" IsVisible="{Binding IsLoading}">
+            <Border Classes="skeleton-card" Padding="14">
+              <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                <Border Grid.Row="0" Grid.Column="0" Classes="skeleton-element" Height="16" Width="180" HorizontalAlignment="Left" Margin="0,0,0,10"/>
+                <Border Grid.Row="0" Grid.Column="1" Classes="skeleton-element" Height="22" Width="64"/>
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                  <Border Classes="skeleton-element" Height="28" Width="120"/>
+                  <Border Classes="skeleton-element" Height="28" Width="210"/>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </StackPanel>
+
+          <!-- Empty State -->
+          <TextBlock Text="{Binding EmptyTunnelsMessage}"
+                     FontSize="13"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     HorizontalAlignment="Center"
+                     Margin="0,18"
+                     IsVisible="{Binding !HasTunnels}"/>
+
+          <!-- Tunnel Cards -->
+          <ItemsControl ItemsSource="{Binding TunnelRows}" IsVisible="{Binding HasTunnels}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TunnelRowViewModel">
+                <Border Classes="card-secondary" Padding="16,14" Margin="0,0,0,10">
+                  <StackPanel Spacing="10">
+                    <!-- Row 1: Globe + Editable Name + Save + Toggle + Delete + Copy -->
+                    <Grid ColumnDefinitions="Auto, *, Auto, Auto, Auto, Auto">
+                      <lucide:LucideIcon Grid.Column="0" Kind="Globe" Size="16"
+                                         Foreground="{DynamicResource AccentPrimaryBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                      <TextBox Grid.Column="1"
+                               Text="{Binding EditableName, Mode=TwoWay}"
+                               FontSize="14" FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+
+                      <Button Grid.Column="2"
+                              Content="Save"
+                              Command="{Binding SaveNameCommand}"
+                              IsEnabled="{Binding IsNameChanged}"
+                              Classes="primary"
+                              Padding="10,4" FontSize="11"
+                              Margin="0,0,10,0"
+                              VerticalAlignment="Center"/>
+
+                      <ToggleSwitch Grid.Column="3"
+                                    IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                    Command="{Binding ToggleEnabledCommand}"
+                                    OnContent="" OffContent=""
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"/>
+
+                      <Button Grid.Column="4"
+                              Command="{Binding DeleteCommand}"
+                              Classes="secondary"
+                              Padding="7" Margin="0,0,6,0"
+                              ToolTip.Tip="Delete tunnel">
+                        <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="#EF4444"/>
+                      </Button>
+
+                      <Button Grid.Column="5"
+                              Command="{Binding CopyAddressCommand}"
+                              Classes="secondary"
+                              Padding="7"
+                              ToolTip.Tip="Copy public address">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <lucide:LucideIcon Kind="Copy" Size="14" IsVisible="{Binding !IsCopied}"/>
+                          <lucide:LucideIcon Kind="Check" Size="14" Foreground="#10B981" IsVisible="{Binding IsCopied}"/>
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+
+                    <!-- Row 2: Green Port Badge + Save + TunnelType Pill + Public Address Pill -->
+                    <Grid ColumnDefinitions="Auto, Auto, Auto, *">
+                      <Border Grid.Column="0"
+                              Background="#2210B981"
+                              BorderBrush="#8010B981"
+                              BorderThickness="1"
+                              CornerRadius="6"
+                              Padding="8,4"
+                              Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <TextBlock Text="Port" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" VerticalAlignment="Center"/>
+                          <TextBox Text="{Binding EditablePort, Mode=TwoWay}"
+                                   FontSize="13" FontWeight="Bold"
+                                   Foreground="#10B981"
+                                   Background="Transparent" BorderThickness="0"
+                                   MinWidth="52" MaxWidth="82" Padding="2"
+                                   IsEnabled="{Binding HasAgentOrigin}"
+                                   VerticalAlignment="Center"/>
+                        </StackPanel>
+                      </Border>
+
+                      <Button Grid.Column="1"
+                              Content="Save"
+                              Command="{Binding SavePortCommand}"
+                              IsEnabled="{Binding IsPortChanged}"
+                              Classes="primary"
+                              Padding="10,4" FontSize="11"
+                              Margin="0,0,12,0"
+                              VerticalAlignment="Center"/>
+
+                      <Border Grid.Column="2"
+                              Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                              CornerRadius="6" Padding="10,5"
+                              Margin="0,0,12,0"
+                              VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TunnelTypeDisplay}"
+                                   FontSize="12" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                      </Border>
+
+                      <Border Grid.Column="3"
+                              Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                              BorderBrush="{DynamicResource AccentPrimaryBrush}"
+                              BorderThickness="1"
+                              CornerRadius="6" Padding="10,5"
+                              IsVisible="{Binding HasPublicAddress}"
+                              VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <lucide:LucideIcon Kind="Link" Size="13" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+                          <TextBlock Text="{Binding PublicAddress}"
+                                     FontSize="13" FontWeight="Medium"
+                                     Foreground="{DynamicResource AccentPrimaryBrush}"
+                                     TextTrimming="CharacterEllipsis"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                      </Border>
+
+                      <TextBlock Grid.Column="3"
+                                 Text="{Binding LimitErrorText}"
+                                 Foreground="#F59E0B"
+                                 FontSize="12"
+                                 VerticalAlignment="Center"
+                                 IsVisible="{Binding !HasPublicAddress}"/>
+                    </Grid>
+
+                    <!-- Inline Error -->
+                    <TextBlock Text="{Binding InlineError}"
+                               FontSize="12"
+                               Foreground="#EF4444"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding HasInlineError}"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
     </Grid>
+  </ScrollViewer>
 </UserControl>

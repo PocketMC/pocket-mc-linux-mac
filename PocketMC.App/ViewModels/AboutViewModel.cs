@@ -21,7 +21,7 @@ public partial class AboutViewModel : ObservableObject
     private readonly IInstanceService _instanceService;
     private readonly WhatsNewService? _whatsNewService;
 
-    public string AppVersion => "Version 1.0.4-beta (Linux & macOS Native)";
+    public string AppVersion => $"Version {AppConfig.AppVersion}";
 
     [ObservableProperty]
     private string _currentDataRoot = string.Empty;

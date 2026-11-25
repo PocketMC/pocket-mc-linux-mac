@@ -27,8 +27,9 @@ namespace PocketMC.Core.Models
         public bool StartMinimizedToTray { get; set; } = false;
         public bool MinimizeToTrayOnClose { get; set; } = false;
 
-        // Power Management
+        // Power Management & Behavior
         public bool KeepComputerAwakeWhileServersRunning { get; set; } = true;
+        public bool EnableTelemetry { get; set; } = true;
 
         // CurseForge
         public string? CurseForgeApiKey { get; set; }
@@ -38,9 +39,12 @@ namespace PocketMC.Core.Models
         public CloudBackupSettings CloudBackups { get; set; } = new();
         public Dictionary<string, CloudOAuthTokenSet> CloudTokens { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-        // AI Diagnostician
+        // AI Diagnostician & Session Summarization
         public string AiProvider { get; set; } = "Gemini";
         public bool EnableAiSummarization { get; set; } = false;
+        public bool AutoSummarizeOnStop { get; set; } = true;
+        public bool AutoSummarizeOnCrash { get; set; } = true;
+        public string OllamaMode { get; set; } = "Local";
         public Dictionary<string, string> AiApiKeys { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> AiModels { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> AiEndpoints { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -48,6 +52,26 @@ namespace PocketMC.Core.Models
         public string? GetCurrentAiKey() => AiApiKeys.TryGetValue(AiProvider, out var key) ? key : null;
         public string? GetCurrentAiModel() => AiModels.TryGetValue(AiProvider, out var model) ? model : null;
         public string? GetCurrentAiEndpoint() => AiEndpoints.TryGetValue(AiProvider, out var ep) ? ep : null;
+
+        public bool IsAiConfigured()
+        {
+            if (string.Equals(AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.Equals(OllamaMode, "Cloud", StringComparison.OrdinalIgnoreCase))
+                {
+                    return !string.IsNullOrWhiteSpace(GetCurrentAiKey());
+                }
+
+                return true;
+            }
+
+            if (string.Equals(AiProvider, "OpenAI-Compatible", StringComparison.OrdinalIgnoreCase))
+            {
+                return !string.IsNullOrWhiteSpace(GetCurrentAiEndpoint());
+            }
+
+            return !string.IsNullOrWhiteSpace(GetCurrentAiKey());
+        }
 
         // Remote Control & Networking
         public RemoteControlSettings RemoteControl { get; set; } = new();

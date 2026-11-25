@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using PocketMC.App.ViewModels;
 using PocketMC.Core.Models;
@@ -151,6 +152,70 @@ namespace PocketMC.Tests
                 vm.LoadLists();
 
                 Assert.Contains("ExternalBannedPlayer", vm.BannedPlayers);
+            }
+            finally
+            {
+                vm?.Dispose();
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task PlayerManagementViewModel_PopulatesRichCardsBanMetadataAndTogglesWhitelist()
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+            PlayerManagementViewModel? vm = null;
+
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(tempDir, "server.properties"), "white-list=false\nmax-players=20\n");
+                await File.WriteAllTextAsync(Path.Combine(tempDir, "banned-players.json"), JsonSerializer.Serialize(new[]
+                {
+                    new { name = "Griefer99", reason = "TNT spam", source = "Admin", expires = "forever", created = "2026-01-01" }
+                }));
+
+                var instance = new ServerInstance
+                {
+                    Name = "SMP",
+                    Slug = "smp",
+                    Path = tempDir,
+                    EngineType = EngineType.Paper
+                };
+
+                var instService = new FakeInstanceService();
+                var playerService = new FakePlayerService2();
+                playerService.Online.Add("Steve");
+                playerService.Ops.Add("Steve");
+                playerService.Whitelist.Add("Steve");
+                var processRunner = new FakeProcessRunner();
+
+                vm = new PlayerManagementViewModel(instService, playerService, processRunner);
+                vm.Initialize(instance);
+
+                await vm.LoadListsAsync();
+                try { Avalonia.Threading.Dispatcher.UIThread.RunJobs(); } catch { }
+
+                Assert.Single(vm.OnlinePlayerCards);
+                Assert.Equal("Steve", vm.OnlinePlayerCards[0].Name);
+                Assert.True(vm.OnlinePlayerCards[0].IsOp);
+
+                Assert.Single(vm.BanListEntries);
+                Assert.Equal("Griefer99", vm.BanListEntries[0].Name);
+                Assert.Equal("TNT spam", vm.BanListEntries[0].Reason);
+                Assert.Equal("Admin", vm.BanListEntries[0].BannedDisplay);
+
+                Assert.Single(vm.WhitelistEntries);
+                Assert.Equal("Steve", vm.WhitelistEntries[0].Name);
+
+                Assert.False(vm.IsWhitelistEnabled);
+                await vm.ToggleWhitelistCommand.ExecuteAsync(null);
+                Assert.True(vm.IsWhitelistEnabled);
+                string props = await File.ReadAllTextAsync(Path.Combine(tempDir, "server.properties"));
+                Assert.Contains("white-list=true", props);
             }
             finally
             {

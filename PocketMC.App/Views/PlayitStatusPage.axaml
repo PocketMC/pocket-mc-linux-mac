@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:lucide="using:Lucide.Avalonia"
+             x:Class="PocketMC.App.Views.PlayitStatusPage"
+             x:DataType="vm:PlayitStatusViewModel"
+             Background="Transparent">
+
+  <Grid Margin="36,20,36,24" RowDefinitions="Auto, *">
+    <!-- Title & Navigation Row -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,22" Spacing="8">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Command="{Binding GoBackCommand}"
+                Classes="subtle"
+                Padding="6"
+                ToolTip.Tip="Back to Tunnels">
+          <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+        </Button>
+        <TextBlock Text="Playit.gg Network Status"
+                   FontSize="24" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <Grid ColumnDefinitions="*, Auto" Margin="42,0,0,0">
+        <TextBlock Grid.Column="0"
+                   Text="Live monitoring of the global Playit.gg network and datacenter routing infrastructure."
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   FontSize="13"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+          <TextBlock Text="{Binding LastUpdated}"
+                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     FontSize="12"
+                     VerticalAlignment="Center"/>
+          <Button Command="{Binding RefreshCommand}"
+                  Classes="secondary"
+                  Padding="14,7">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+              <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+
+    <!-- Status Monitors Grid -->
+    <Grid Grid.Row="1">
+      <StackPanel IsVisible="{Binding IsLoading}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Spacing="14">
+        <ProgressBar IsIndeterminate="True" Width="160" Height="6"/>
+        <TextBlock Text="Fetching network status..."
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   FontSize="14" HorizontalAlignment="Center"/>
+      </StackPanel>
+
+      <ScrollViewer IsVisible="{Binding !IsLoading}"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Monitors}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:PlayitStatusMonitorViewModel">
+              <Border Width="300"
+                      Margin="0,0,16,16"
+                      Classes="card"
+                      Padding="16">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                  <Ellipse Grid.Column="0"
+                           Width="12" Height="12"
+                           Fill="{Binding IconColorHex}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0"/>
+
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             FontSize="14" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis"/>
+
+                  <TextBlock Grid.Column="2"
+                             Text="{Binding StatusText}"
+                             FontSize="12"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             VerticalAlignment="Center"
+                             Margin="8,0,0,0"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

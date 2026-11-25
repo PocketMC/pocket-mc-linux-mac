@@ -1,53 +1,126 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:infra="using:PocketMC.Infrastructure.Services"
+        xmlns:mkt="using:PocketMC.App.ViewModels.Marketplace"
+        xmlns:lucide="using:Lucide.Avalonia"
         x:Class="PocketMC.App.Views.DependencyConfirmWindow"
-        Title="Confirm Add-on Installation"
-        Width="500" Height="400"
+        x:DataType="mkt:DependencyConfirmationViewModel"
+        Title="Confirm Installation"
+        Width="600" Height="500"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="#1e1e24"
-        RequestedThemeVariant="Dark">
+        Background="{DynamicResource ApplicationBackgroundBrush}">
 
-  <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+  <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
     <!-- Header -->
-    <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,15">
-      <TextBlock Text="Confirm Installations" 
-                 FontSize="18" 
-                 FontWeight="Bold" 
-                 Foreground="White"/>
-      <TextBlock Text="Review the selected add-on and its dependencies to proceed with download." 
-                 FontSize="12" 
-                 Foreground="#a0a0a5"
+    <StackPanel Grid.Row="0" Spacing="5" Margin="0,6,0,12">
+      <TextBlock Text="Ready to Install"
+                 FontSize="22" FontWeight="Bold"
+                 Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+      <TextBlock Text="The following items will be installed on your server."
+                 FontSize="13"
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                  TextWrapping="Wrap"/>
     </StackPanel>
 
+    <!-- Warning / Error Banner -->
+    <Border Grid.Row="1"
+            Background="#22F59E0B"
+            BorderBrush="#55F59E0B"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="10"
+            Margin="0,0,0,10"
+            IsVisible="{Binding HasErrors}">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <lucide:LucideIcon Kind="TriangleAlert" Size="18" Foreground="#F59E0B" VerticalAlignment="Center"/>
+        <TextBlock Text="Some dependencies could not be resolved or have issues."
+                   FontWeight="SemiBold" FontSize="12"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
     <!-- Dependencies List -->
-    <Border Grid.Row="1" Background="#141419" BorderBrush="#2c2c35" BorderThickness="1" CornerRadius="8" Padding="8">
-      <ListBox Name="LstDependencies" Background="Transparent" BorderThickness="0">
+    <Border Grid.Row="2"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="10">
+      <ListBox Name="LstDependencies"
+               ItemsSource="{Binding Dependencies}"
+               Background="Transparent"
+               BorderThickness="0">
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="infra:ResolvedDependency">
-            <Grid ColumnDefinitions="Auto, *, Auto" Margin="4">
-              <!-- Selection Checkbox -->
-              <CheckBox Grid.Column="0" 
-                        IsChecked="{Binding IsSelected}" 
+            <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,4">
+              <CheckBox Grid.Column="0"
+                        IsChecked="{Binding IsSelected}"
                         IsEnabled="{Binding IsCheckboxEnabled}"
-                        Margin="0,0,8,0"
-                        VerticalAlignment="Center"/>
+                        VerticalAlignment="Center"
+                        Margin="0,0,10,0"/>
 
-              <!-- Name & File info -->
-              <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                <TextBlock Text="{Binding ProjectTitle}" FontWeight="SemiBold" Foreground="White" FontSize="13"/>
-                <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="#808085"/>
+              <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center" Margin="0,4">
+                <TextBlock Text="{Binding ProjectTitle}"
+                           FontWeight="SemiBold" FontSize="14"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+
+                <TextBlock FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           IsVisible="{Binding DownloadUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <Run Text="{Binding VersionName}"/>
+                  <Run Text=" | "/>
+                  <Run Text="{Binding FileName}"/>
+                  <Run Text=" | "/>
+                  <Run Text="{Binding Provider}"/>
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Spacing="8"
+                            IsVisible="{Binding SelectedLoader, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <TextBlock Text="{Binding SelectedLoader, StringFormat='Loader: {0}'}"
+                             FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                  <TextBlock Text="{Binding MatchedMinecraftVersion, StringFormat='Game Version: {0}'}"
+                             FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Warning}"
+                           FontSize="12" Foreground="#F59E0B" TextWrapping="Wrap"
+                           IsVisible="{Binding Warning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="{Binding Error}"
+                           FontSize="12" Foreground="#EF4444" FontWeight="SemiBold" TextWrapping="Wrap"
+                           IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="4" Padding="8"
+                        Margin="0,4,0,0"
+                        IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="Technical Details" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding ProjectId, StringFormat='Project ID: {0}'}" FontSize="11"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                    <TextBlock Text="{Binding Provider, StringFormat='Provider: {0}'}" FontSize="11"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                  </StackPanel>
+                </Border>
               </StackPanel>
 
-              <!-- Required/Optional/Installed Badge -->
-              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Border Background="#2c2c35" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsAlreadyInstalled}">
-                  <TextBlock Text="Installed" FontSize="10" Foreground="#2ecc71" FontWeight="Bold"/>
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0,0,0">
+                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                        CornerRadius="4" Padding="10,4"
+                        IsVisible="{Binding IsAlreadyInstalled}">
+                  <TextBlock Text="Already Installed" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </Border>
-                <Border Background="#2c2c35" CornerRadius="4" Padding="6,2" IsVisible="{Binding !IsAlreadyInstalled}">
-                  <TextBlock Text="{Binding Type}" FontSize="10" Foreground="#1e90ff" FontWeight="Bold"/>
+                <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        CornerRadius="4" Padding="10,4">
+                  <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="SemiBold"
+                             Foreground="White"/>
                 </Border>
               </StackPanel>
             </Grid>
@@ -57,20 +130,16 @@
     </Border>
 
     <!-- Actions -->
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
-      <Button Content="Cancel" 
-              Click="BtnCancel_Click" 
-              Background="#2c2c35" 
-              Foreground="White" 
-              BorderBrush="#3c3c45"
-              Padding="16,8"
-              CornerRadius="6"/>
-      <Button Content="Proceed with Installation" 
-              Click="BtnProceed_Click" 
-              Background="#3f51b5" 
-              Foreground="White"
-              Padding="16,8"
-              CornerRadius="6"/>
+    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,16,0,0">
+      <Button Content="Cancel"
+              Click="BtnCancel_Click"
+              Classes="secondary"
+              Width="100"/>
+      <Button Content="Install"
+              Click="BtnProceed_Click"
+              Classes="primary"
+              IsEnabled="{Binding CanInstall}"
+              Width="120"/>
     </StackPanel>
   </Grid>
 </Window>

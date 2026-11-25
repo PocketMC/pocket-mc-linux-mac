@@ -6,8 +6,11 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Utils;
 
 namespace PocketMC.RemoteControl.Tunnels;
+
+public sealed record CloudflaredDownloadSpec(string Url, bool IsTarGz);
 
 public class CloudflaredQuickTunnelProvider : IRemoteTunnelProvider
 {
@@ -107,42 +110,80 @@ public class CloudflaredQuickTunnelProvider : IRemoteTunnelProvider
         return Task.FromResult("Stopped");
     }
 
+    public static CloudflaredDownloadSpec ResolveDownloadSpec(OSPlatform platform, Architecture arch)
+    {
+        if (platform == OSPlatform.OSX)
+        {
+            string url = arch == Architecture.Arm64
+                ? "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz"
+                : "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz";
+            return new CloudflaredDownloadSpec(url, IsTarGz: true);
+        }
+
+        if (platform == OSPlatform.Linux)
+        {
+            string url = arch == Architecture.Arm64
+                ? "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64"
+                : "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64";
+            return new CloudflaredDownloadSpec(url, IsTarGz: false);
+        }
+
+        return new CloudflaredDownloadSpec(string.Empty, IsTarGz: false);
+    }
+
     private async Task<string> DownloadBinaryAsync()
     {
         var binDir = Path.Combine(_settingsService.GetSettingsDirectory(), "bin");
         Directory.CreateDirectory(binDir);
-        
-        string fileName = "cloudflared";
-        string url = "";
-        
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+
+        var platform = RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+            ? OSPlatform.OSX
+            : (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux : OSPlatform.Windows);
+
+        var spec = ResolveDownloadSpec(platform, RuntimeInformation.ProcessArchitecture);
+        if (string.IsNullOrWhiteSpace(spec.Url))
         {
-            url = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 
-                ? "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64"
-                : "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64";
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz"; // cloudflared ships fat mac binary inside tgz, simplified here for time
-            // To simplify, let's just download the raw binary if they provide it. If not we might need tar extraction. 
-            // Actually Homebrew is easier for mac, but let's assume raw binary download url exists for simplicity in this task.
-            url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64"; // fallback guess
-        }
-        else
-        {
-            return ""; // Not supported
+            return string.Empty;
         }
 
-        var binPath = Path.Combine(binDir, fileName);
+        string binPath = Path.Combine(binDir, "cloudflared");
         if (!File.Exists(binPath))
         {
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return "";
-            
-            var bytes = await response.Content.ReadAsByteArrayAsync();
-            await File.WriteAllBytesAsync(binPath, bytes);
-            
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            var response = await _httpClient.GetAsync(spec.Url);
+            if (!response.IsSuccessStatusCode) return string.Empty;
+
+            if (spec.IsTarGz)
+            {
+                string tempArchive = Path.Combine(binDir, $"cloudflared-{Guid.NewGuid():N}.tgz");
+                string extractDir = Path.Combine(binDir, $"cf-extract-{Guid.NewGuid():N}");
+                try
+                {
+                    byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                    await File.WriteAllBytesAsync(tempArchive, bytes);
+                    SafeZipExtractor.ExtractTarGz(tempArchive, extractDir);
+
+                    string? extractedBin = Directory.EnumerateFiles(extractDir, "cloudflared", SearchOption.AllDirectories)
+                        .FirstOrDefault();
+                    if (string.IsNullOrWhiteSpace(extractedBin) || !File.Exists(extractedBin))
+                    {
+                        return string.Empty;
+                    }
+
+                    File.Move(extractedBin, binPath, overwrite: true);
+                }
+                finally
+                {
+                    try { if (File.Exists(tempArchive)) File.Delete(tempArchive); } catch { }
+                    try { if (Directory.Exists(extractDir)) Directory.Delete(extractDir, true); } catch { }
+                }
+            }
+            else
+            {
+                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                await File.WriteAllBytesAsync(binPath, bytes);
+            }
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && File.Exists(binPath))
             {
                 File.SetUnixFileMode(binPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             }

@@ -1,0 +1,175 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PocketMC.App.ViewModels"
+        xmlns:coreModels="using:PocketMC.Core.Models"
+        xmlns:lucide="using:Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.Intelligence.OllamaModelManagerDialog"
+        x:DataType="vm:OllamaModelManagerViewModel"
+        Title="Ollama Model Manager"
+        Width="740" Height="580"
+        MinWidth="580" MinHeight="460"
+        WindowStartupLocation="CenterOwner"
+        ExtendClientAreaToDecorationsHint="True"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+  <Grid Margin="22,38,22,22" RowDefinitions="Auto, *">
+    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
+      <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+        <lucide:LucideIcon Kind="Cpu" Size="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+        <TextBlock Text="Ollama Model Manager" FontSize="18" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+      </StackPanel>
+      <Button Grid.Column="1" Command="{Binding RefreshModelsCommand}" Classes="secondary" Padding="10,5">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+          <TextBlock Text="Refresh"/>
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+      <!-- Tab 1: Installed Models -->
+      <TabItem Header="Installed Models">
+        <Grid RowDefinitions="Auto, *" Margin="0,10,0,0">
+          <TextBlock Grid.Row="0" Text="{Binding StatusText}" FontSize="12"
+                     Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding InstalledModels}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="coreModels:OllamaModelInfo">
+                  <Border Classes="card-secondary" Margin="0,0,0,8" Padding="12">
+                    <Grid ColumnDefinitions="*, Auto">
+                      <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{Binding DetailsSummary}" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Content="Select" Classes="primary" Padding="12,5"
+                                Command="{Binding $parent[ItemsControl].((vm:OllamaModelManagerViewModel)DataContext).SelectModelCommand}"
+                                CommandParameter="{Binding Name}"/>
+                        <Button Content="Delete" Classes="secondary" Padding="12,5"
+                                Command="{Binding $parent[ItemsControl].((vm:OllamaModelManagerViewModel)DataContext).DeleteModelCommand}"
+                                CommandParameter="{Binding Name}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+
+      <!-- Tab 2: Download Models -->
+      <TabItem Header="Download Models">
+        <Grid RowDefinitions="*, Auto" Margin="0,10,0,0">
+          <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+              <Border Classes="card" Padding="14">
+                <Grid ColumnDefinitions="*, 300">
+                  <StackPanel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="Custom Model" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Enter an Ollama model tag to pull." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Grid Grid.Column="1" ColumnDefinitions="*, 8, Auto" VerticalAlignment="Center">
+                    <TextBox Grid.Column="0" Text="{Binding CustomModelName, Mode=TwoWay}" Watermark="e.g. llama3.2:3b"/>
+                    <Button Grid.Column="2" Content="Pull" Classes="primary"
+                            Command="{Binding PullCustomModelCommand}"/>
+                  </Grid>
+                </Grid>
+              </Border>
+
+              <TextBlock Text="Recommended Models" FontSize="14" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0"/>
+
+              <Border Classes="card-secondary" Padding="12">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel>
+                    <TextBlock Text="llama3.2:3b" FontWeight="SemiBold"/>
+                    <TextBlock Text="Lightweight, ~2.0 GB" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Download" Classes="secondary"
+                          Command="{Binding PullRecommendedModelCommand}" CommandParameter="llama3.2:3b"/>
+                </Grid>
+              </Border>
+
+              <Border Classes="card-secondary" Padding="12">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel>
+                    <TextBlock Text="qwen2.5:7b" FontWeight="SemiBold"/>
+                    <TextBlock Text="Balanced, ~4.7 GB" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Download" Classes="secondary"
+                          Command="{Binding PullRecommendedModelCommand}" CommandParameter="qwen2.5:7b"/>
+                </Grid>
+              </Border>
+
+              <Border Classes="card-secondary" Padding="12">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel>
+                    <TextBlock Text="deepseek-r1:8b" FontWeight="SemiBold"/>
+                    <TextBlock Text="Reasoning, ~4.9 GB" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Download" Classes="secondary"
+                          Command="{Binding PullRecommendedModelCommand}" CommandParameter="deepseek-r1:8b"/>
+                </Grid>
+              </Border>
+
+              <Border Classes="card-secondary" Padding="12">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel>
+                    <TextBlock Text="phi4:14b" FontWeight="SemiBold"/>
+                    <TextBlock Text="Advanced, ~9.1 GB" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Download" Classes="secondary"
+                          Command="{Binding PullRecommendedModelCommand}" CommandParameter="phi4:14b"/>
+                </Grid>
+              </Border>
+
+              <Border Classes="card-secondary" Padding="12">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel>
+                    <TextBlock Text="mistral:7b" FontWeight="SemiBold"/>
+                    <TextBlock Text="Balanced, ~4.1 GB" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Download" Classes="secondary"
+                          Command="{Binding PullRecommendedModelCommand}" CommandParameter="mistral:7b"/>
+                </Grid>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+
+          <Border Grid.Row="1" Classes="card" IsVisible="{Binding IsDownloading}" Margin="0,12,0,0" Padding="12">
+            <Grid ColumnDefinitions="*, 12, Auto">
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{Binding ProgressStatusText}" FontSize="12"/>
+                <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadPercent}" Height="5"/>
+              </StackPanel>
+              <Button Grid.Column="2" Content="Cancel" Classes="secondary" Command="{Binding CancelPullCommand}"/>
+            </Grid>
+          </Border>
+        </Grid>
+      </TabItem>
+
+      <!-- Tab 3: Manual Steps -->
+      <TabItem Header="Manual Steps">
+        <StackPanel Spacing="12" Margin="0,12,0,0">
+          <TextBlock Text="Manually Install Models" FontSize="16" FontWeight="SemiBold"/>
+          <TextBlock Text="Run the following command in your terminal to download a model via Ollama CLI:"
+                     FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+          <Grid ColumnDefinitions="*, 10, Auto">
+            <TextBox Grid.Column="0" Text="{Binding ManualCommand}" IsReadOnly="True" FontFamily="Monospace"/>
+            <Button Grid.Column="2" Content="Copy Command" Classes="secondary"
+                    Command="{Binding CopyManualCommandCommand}"/>
+          </Grid>
+          <TextBlock Text="Models are cached locally in ~/.ollama/models." FontSize="12"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</Window>

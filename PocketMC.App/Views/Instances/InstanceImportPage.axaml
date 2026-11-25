@@ -74,10 +74,10 @@
                     <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Grid.Column="0" Spacing="4">
                             <TextBlock Text="Package Software Manifest" Classes="import-title" />
-                            <TextBlock Text="{Binding CurrentStep}" FontSize="13" Foreground="#1E90FF" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding CurrentStep}" FontSize="13" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#261E90FF" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding DetectedEngineType}" Foreground="#1E90FF" FontSize="12" FontWeight="Bold"/>
+                        <Border Grid.Column="1" Background="{DynamicResource ControlFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DetectedEngineType}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" FontSize="12" FontWeight="Bold"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -126,8 +126,8 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <Button Command="{Binding GoBackCommand}" Content="Cancel" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,8" Cursor="Hand"/>
-                    <Button Command="{Binding ImportCommand}" Content="Import Instance" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="18,8" Cursor="Hand" FontWeight="SemiBold" IsEnabled="{Binding CanImport}"/>
+                    <Button Command="{Binding GoBackCommand}" Content="Cancel" Classes="secondary" Padding="18,8"/>
+                    <Button Command="{Binding ImportCommand}" Content="Import Instance" Classes="primary" Padding="18,8" IsEnabled="{Binding CanImport}"/>
                 </StackPanel>
             </Grid>
         </Border>

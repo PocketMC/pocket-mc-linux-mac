@@ -20,6 +20,7 @@ namespace PocketMC.Tests
         [InlineData(typeof(AiDiagnosticViewModel), typeof(AiDiagnosticPage))]
         [InlineData(typeof(RemoteControlViewModel), typeof(RemoteControlPage))]
         [InlineData(typeof(TunnelViewModel), typeof(TunnelPage))]
+        [InlineData(typeof(PlayitStatusViewModel), typeof(PlayitStatusPage))]
         [InlineData(typeof(PortsMapViewModel), typeof(PortsMapPage))]
         [InlineData(typeof(JavaManagementViewModel), typeof(JavaManagementPage))]
         [InlineData(typeof(AboutViewModel), typeof(AboutPage))]

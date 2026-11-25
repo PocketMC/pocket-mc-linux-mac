@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="using:PocketMC.App.Views.Dialogs"
+        xmlns:mkt="using:PocketMC.App.ViewModels.Marketplace"
+        xmlns:lucide="using:Lucide.Avalonia"
+        x:Class="PocketMC.App.Views.Dialogs.AddonInstallDialogWindow"
+        x:DataType="dialogs:AddonInstallDialogWindow"
+        Title="Installing Addons"
+        Width="560"
+        SizeToContent="Height"
+        MinWidth="480" MaxWidth="640"
+        MaxHeight="640"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource ApplicationBackgroundBrush}">
+
+  <Grid Margin="20" MaxWidth="600" RowDefinitions="Auto, Auto, *, Auto, Auto">
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,6">
+      <lucide:LucideIcon Kind="Download" Size="18" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+      <TextBlock Text="Downloading &amp; Installing"
+                 FontSize="16" FontWeight="Bold"
+                 Foreground="{DynamicResource AccentPrimaryBrush}"
+                 VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Summary -->
+    <TextBlock Grid.Row="1"
+               Text="Please wait while the addons and dependencies are being installed."
+               FontSize="12"
+               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+               Margin="0,0,0,10"
+               TextWrapping="Wrap"/>
+
+    <!-- Items List -->
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" MaxHeight="300" Margin="0,0,0,15" Padding="0,0,12,0">
+      <ItemsControl x:Name="ItemsList">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="mkt:AddonInstallRowViewModel">
+            <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                    BorderThickness="1" CornerRadius="6"
+                    Margin="0,0,0,8" Padding="12">
+              <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                  <TextBlock Text="{Binding ProjectTitle}" FontWeight="SemiBold" FontSize="14"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             TextTrimming="CharacterEllipsis"/>
+                  <TextBlock Text="{Binding FileName}" FontSize="12"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                  <ProgressBar IsIndeterminate="True" Width="18" Height="4" IsVisible="{Binding IsDownloading}"/>
+                  <TextBlock Text="{Binding StatusText}"
+                             Foreground="{Binding StatusForeground}"
+                             FontSize="12" FontWeight="Medium"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                             Minimum="0" Maximum="100" Value="{Binding ProgressValue}"
+                             Height="4" Margin="0,8,0,0"
+                             IsVisible="{Binding IsDownloading}"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Overall Progress -->
+    <StackPanel Grid.Row="3" Margin="0,0,0,15" Spacing="4">
+      <TextBlock x:Name="TxtOverallStatus"
+                 Text="Preparing..."
+                 FontSize="12" FontWeight="SemiBold"
+                 Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+      <ProgressBar x:Name="OverallProgressBar" Minimum="0" Maximum="100" Height="6"/>
+    </StackPanel>
+
+    <!-- Actions -->
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button x:Name="BtnCancel"
+              Content="Cancel"
+              Click="BtnCancel_Click"
+              Classes="secondary"
+              MinWidth="88"
+              Padding="14,7"/>
+    </StackPanel>
+  </Grid>
+</Window>

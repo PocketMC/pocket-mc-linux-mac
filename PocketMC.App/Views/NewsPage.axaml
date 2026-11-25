@@ -114,7 +114,8 @@
                             <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4"/>
 
                             <!-- Content Blocks -->
-                            <ItemsControl ItemsSource="{Binding SelectedArticle.Blocks}">
+                            <StackPanel x:Name="RichArticleHost" Spacing="0"/>
+                            <ItemsControl IsVisible="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="news:NewsContentBlock">
                                         <Panel Margin="0,4,0,8">

@@ -4,6 +4,7 @@ using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Mods;
 using PocketMC.Infrastructure.Services;
 using PocketMC.Platform.Services;
 using PocketMC.Platform.Lifecycle;
@@ -110,11 +111,17 @@ namespace PocketMC.App
                     services.AddSingleton<ICloudBackupProvider, OneDriveBackupProvider>();
                     services.AddSingleton<ICloudBackupProvider, DropboxBackupProvider>();
                     services.AddSingleton<CloudBackupService>();
-                    services.AddSingleton<IBackupService, BackupService>();
+                    services.AddSingleton<BackupService>();
+                    services.AddSingleton<IBackupService>(sp => sp.GetRequiredService<BackupService>());
+                    services.AddSingleton<WorldManager>();
+                    services.AddSingleton<BedrockAddonInstaller>();
 
                     // New Phase 4 AI Diagnostics
                     services.AddSingleton<ILogRedactionService, LogRedactionService>();
                     services.AddSingleton<LlmProviderFactory>();
+                    services.AddSingleton<SummaryStorageService>();
+                    services.AddSingleton<SessionSummarizationService>();
+                    services.AddSingleton<IOllamaService, OllamaService>();
                     services.AddSingleton<IAiDiagnosticService, AiDiagnosticService>();
 
                     // Server Version Updates (Transactional Upgrades & Rollbacks)
@@ -141,6 +148,7 @@ namespace PocketMC.App
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.IRemoteTunnelProvider, PocketMC.RemoteControl.Tunnels.CloudflaredQuickTunnelProvider>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.IRemoteTunnelProvider, PocketMC.RemoteControl.Tunnels.PlayitHttpsTunnelProvider>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.PlayitApiClient>();
+                    services.AddSingleton<PlayitStatusService>();
                     services.AddSingleton<PocketMC.RemoteControl.Tunnels.RemoteTunnelManager>();
                     services.AddSingleton<PocketMC.RemoteControl.Services.RemoteControlCoordinator>();
 
@@ -176,6 +184,9 @@ namespace PocketMC.App
                     services.AddSingleton<PocketMC.Infrastructure.Networking.PortLeaseRegistry>();
                     services.AddSingleton<PocketMC.Infrastructure.Networking.PortProbeService>();
                     services.AddSingleton<PocketMC.Infrastructure.Networking.PortRecoveryService>();
+                    services.AddSingleton<IServerLifecycleService, ServerLifecycleService>();
+                    services.AddSingleton<PocketMC.Infrastructure.Networking.InstancePortUpdateService>();
+                    services.AddSingleton<PumpkinProvider>();
 
                     services.AddSingleton<MainWindowViewModel>();
                     services.AddTransient<MainWindow>();
@@ -217,6 +228,8 @@ namespace PocketMC.App
                     services.AddTransient<PocketMC.App.Views.RemoteControlPage>();
                     services.AddTransient<PocketMC.App.ViewModels.TunnelViewModel>();
                     services.AddTransient<PocketMC.App.Views.TunnelPage>();
+                    services.AddTransient<PocketMC.App.ViewModels.PlayitStatusViewModel>();
+                    services.AddTransient<PocketMC.App.Views.PlayitStatusPage>();
                     services.AddTransient<PocketMC.App.ViewModels.PortsMapViewModel>();
                     services.AddTransient<PocketMC.App.Views.PortsMapPage>();
                     services.AddSingleton<PocketMC.Infrastructure.WhatsNew.WhatsNewService>();

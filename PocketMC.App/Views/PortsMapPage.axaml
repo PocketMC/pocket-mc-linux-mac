@@ -1,174 +1,197 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PocketMC.App.ViewModels"
              xmlns:lucide="using:Lucide.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="PocketMC.App.Views.PortsMapPage"
-             x:DataType="vm:PortsMapViewModel">
+             x:DataType="vm:PortsMapViewModel"
+             Background="Transparent">
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="24,16,24,16">
+  <Grid Margin="36,20,36,24" RowDefinitions="Auto, *">
+    <!-- HEADER -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,22" Spacing="8">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Command="{Binding GoBackCommand}" Classes="subtle" Padding="6" ToolTip.Tip="Back">
+          <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+        </Button>
+        <TextBlock Text="Interactive Ports Map"
+                   FontSize="24" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
 
-        <!-- TITLE & NAVIGATION ROW -->
-        <Border Grid.Row="0" Margin="0,0,0,16" Padding="0,0,0,12" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource CardBorderBrush}">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Background="Transparent" Padding="8" CornerRadius="8" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                </Button>
+      <Grid ColumnDefinitions="*, Auto" Margin="42,0,0,0">
+        <TextBlock Grid.Column="0"
+                   Text="Live network topology showing public endpoints routed into local instance ports."
+                   FontSize="13"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Interactive Ports Map" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="Visualize public internet traffic routing through Playit.gg tunnels to local server ports." FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                </StackPanel>
+        <Button Grid.Column="1" Command="{Binding RefreshMapCommand}" Classes="secondary" Padding="14,7">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+            <TextBlock Text="Refresh Map" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+    </StackPanel>
 
-                <Button Grid.Column="2" Command="{Binding RefreshMapCommand}" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,6" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <lucide:LucideIcon Kind="RefreshCw" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Refresh" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </Border>
+    <!-- CONTENT -->
+    <Grid Grid.Row="1">
+      <StackPanel IsVisible="{Binding IsLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14">
+        <ProgressBar IsIndeterminate="True" Width="160" Height="6"/>
+        <TextBlock Text="Discovering server ports and active routes..."
+                   FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+      </StackPanel>
 
-        <!-- MAIN TOPOLOGY SCROLL AREA -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="16">
+      <ScrollViewer IsVisible="{Binding !IsLoading}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="12">
+          <Border Background="#223B82F6" BorderBrush="#443B82F6" BorderThickness="1" CornerRadius="6" Padding="12"
+                  IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap"/>
+          </Border>
 
-                <!-- STATUS MESSAGE BANNER -->
-                <Border Background="#1c2538" BorderBrush="#3b82f6" BorderThickness="1" CornerRadius="8" Padding="12" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <Grid ColumnDefinitions="Auto, *">
-                        <lucide:LucideIcon Grid.Column="0" Kind="Info" Size="18" Foreground="#3b82f6" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Foreground="#bfdbfe" FontSize="12" VerticalAlignment="Center"/>
+          <ItemsControl ItemsSource="{Binding ServerGroups}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ServerGroupViewModel">
+                <Expander Classes="card-expander" IsExpanded="{Binding IsExpanded, Mode=TwoWay}" Margin="0,0,0,12">
+                  <Expander.Header>
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                        <Ellipse Width="10" Height="10" Fill="{Binding ActiveColorHex}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ServerName}" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                      <Border Grid.Column="2" Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                              CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ServerInfo}" FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                      </Border>
                     </Grid>
-                </Border>
+                  </Expander.Header>
 
-                <!-- EMPTY STATE -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Stretch" IsVisible="{Binding !ServerGroups.Count}">
-                    <StackPanel Spacing="12" HorizontalAlignment="Center">
-                        <lucide:LucideIcon Kind="Network" Size="48" Opacity="0.3" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No active network routes discovered" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Create a Minecraft server instance or connect your Playit.gg agent to see routes charted here." FontSize="12" Opacity="0.6" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- SERVER GROUPS -->
-                <ItemsControl ItemsSource="{Binding ServerGroups}">
+                  <ItemsControl ItemsSource="{Binding Routes}" Margin="0,6,0,2">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ServerGroupViewModel">
-                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
-                                <StackPanel Spacing="12">
-
-                                    <!-- SERVER HEADER ROW -->
-                                    <Grid ColumnDefinitions="Auto, *, Auto">
-                                        <!-- STATUS GLOW BADGE -->
-                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,12,0" VerticalAlignment="Center">
-                                            <lucide:LucideIcon Kind="Server" Size="18" Foreground="{Binding ActiveColorHex}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-
-                                        <!-- SERVER INFO -->
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="{Binding ServerName}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding ServerInfo}" FontSize="12" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        </StackPanel>
-
-                                        <!-- ACTION CONTROLS -->
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <Button Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).NavigateToConsoleCommand}" CommandParameter="{Binding ServerId}" Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,6">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <lucide:LucideIcon Kind="Terminal" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                    <TextBlock Text="Console" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- DIVIDER -->
-                                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Margin="0,4"/>
-
-                                    <!-- ROUTE TOPOLOGY ITEMS -->
-                                    <ItemsControl ItemsSource="{Binding Routes}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:PortRouteViewModel">
-                                                <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                                    <Grid ColumnDefinitions="2*, Auto, 1.5*, Auto, 2.5*">
-
-                                                        <!-- NODE 1: PUBLIC ENDPOINT -->
-                                                        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" VerticalAlignment="Center">
-                                                            <Grid ColumnDefinitions="*, Auto">
-                                                                <StackPanel Grid.Column="0" Spacing="2">
-                                                                    <TextBlock Text="{Binding PublicAddressLabel}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
-                                                                    <TextBlock Text="Playit Public Endpoint" FontSize="10" Foreground="#3b82f6" FontWeight="SemiBold"/>
-                                                                </StackPanel>
-                                                                <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).CopyAddressCommand}" CommandParameter="{Binding PublicAddress}" IsVisible="{Binding HasTunnel}" Background="Transparent" Padding="4" CornerRadius="4" VerticalAlignment="Center">
-                                                                    <lucide:LucideIcon Kind="Copy" Size="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                                </Button>
-                                                            </Grid>
-                                                        </Border>
-
-                                                        <!-- CONNECTOR 1 -->
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
-                                                            <lucide:LucideIcon Kind="ArrowRight" Size="16" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.4"/>
-                                                        </StackPanel>
-
-                                                        <!-- NODE 2: LOCAL PORT BINDING -->
-                                                        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" VerticalAlignment="Center">
-                                                            <Grid>
-                                                                <!-- NORMAL VIEW -->
-                                                                <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding !IsEditingPort}">
-                                                                    <StackPanel Grid.Column="0" Spacing="2">
-                                                                        <TextBlock Text="{Binding LocalPortLabel}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                                        <TextBlock Text="Local Port Binding" FontSize="10" Opacity="0.6"/>
-                                                                    </StackPanel>
-                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).EditPortCommand}" CommandParameter="{Binding}" IsVisible="{Binding !IsOnline}" Background="Transparent" Padding="4" CornerRadius="4" VerticalAlignment="Center">
-                                                                        <lucide:LucideIcon Kind="Pen" Size="13" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.8"/>
-                                                                    </Button>
-                                                                </Grid>
-
-                                                                <!-- EDIT VIEW -->
-                                                                <Grid ColumnDefinitions="*, Auto, Auto" IsVisible="{Binding IsEditingPort}">
-                                                                    <TextBox Grid.Column="0" Text="{Binding EditingPortText}" FontSize="12" Height="28" Padding="6,2" Margin="0,0,4,0"/>
-                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).SavePortCommand}" CommandParameter="{Binding}" Background="#16a34a" Foreground="White" Padding="6,4" CornerRadius="4" Margin="0,0,4,0">
-                                                                        <lucide:LucideIcon Kind="Check" Size="12"/>
-                                                                    </Button>
-                                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).CancelEditPortCommand}" CommandParameter="{Binding}" Background="#dc2626" Foreground="White" Padding="6,4" CornerRadius="4">
-                                                                        <lucide:LucideIcon Kind="X" Size="12"/>
-                                                                    </Button>
-                                                                </Grid>
-                                                            </Grid>
-                                                        </Border>
-
-                                                        <!-- CONNECTOR 2 -->
-                                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0">
-                                                            <lucide:LucideIcon Kind="ArrowRight" Size="16" Foreground="{DynamicResource TextPrimaryBrush}" Opacity="0.4"/>
-                                                        </StackPanel>
-
-                                                        <!-- NODE 3: TARGET SERVICE ROLE -->
-                                                        <Border Grid.Column="4" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" VerticalAlignment="Center">
-                                                            <StackPanel Spacing="2">
-                                                                <TextBlock Text="{Binding ServiceRoleName}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                                <TextBlock Text="{Binding ServiceRoleDetail}" FontSize="10" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
-                                                            </StackPanel>
-                                                        </Border>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                      <DataTemplate x:DataType="vm:PortRouteViewModel">
+                        <Border Classes="card-secondary" Padding="14,12" Margin="0,0,0,8">
+                          <Grid ColumnDefinitions="1.15*, 48, 1.0*, 48, 1.15*">
+                            <!-- NODE 1: PUBLIC INTERNET -->
+                            <Border Grid.Column="0" Classes="card" Padding="12,10" VerticalAlignment="Center">
+                              <Grid ColumnDefinitions="Auto, *, Auto">
+                                <lucide:LucideIcon Grid.Column="0" Kind="Globe" Size="18"
+                                                   Foreground="{DynamicResource AccentPrimaryBrush}"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                  <TextBlock Text="Public Endpoint" FontSize="10" FontWeight="SemiBold"
+                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                  <TextBlock Text="{Binding PublicAddressLabel}" FontSize="12" FontWeight="SemiBold"
+                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                             TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
+                                <Button Grid.Column="2"
+                                        Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).CopyAddressCommand}"
+                                        CommandParameter="{Binding PublicAddress}"
+                                        IsVisible="{Binding HasTunnel}"
+                                        Classes="subtle" Padding="6"
+                                        ToolTip.Tip="Copy public address">
+                                  <lucide:LucideIcon Kind="Copy" Size="13"/>
+                                </Button>
+                              </Grid>
                             </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </ScrollViewer>
 
-        <!-- BOTTOM TIP BAR -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,12,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <lucide:LucideIcon Kind="Info" Size="16" Foreground="#3b82f6" VerticalAlignment="Center"/>
-                <TextBlock Text="Running servers are automatically discovered. Ports can be reconfigured when the server instance is stopped." FontSize="11" Opacity="0.7" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
+                            <!-- CONNECTOR 1 -->
+                            <Grid Grid.Column="1" Height="22" VerticalAlignment="Center">
+                              <Line StartPoint="0,11" EndPoint="48,11" StrokeThickness="2"
+                                    Stroke="#44FFFFFF" StrokeDashArray="3,3" IsVisible="{Binding !IsOnline}"/>
+                              <Line StartPoint="0,11" EndPoint="48,11" StrokeThickness="2"
+                                    Stroke="{Binding ActiveColorHex}" IsVisible="{Binding IsOnline}"/>
+                              <lucide:LucideIcon Kind="ArrowRight" Size="14"
+                                                 Foreground="{Binding ActiveColorHex}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- NODE 2: LOCAL PORT -->
+                            <Border Grid.Column="2" Classes="card" Padding="10,10" VerticalAlignment="Center">
+                              <Panel>
+                                <!-- View Mode -->
+                                <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding !IsEditingPort}">
+                                  <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LocalPortLabel}" FontWeight="Bold" FontSize="14"
+                                               Foreground="{Binding ActiveColorHex}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Protocol}" FontSize="10"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                                  </StackPanel>
+                                  <Button Grid.Column="1"
+                                          Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).EditPortCommand}"
+                                          CommandParameter="{Binding}"
+                                          Classes="subtle" Padding="5" ToolTip.Tip="Edit Port">
+                                    <lucide:LucideIcon Kind="Pen" Size="13"/>
+                                  </Button>
+                                </Grid>
+
+                                <!-- Edit Mode -->
+                                <Grid ColumnDefinitions="*, Auto, Auto" IsVisible="{Binding IsEditingPort}">
+                                  <TextBox Grid.Column="0" Text="{Binding EditingPortText, Mode=TwoWay}"
+                                           Watermark="Port" FontSize="12" FontWeight="Bold" Padding="4,2"
+                                           HorizontalContentAlignment="Center"/>
+                                  <Button Grid.Column="1"
+                                          Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).SavePortCommand}"
+                                          CommandParameter="{Binding}"
+                                          Classes="subtle" Padding="4" Margin="2,0,0,0" ToolTip.Tip="Save">
+                                    <lucide:LucideIcon Kind="Check" Size="14" Foreground="#10B981"/>
+                                  </Button>
+                                  <Button Grid.Column="2"
+                                          Command="{Binding $parent[UserControl].((vm:PortsMapViewModel)DataContext).CancelEditPortCommand}"
+                                          CommandParameter="{Binding}"
+                                          Classes="subtle" Padding="4" ToolTip.Tip="Cancel">
+                                    <lucide:LucideIcon Kind="X" Size="14" Foreground="#EF4444"/>
+                                  </Button>
+                                </Grid>
+                              </Panel>
+                            </Border>
+
+                            <!-- CONNECTOR 2 -->
+                            <Grid Grid.Column="3" Height="22" VerticalAlignment="Center">
+                              <Line StartPoint="0,11" EndPoint="48,11" StrokeThickness="2"
+                                    Stroke="#44FFFFFF" StrokeDashArray="3,3" IsVisible="{Binding !IsOnline}"/>
+                              <Line StartPoint="0,11" EndPoint="48,11" StrokeThickness="2"
+                                    Stroke="{Binding ActiveColorHex}" IsVisible="{Binding IsOnline}"/>
+                              <lucide:LucideIcon Kind="ArrowRight" Size="14"
+                                                 Foreground="{Binding ActiveColorHex}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- NODE 3: TARGET SERVICE ROLE -->
+                            <Border Grid.Column="4" Classes="card" Padding="12,10" VerticalAlignment="Center">
+                              <Grid ColumnDefinitions="Auto, *">
+                                <Border Grid.Column="0" Width="30" Height="30" CornerRadius="15"
+                                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        Margin="0,0,10,0" VerticalAlignment="Center">
+                                  <lucide:LucideIcon Kind="Link" Size="14" Foreground="{Binding ActiveColorHex}"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                  <TextBlock Text="{Binding ServiceRoleName}" FontSize="13" FontWeight="Bold"
+                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                             TextTrimming="CharacterEllipsis"/>
+                                  <TextBlock Text="{Binding ServiceRoleDetail}" FontSize="11"
+                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                             TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                              </Grid>
+                            </Border>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Expander>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
     </Grid>
+  </Grid>
 </UserControl>

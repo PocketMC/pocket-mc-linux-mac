@@ -6,7 +6,7 @@ using PocketMC.Core.Services;
 
 namespace PocketMC.App.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject, IShellHost
+public partial class MainWindowViewModel : ObservableObject, IShellHost, IDisposable
 {
     private readonly IAppNavigationService _navigationService;
     private readonly IServiceProvider _serviceProvider;
@@ -66,6 +66,19 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     private int _unreadNewsCount;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SidebarWidth))]
+    private bool _isPaneOpen = true;
+
+    public double SidebarWidth => IsPaneOpen ? 224 : 56;
+
+    [ObservableProperty]
+    private bool _isWallpaperActive;
+
+    public event Action? BackdropRefreshRequested;
+
+    public void RequestBackdropRefresh() => BackdropRefreshRequested?.Invoke();
+
+    [ObservableProperty]
     private string _selectedNavSection = "Dashboard";
 
     public bool IsDashboardSelected => SelectedNavSection == "Dashboard";
@@ -87,6 +100,16 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
         OnPropertyChanged(nameof(IsAboutSelected));
     }
 
+    private readonly PocketMC.Infrastructure.News.NewsService? _newsService;
+    private bool _disposed;
+
+    public bool HasUnreadNews => UnreadNewsCount > 0;
+
+    partial void OnUnreadNewsCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasUnreadNews));
+    }
+
     public MainWindowViewModel(
         IAppNavigationService navigationService,
         IServiceProvider serviceProvider,
@@ -99,16 +122,59 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
         _settingsService = settingsService;
         _currentViewModel = dashboardViewModel;
         _metricsProvider = metricsProvider ?? serviceProvider.GetService(typeof(INativeMetricsProvider)) as INativeMetricsProvider;
+        _newsService = serviceProvider.GetService(typeof(PocketMC.Infrastructure.News.NewsService)) as PocketMC.Infrastructure.News.NewsService;
 
         _navigationService.Initialize(this);
         _navigationService.NavigationChanged += OnNavigationChanged;
         _navigationService.NavigateToDetailPage(dashboardViewModel, "Dashboard", DetailRouteKind.Dashboard, DetailBackNavigation.Dashboard, clearDetailStack: true);
+
+        if (_newsService != null)
+        {
+            _newsService.NewsStateChanged += OnNewsStateChanged;
+            RefreshUnreadNewsCount();
+        }
 
         UpdateSystemMemoryMetrics();
         _metricsTimer = new System.Timers.Timer(2500);
         _metricsTimer.Elapsed += (s, e) => UpdateSystemMemoryMetrics();
         _metricsTimer.AutoReset = true;
         _metricsTimer.Start();
+    }
+
+    private void OnNewsStateChanged() => RefreshUnreadNewsCount();
+
+    public void RefreshUnreadNewsCount()
+    {
+        if (_newsService == null || _disposed) return;
+
+        int unread = _newsService.GetUnreadNewsCount();
+        if (Avalonia.Application.Current == null || Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        {
+            UnreadNewsCount = unread;
+        }
+        else
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (!_disposed)
+                {
+                    UnreadNewsCount = unread;
+                }
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _metricsTimer?.Stop();
+        _metricsTimer?.Dispose();
+        _navigationService.NavigationChanged -= OnNavigationChanged;
+        if (_newsService != null)
+        {
+            _newsService.NewsStateChanged -= OnNewsStateChanged;
+        }
     }
 
     private void UpdateSystemMemoryMetrics()
@@ -277,6 +343,12 @@ public partial class MainWindowViewModel : ObservableObject, IShellHost
     public void DismissUpdateBanner()
     {
         IsUpdateBannerVisible = false;
+    }
+
+    [RelayCommand]
+    public void TogglePane()
+    {
+        IsPaneOpen = !IsPaneOpen;
     }
 
     [RelayCommand]

@@ -22,6 +22,18 @@ namespace PocketMC.App
             {
                 var settingsService = Services.GetRequiredService<PocketMC.Core.Services.ISettingsService>();
 
+                // Apply saved theme and accent before showing first window
+                var themeManager = Services.GetService<PocketMC.Infrastructure.Services.ThemeManager>();
+                if (themeManager != null && Enum.TryParse<PocketMC.Infrastructure.Services.ThemeMode>(settingsService.Settings.Theme, ignoreCase: true, out var themeMode))
+                {
+                    themeManager.ApplyTheme(themeMode);
+                }
+
+                Services.GetService<PocketMC.App.Services.AccentColorService>()?.ApplyCurrentAccent();
+                _ = System.Threading.Tasks.Task.Run(() => PocketMC.Infrastructure.Configuration.AppConfig.RefreshRemoteConfigAsync());
+
+                SplashWindow.ShowSplash();
+
                 if (!settingsService.Settings.HasCompletedInitialSetup)
                 {
                     var setupWindow = Services.GetRequiredService<RootDirectorySetupWindow>();
@@ -46,6 +58,7 @@ namespace PocketMC.App
                 {
                     desktop.MainWindow.Loaded += async (s, e) =>
                     {
+                        SplashWindow.CloseSplash();
                         try
                         {
                             var whatsNewService = Services.GetRequiredService<PocketMC.Infrastructure.WhatsNew.WhatsNewService>();
@@ -53,6 +66,25 @@ namespace PocketMC.App
                             {
                                 var whatsNewWin = new WhatsNewWindow(whatsNewService);
                                 await whatsNewWin.ShowDialog(desktop.MainWindow);
+                            }
+                        }
+                        catch { }
+
+                        try
+                        {
+                            var newsService = Services.GetService<PocketMC.Infrastructure.News.NewsService>();
+                            if (newsService != null)
+                            {
+                                await newsService.SyncAsync();
+                                foreach (var item in newsService.GetPendingPopupNews())
+                                {
+                                    var popup = new NewsPopupWindow(item);
+                                    await popup.ShowDialog(desktop.MainWindow);
+                                    if (popup.WasAcknowledged)
+                                    {
+                                        newsService.MarkRead(item.Metadata.Id);
+                                    }
+                                }
                             }
                         }
                         catch { }

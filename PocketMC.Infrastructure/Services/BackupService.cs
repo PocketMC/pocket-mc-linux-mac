@@ -250,52 +250,68 @@ namespace PocketMC.Infrastructure.Services
 
             bool isRunning = _processRunner.TryGetRunningInfo(instance.Slug, out _, out var state) && state == "Running";
             var skippedFiles = new List<string>();
+            string sourceDirToCompress = worldDir;
+            string? snapshotStageDir = null;
 
             try
             {
                 if (isRunning)
                 {
-                    bool syncSuccess = await TrySyncSaveViaRconAsync(instance.Path, onProgress);
-
-                    if (!syncSuccess)
+                    if (instance.EngineType == EngineType.Bedrock)
                     {
-                        _logger.LogInformation("RCON sync not available or failed; falling back to console ingestion for server {ServerName}.", instance.Name);
+                        snapshotStageDir = Path.Combine(instance.Path, ".backup-stage-" + Guid.NewGuid().ToString("N"));
+                        onProgress?.Invoke("Waiting for a confirmed Bedrock snapshot...");
+                        sourceDirToCompress = await BedrockSnapshotService.StageAsync(
+                            _processRunner,
+                            _logService,
+                            instance,
+                            worldDir,
+                            snapshotStageDir);
+                    }
+                    else
+                    {
+                        bool syncSuccess = await TrySyncSaveViaRconAsync(instance.Path, onProgress);
 
-                        onProgress?.Invoke("Disabling auto-save (Console)...");
-                        await _processRunner.SendCommandAsync(instance, "save-off");
-                        await Task.Delay(500);
-
-                        onProgress?.Invoke("Flushing world to disk (Console)...");
-                        int initialLogCount = _logService.GetLogs(instance.Slug).Count;
-                        await _processRunner.SendCommandAsync(instance, "save-all");
-
-                        onProgress?.Invoke("Waiting for save to complete...");
-                        bool saved = false;
-                        for (int i = 0; i < 30; i++) // Up to 15 seconds
+                        if (!syncSuccess)
                         {
+                            _logger.LogInformation("RCON sync not available or failed; falling back to console ingestion for server {ServerName}.", instance.Name);
+
+                            onProgress?.Invoke("Disabling auto-save (Console)...");
+                            await _processRunner.SendCommandAsync(instance, "save-off");
                             await Task.Delay(500);
-                            var currentLogs = _logService.GetLogs(instance.Slug);
-                            if (currentLogs.Count > initialLogCount)
+
+                            onProgress?.Invoke("Flushing world to disk (Console)...");
+                            int initialLogCount = _logService.GetLogs(instance.Slug).Count;
+                            await _processRunner.SendCommandAsync(instance, "save-all");
+
+                            onProgress?.Invoke("Waiting for save to complete...");
+                            bool saved = false;
+                            for (int i = 0; i < 30; i++) // Up to 15 seconds
                             {
-                                var newLines = currentLogs.Skip(initialLogCount);
-                                if (newLines.Any(line => SaveCompletedRegex.IsMatch(line)))
+                                await Task.Delay(500);
+                                var currentLogs = _logService.GetLogs(instance.Slug);
+                                if (currentLogs.Count > initialLogCount)
                                 {
-                                    saved = true;
-                                    break;
+                                    var newLines = currentLogs.Skip(initialLogCount);
+                                    if (newLines.Any(line => SaveCompletedRegex.IsMatch(line)))
+                                    {
+                                        saved = true;
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (!saved)
-                        {
-                            _logger.LogWarning("Server {ServerName} did not emit a recognized save confirmation. Proceeding after a short settle delay.", instance.Name);
-                            await Task.Delay(TimeSpan.FromSeconds(2));
+                            if (!saved)
+                            {
+                                _logger.LogWarning("Server {ServerName} did not emit a recognized save confirmation. Proceeding after a short settle delay.", instance.Name);
+                                await Task.Delay(TimeSpan.FromSeconds(2));
+                            }
                         }
                     }
                 }
 
                 onProgress?.Invoke("Compressing world...");
-                await Task.Run(() => CreateZipWithLockedFileSkip(worldDir, zipPath, skippedFiles, progress));
+                await Task.Run(() => CreateZipWithLockedFileSkip(sourceDirToCompress, zipPath, skippedFiles, progress));
 
                 var zipInfo = new FileInfo(zipPath);
                 if (!zipInfo.Exists || zipInfo.Length == 0)
@@ -322,7 +338,7 @@ namespace PocketMC.Infrastructure.Services
             }
             finally
             {
-                if (isRunning)
+                if (isRunning && instance.EngineType != EngineType.Bedrock)
                 {
                     try
                     {
@@ -332,6 +348,11 @@ namespace PocketMC.Infrastructure.Services
                     {
                         _logger.LogWarning(ex, "Failed to re-enable auto-save.");
                     }
+                }
+
+                if (snapshotStageDir != null && Directory.Exists(snapshotStageDir))
+                {
+                    await TryCleanDirectoryAsync(snapshotStageDir, "Bedrock snapshot staging directory");
                 }
             }
         }

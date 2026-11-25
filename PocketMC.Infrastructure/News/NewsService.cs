@@ -79,6 +79,40 @@ namespace PocketMC.Infrastructure.News
                 (item.Metadata.ExpiresUtc == null || item.Metadata.ExpiresUtc > now));
         }
 
+        public IReadOnlyList<NewsItem> GetPendingPopupNews(string? currentVersionText = null)
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            Version? currentVersion = ParseVersion(currentVersionText ?? Configuration.AppConfig.AppVersion);
+
+            return GetCachedNews()
+                .Where(item =>
+                    item.Metadata.Popup &&
+                    !item.Metadata.IsRead &&
+                    (item.Metadata.ExpiresUtc == null || item.Metadata.ExpiresUtc > now) &&
+                    (currentVersion == null || IsForVersion(item.Metadata, currentVersion)))
+                .OrderBy(item => item.Metadata.PublishedUtc)
+                .ThenBy(item => item.Metadata.Id, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private static bool IsForVersion(NewsMetadata metadata, Version currentVersion)
+            => (metadata.MinimumVersion == null || currentVersion >= metadata.MinimumVersion) &&
+               (metadata.MaximumVersion == null || currentVersion <= metadata.MaximumVersion);
+
+        private static Version? ParseVersion(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            string normalized = System.Text.RegularExpressions.Regex.Replace(
+                value.Trim(),
+                @"[-+].*$",
+                string.Empty,
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant,
+                TimeSpan.FromSeconds(1));
+            string[] parts = normalized.Split('.');
+            if (parts.Length == 2) normalized += ".0";
+            return Version.TryParse(normalized, out Version? version) ? version : null;
+        }
+
         public void MarkRead(string newsId)
         {
             if (string.IsNullOrWhiteSpace(newsId) || !Directory.Exists(_cacheDirectory)) return;

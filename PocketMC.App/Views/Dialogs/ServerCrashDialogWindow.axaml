@@ -7,7 +7,7 @@
         MinWidth="640" MaxWidth="840"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="#18181B">
+        Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -19,7 +19,7 @@
 
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Margin="0,0,0,16">
-            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#3B202A" Margin="0,0,14,0" VerticalAlignment="Center">
+            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#26F38BA8" Margin="0,0,14,0" VerticalAlignment="Center">
                 <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
                           Width="20" Height="20"
                           Foreground="#F38BA8"
@@ -28,38 +28,38 @@
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtServerName" Text="Server Name" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    <TextBlock x:Name="TxtServerName" Text="Server Name" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <Border Background="#F38BA8" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
                         <TextBlock x:Name="TxtCategoryBadge" Text="Crashed" FontSize="11" FontWeight="Bold" Foreground="#1E1E2E"/>
                     </Border>
                 </StackPanel>
-                <TextBlock x:Name="TxtServerDetails" Text="Engine Type &amp; Version" FontSize="12" Foreground="#A1A1AA" Margin="0,2,0,0"/>
+                <TextBlock x:Name="TxtServerDetails" Text="Engine Type &amp; Version" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
             </StackPanel>
         </Grid>
 
         <!-- Crash Summary Card -->
         <Border Grid.Row="1"
-                Background="#27272A"
-                BorderBrush="#3F3F46"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="14,12"
                 Margin="0,0,0,16">
             <StackPanel Spacing="4">
-                <TextBlock x:Name="TxtCrashTitle" Text="Crash Summary" FontSize="13" FontWeight="SemiBold" Foreground="#F38BA8"/>
-                <TextBlock x:Name="TxtCrashSummary" Text="The server encountered an unhandled exception." FontSize="12" Foreground="#E4E4E7" TextWrapping="Wrap" LineHeight="18"/>
+                <TextBlock x:Name="TxtCrashTitle" Text="Crash Summary" FontSize="13" FontWeight="SemiBold" Foreground="#EF4444"/>
+                <TextBlock x:Name="TxtCrashSummary" Text="The server encountered an unhandled exception." FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
             </StackPanel>
         </Border>
 
         <!-- Diagnostic Log Section -->
         <Grid Grid.Row="2" RowDefinitions="Auto, *" Margin="0,0,0,20">
-            <TextBlock Grid.Row="0" Text="Diagnostic &amp; Exception Log" FontSize="12" FontWeight="SemiBold" Foreground="#A1A1AA" Margin="0,0,0,6"/>
-            <Border Grid.Row="1" Background="#09090B" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="6" Padding="10">
+            <TextBlock Grid.Row="0" Text="Diagnostic &amp; Exception Log" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+            <Border Grid.Row="1" Background="{DynamicResource ConsoleBackgroundBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10">
                 <ScrollViewer MaxHeight="220" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                     <SelectableTextBlock x:Name="TxtLogViewer"
                                          FontFamily="Consolas, Menlo, Monaco, 'Courier New', monospace"
                                          FontSize="11"
-                                         Foreground="#CDD6F4"
+                                         Foreground="{DynamicResource ConsoleTextBrush}"
                                          LineHeight="18"
                                          TextWrapping="NoWrap"/>
                 </ScrollViewer>
@@ -71,18 +71,18 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                 <Button x:Name="BtnOpenFolder"
                         Content="Open Crash Folder"
-                        Background="#27272A"
-                        BorderBrush="#3F3F46"
-                        Foreground="#FFFFFF"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         CornerRadius="6"
                         Padding="12,8"
                         Cursor="Hand"
                         IsVisible="False"/>
                 <Button x:Name="BtnCopyLogs"
                         Content="Copy Logs"
-                        Background="#27272A"
-                        BorderBrush="#3F3F46"
-                        Foreground="#FFFFFF"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         CornerRadius="6"
                         Padding="12,8"
                         Cursor="Hand"/>
@@ -91,17 +91,17 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                 <Button x:Name="BtnClose"
                         Content="Close"
-                        Background="#27272A"
-                        BorderBrush="#3F3F46"
-                        Foreground="#FFFFFF"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         CornerRadius="6"
                         Padding="16,8"
                         MinWidth="80"
                         Cursor="Hand"/>
                 <Button x:Name="BtnRestart"
                         Content="Restart Server"
-                        Background="#3B82F6"
-                        Foreground="#FFFFFF"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                         CornerRadius="6"
                         Padding="16,8"
                         MinWidth="120"

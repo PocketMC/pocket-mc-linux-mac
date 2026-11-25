@@ -1,6 +1,10 @@
 # Build artifacts
 [Bb]in/
 [Oo]bj/
+[Tt]est[Rr]esult*/
+*.dmp
+*.trx
+*.coverage
 .vs/
 *.user
 *.suo

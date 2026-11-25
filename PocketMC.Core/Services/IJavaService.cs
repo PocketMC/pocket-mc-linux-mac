@@ -11,5 +11,6 @@ namespace PocketMC.Core.Services
         Task<bool> IsJavaRuntimeInstalledAsync(string version);
         Task DeleteJavaRuntimeAsync(string version);
         Task RegisterCustomJavaRuntimeAsync(string version, string path);
+        string? GetJavaRuntimeDirectory(string version) => null;
     }
 }

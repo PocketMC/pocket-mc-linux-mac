@@ -14,13 +14,32 @@ namespace PocketMC.App.Controls
     /// </summary>
     public static class MarkdownRenderer
     {
-        private static readonly IBrush HeadingBrush = new SolidColorBrush(Color.Parse("#FFFFFF"));
-        private static readonly IBrush TextBrush = new SolidColorBrush(Color.Parse("#e0e0e5"));
-        private static readonly IBrush CodeBrush = new SolidColorBrush(Color.Parse("#1e90ff"));
-        private static readonly IBrush CodeBgBrush = new SolidColorBrush(Color.Parse("#1a1a24"));
-        private static readonly IBrush CodeBorderBrush = new SolidColorBrush(Color.Parse("#2c2c38"));
-        private static readonly IBrush BulletBrush = new SolidColorBrush(Color.Parse("#1e90ff"));
-        private static readonly IBrush HrBrush = new SolidColorBrush(Color.Parse("#2c2c38"));
+        private static IBrush HeadingBrush => ResolveBrush("TextFillColorPrimaryBrush", "#FFFFFF");
+        private static IBrush TextBrush => ResolveBrush("TextFillColorSecondaryBrush", "#E0E0E5");
+        private static IBrush CodeBrush => ResolveBrush("AccentTextFillColorPrimaryBrush", "#4ECC4E");
+        private static IBrush CodeBgBrush => ResolveBrush("ConsoleBackgroundBrush", "#1A1A24");
+        private static IBrush CodeBorderBrush => ResolveBrush("CardStrokeColorDefaultBrush", "#2C2C38");
+        private static IBrush BulletBrush => ResolveBrush("AccentTextFillColorPrimaryBrush", "#4ECC4E");
+        private static IBrush HrBrush => ResolveBrush("CardStrokeColorDefaultBrush", "#2C2C38");
+
+        private static IBrush ResolveBrush(string key, string fallbackHex)
+        {
+            try
+            {
+                if (Application.Current != null &&
+                    Application.Current.TryFindResource(key, Application.Current.ActualThemeVariant, out object? resource) &&
+                    resource is IBrush brush)
+                {
+                    return brush;
+                }
+            }
+            catch
+            {
+                // Ignore resource lookup failures in headless test contexts
+            }
+
+            return Brush.Parse(fallbackHex);
+        }
 
         public static Control Render(string markdown)
         {
@@ -225,12 +244,14 @@ namespace PocketMC.App.Controls
 
                     var border = new Border
                     {
-                        BorderBrush = new SolidColorBrush(Color.Parse("#2c2c38")),
+                        BorderBrush = CodeBorderBrush,
                         BorderThickness = new Thickness(1),
                         Padding = new Thickness(12, 10),
-                        Background = isHeader 
-                            ? new SolidColorBrush(Color.Parse("#25252f")) 
-                            : (r % 2 == 0 ? new SolidColorBrush(Color.Parse("#1a1a24")) : new SolidColorBrush(Color.Parse("#141419")))
+                        Background = isHeader
+                            ? ResolveBrush("ControlFillColorSecondaryBrush", "#25252F")
+                            : (r % 2 == 0
+                                ? ResolveBrush("CardBackgroundFillColorDefaultBrush", "#1A1A24")
+                                : ResolveBrush("CardBackgroundFillColorSecondaryBrush", "#141419"))
                     };
 
                     var textBlock = new TextBlock
@@ -238,7 +259,7 @@ namespace PocketMC.App.Controls
                         Text = CleanInlineFormatting(text),
                         FontSize = isHeader ? 13 : 12,
                         FontWeight = isHeader ? FontWeight.SemiBold : FontWeight.Normal,
-                        Foreground = isHeader ? new SolidColorBrush(Color.Parse("#FFFFFF")) : TextBrush,
+                        Foreground = isHeader ? HeadingBrush : TextBrush,
                         TextWrapping = TextWrapping.Wrap
                     };
 

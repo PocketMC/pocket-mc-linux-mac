@@ -41,6 +41,31 @@ namespace PocketMC.Infrastructure.Services
             return new Release(gate);
         }
 
+        public static string FindInstanceRoot(string path)
+        {
+            string fullPath = Path.GetFullPath(path);
+            string? current = fullPath;
+
+            while (!string.IsNullOrEmpty(current))
+            {
+                if (File.Exists(Path.Combine(current, "instance.json")) ||
+                    File.Exists(Path.Combine(current, "server.properties")) ||
+                    File.Exists(Path.Combine(current, "pocketmine.yml")))
+                {
+                    return current;
+                }
+
+                string? parent = Path.GetDirectoryName(current);
+                if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+                current = parent;
+            }
+
+            return Path.GetDirectoryName(fullPath) ?? fullPath;
+        }
+
         public void SetRunning(string directory, bool isRunning)
         {
             string key = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);

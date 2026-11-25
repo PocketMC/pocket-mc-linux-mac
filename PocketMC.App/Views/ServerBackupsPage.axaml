@@ -4,7 +4,7 @@
              xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.ServerBackupsPage"
              x:DataType="vm:ServerBackupsViewModel"
-             Background="{DynamicResource WindowBackgroundBrush}">
+             Background="Transparent">
 
   <Grid RowDefinitions="Auto, *">
     
@@ -68,7 +68,7 @@
 
         <!-- Actions Panel -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0" HorizontalAlignment="Left">
-          <Button Command="{Binding CreateBackupCommand}" Background="#1e90ff" Foreground="White" CornerRadius="8" Padding="16,10">
+          <Button Command="{Binding CreateBackupCommand}" Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" CornerRadius="8" Padding="16,10">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
               <TextBlock Text="Create Backup Now" FontWeight="Medium" VerticalAlignment="Center"/>
@@ -142,7 +142,7 @@
                       <CheckBox Grid.Column="0" IsChecked="{Binding IsGoogleDriveEnabled}" Content="Google Drive" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
                         <TextBlock Text="{Binding GoogleDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectGoogleDrive}"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Connect" FontSize="10" Padding="6,2" Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" IsVisible="{Binding CanConnectGoogleDrive}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="GoogleDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsGoogleDriveConnected}"/>
                       </StackPanel>
                     </Grid>
@@ -160,7 +160,7 @@
                       <CheckBox Grid.Column="0" IsChecked="{Binding IsOneDriveEnabled}" Content="Microsoft OneDrive" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
                         <TextBlock Text="{Binding OneDriveStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectOneDrive}"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Connect" FontSize="10" Padding="6,2" Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" IsVisible="{Binding CanConnectOneDrive}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="OneDrive" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsOneDriveConnected}"/>
                       </StackPanel>
                     </Grid>
@@ -178,7 +178,7 @@
                       <CheckBox Grid.Column="0" IsChecked="{Binding IsDropboxEnabled}" Content="Dropbox" Foreground="{DynamicResource TextPrimaryBrush}"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
                         <TextBlock Text="{Binding DropboxStatus, StringFormat='({0})'}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Connect" FontSize="10" Padding="6,2" Background="#3f51b5" Foreground="White" IsVisible="{Binding CanConnectDropbox}"/>
+                        <Button Command="{Binding ConnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Connect" FontSize="10" Padding="6,2" Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" IsVisible="{Binding CanConnectDropbox}"/>
                         <Button Command="{Binding DisconnectCloudProviderCommand}" CommandParameter="Dropbox" Content="Disconnect" FontSize="10" Padding="6,2" Background="#d32f2f" Foreground="White" IsVisible="{Binding IsDropboxConnected}"/>
                       </StackPanel>
                     </Grid>
@@ -195,7 +195,7 @@
 
           <!-- Save settings button -->
           <Button Command="{Binding SaveSettingsCommand}" Content="Save Configurations" 
-                  Background="#3f51b5" Foreground="White" CornerRadius="8" 
+                  Background="{DynamicResource AccentFillColorDefaultBrush}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" CornerRadius="8" 
                   Padding="16,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
         </StackPanel>
       </ScrollViewer>

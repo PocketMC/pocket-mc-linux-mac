@@ -38,6 +38,8 @@ namespace PocketMC.App.ViewModels
         private readonly IGeyserDetector _geyserDetector;
         private readonly ISimpleVoiceChatDetector _voiceChatDetector;
         private readonly System.Timers.Timer _timer;
+        private readonly IServerLifecycleService? _lifecycleService;
+        private volatile bool _disposed;
 
         private List<TunnelData> _cachedActiveTunnels = new();
         private int _pollCount = 0;
@@ -54,12 +56,32 @@ namespace PocketMC.App.ViewModels
         public async Task LoadInstancesAsync()
         {
             await ListVm.LoadInstancesAsync();
+            foreach (var card in Instances)
+            {
+                RefreshCardCapabilityBadges(card);
+            }
             if (SelectedInstance == null && Instances.Count > 0)
             {
                 SelectedInstance = Instances[0];
             }
             OnPropertyChanged(nameof(HasInstances));
             OnPropertyChanged(nameof(ServerState));
+        }
+
+        private void RefreshCardCapabilityBadges(InstanceCardViewModel card)
+        {
+            try
+            {
+                bool hasGeyser = card.Instance.EngineType != EngineType.Bedrock &&
+                                 card.Instance.EngineType != EngineType.PocketMine &&
+                                 _geyserDetector.IsGeyserInstalled(card.Instance.Path);
+                var voiceDetect = _voiceChatDetector.Detect(card.Instance.Path);
+                card.SetBadges(hasGeyser, voiceDetect.IsDetected);
+            }
+            catch
+            {
+                // Ignore filesystem detection error
+            }
         }
 
         [ObservableProperty]
@@ -83,6 +105,7 @@ namespace PocketMC.App.ViewModels
         public IAsyncRelayCommand<InstanceCardViewModel> CopyLanIpCommand { get; }
         public IAsyncRelayCommand<InstanceCardViewModel> CopyNumericIpCommand { get; }
         public IAsyncRelayCommand<InstanceCardViewModel> CopyBedrockIpCommand { get; }
+        public IAsyncRelayCommand<InstanceCardViewModel> CopyVoiceChatIpCommand { get; }
 
         public DashboardViewModel(
             IInstanceService instanceService,
@@ -146,7 +169,7 @@ namespace PocketMC.App.ViewModels
                 onOpenExport: NavigateToExport);
 
             NewInstanceCommand = new AsyncRelayCommand(NavigateToNewInstance);
-            RefreshInstancesCommand = new AsyncRelayCommand(async () => await ListVm.LoadInstancesAsync());
+            RefreshInstancesCommand = new AsyncRelayCommand(LoadInstancesAsync);
             StartServerCommand = new AsyncRelayCommand<InstanceCardViewModel>(async card => { if (card != null) await ActionsVm.StartServerAsync(card); });
             StopServerCommand = new AsyncRelayCommand<InstanceCardViewModel>(async card => { if (card != null) await ActionsVm.StopServerAsync(card); });
             RestartServerCommand = new AsyncRelayCommand<InstanceCardViewModel>(async card => { if (card != null) await ActionsVm.RestartServerAsync(card); });
@@ -191,10 +214,19 @@ namespace PocketMC.App.ViewModels
             });
             CopyBedrockIpCommand = new AsyncRelayCommand<InstanceCardViewModel>(async card =>
             {
-                if (card?.BedrockTunnelAddress != null) await CopyToClipboardAsync(card.BedrockTunnelAddress);
+                if (card?.BedrockIpDisplayText != null) await CopyToClipboardAsync(card.BedrockIpDisplayText);
+            });
+            CopyVoiceChatIpCommand = new AsyncRelayCommand<InstanceCardViewModel>(async card =>
+            {
+                if (card?.VoiceChatTunnelAddress != null) await CopyToClipboardAsync(card.VoiceChatTunnelAddress);
             });
 
             _processRunner.StateChanged += OnProcessStateChanged;
+            _lifecycleService = _serviceProvider?.GetService<IServerLifecycleService>();
+            if (_lifecycleService != null)
+            {
+                _lifecycleService.RestartCountdownTick += OnLifecycleRestartCountdownTick;
+            }
 
             _timer = new System.Timers.Timer(2000);
             _timer.Elapsed += OnTimerElapsed;
@@ -204,14 +236,20 @@ namespace PocketMC.App.ViewModels
 
         private async Task InitializeAsync()
         {
-            await ListVm.LoadInstancesAsync();
-            if (SelectedInstance == null && Instances.Count > 0)
+            await LoadInstancesAsync();
+            if (!_disposed)
             {
-                SelectedInstance = Instances[0];
+                _timer.Start();
             }
-            OnPropertyChanged(nameof(HasInstances));
-            OnPropertyChanged(nameof(ServerState));
-            _timer.Start();
+        }
+
+        private void OnLifecycleRestartCountdownTick(string slug, int secondsRemaining)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var card = Instances.FirstOrDefault(c => c.Slug == slug);
+                card?.UpdateRestartCountdown(secondsRemaining);
+            });
         }
 
         private void OnProcessStateChanged(string slug, string state)
@@ -289,8 +327,27 @@ namespace PocketMC.App.ViewModels
                             javaTunnel = match.PublicAddress;
                             numericTunnel = match.NumericAddress;
                         }
+
+                        if (card.ShowCrossPlayBadge)
+                        {
+                            int geyserPort = card.Instance.GeyserBedrockPort ?? 19132;
+                            var bedrockMatch = _cachedActiveTunnels.FirstOrDefault(t => t.Port == geyserPort);
+                            if (bedrockMatch != null)
+                            {
+                                bedrockTunnel = bedrockMatch.PublicAddress;
+                                bedrockNumericTunnel = bedrockMatch.NumericAddress;
+                            }
+                        }
+
+                        var voiceDetect = _voiceChatDetector.Detect(card.Instance.Path);
+                        if (voiceDetect.IsDetected && voiceDetect.Port > 0)
+                        {
+                            var voiceMatch = _cachedActiveTunnels.FirstOrDefault(t => t.Port == voiceDetect.Port);
+                            card.UpdateVoiceChatTunnel(voiceMatch?.PublicAddress, voiceMatch?.NumericAddress);
+                        }
                     }
 
+                    card.IsTunnelResolving = !string.IsNullOrEmpty(playitSecret) && string.IsNullOrEmpty(javaTunnel);
                     card.UpdateTunnels(javaTunnel, numericTunnel, bedrockTunnel, bedrockNumericTunnel, lanAddress);
                 }
                 else
@@ -385,9 +442,15 @@ namespace PocketMC.App.ViewModels
 
         public void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
             _timer.Stop();
             _timer.Dispose();
             _processRunner.StateChanged -= OnProcessStateChanged;
+            if (_lifecycleService != null)
+            {
+                _lifecycleService.RestartCountdownTick -= OnLifecycleRestartCountdownTick;
+            }
         }
     }
 }

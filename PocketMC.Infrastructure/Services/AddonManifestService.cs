@@ -429,7 +429,7 @@ namespace PocketMC.Infrastructure.Services
             return sb.ToString();
         }
 
-        private static string? ResolveAddonFilePath(string serverDir, string subDir, string fileName)
+        public static string? ResolveAddonFilePath(string serverDir, string subDir, string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)
             {

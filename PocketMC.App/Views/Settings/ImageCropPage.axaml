@@ -1,44 +1,70 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.Settings.ImageCropPage"
-             Margin="24">
+             Background="Transparent">
 
-    <Grid RowDefinitions="Auto, *, Auto">
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
-            <TextBlock Text="Crop Server Icon" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="Adjust and crop your image to standard 64x64 Minecraft server icon." FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
-        </StackPanel>
+  <DockPanel LastChildFill="True">
+    <Border DockPanel.Dock="Bottom"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="20,14">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button Classes="secondary" Click="BtnCancel_Click" Padding="14,8">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <lucide:LucideIcon Kind="X" Size="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Text="Cancel" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <Button Classes="primary" Click="BtnSave_Click" Padding="16,8">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <lucide:LucideIcon Kind="Check" Size="14" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Text="Crop &amp; Save" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Border>
 
-        <!-- Preview & Crop Canvas -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
-                BorderBrush="{DynamicResource CardBorderBrush}"
-                BorderThickness="1" CornerRadius="12" ClipToBounds="True"
-                HorizontalAlignment="Center" VerticalAlignment="Center" Padding="16">
-            <Grid Width="256" Height="256">
-                <!-- Source Image Preview -->
-                <Image x:Name="SourceImagePreview" Stretch="UniformToFill" Width="256" Height="256"/>
+    <Grid Margin="24" RowDefinitions="Auto, *, Auto">
+      <StackPanel Grid.Row="0" Margin="0,0,0,16" Spacing="4">
+        <TextBlock Text="Crop Server Icon" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <TextBlock Text="Drag the square frame or resize from its bottom-right handle. The output is scaled cleanly to 64x64 pixels for server-icon.png."
+                   FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+      </StackPanel>
 
-                <!-- Crop Overlay Mask -->
-                <Border BorderBrush="{DynamicResource AccentPrimaryBrush}"
-                        BorderThickness="2" CornerRadius="4"
-                        Width="128" Height="128"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        BoxShadow="0 0 0 9999px #80000000"/>
-            </Grid>
+      <Border Grid.Row="1" Background="#111116" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+        <Canvas x:Name="DrawCanvas" Background="Transparent"
+                SizeChanged="DrawCanvas_SizeChanged"
+                PointerPressed="Canvas_PointerPressed"
+                PointerMoved="Canvas_PointerMoved"
+                PointerReleased="Canvas_PointerReleased">
+          <Image x:Name="SourceImage" Stretch="Fill"/>
+          <Border x:Name="CropRectBorder"
+                  BorderBrush="White"
+                  BorderThickness="2"
+                  Background="#22FFFFFF"
+                  Cursor="SizeAll"/>
+          <Thumb x:Name="ResizeThumbBR"
+                 Width="16" Height="16"
+                 Cursor="BottomRightCorner"
+                 DragDelta="ResizeThumb_DragDelta">
+            <Thumb.Template>
+              <ControlTemplate>
+                <Ellipse Width="16" Height="16" Fill="White" Stroke="#202026" StrokeThickness="2"/>
+              </ControlTemplate>
+            </Thumb.Template>
+          </Thumb>
+        </Canvas>
+      </Border>
+
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,14,0,0" VerticalAlignment="Center">
+        <TextBlock Text="64x64 Preview:" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13"/>
+        <Border Width="64" Height="64" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" Background="#111116" CornerRadius="4">
+          <Image x:Name="PreviewImage" Stretch="UniformToFill"/>
         </Border>
-
-        <!-- Action Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Cancel" Click="OnCancelClick"
-                    Background="{DynamicResource ControlFillSecondaryBrush}"
-                    Foreground="{DynamicResource TextPrimaryBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
-                    CornerRadius="8" Padding="16,8" Cursor="Hand"/>
-            <Button Content="Apply Icon (64x64)" Click="OnApplyClick"
-                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                    CornerRadius="8" Padding="20,8" Cursor="Hand" FontWeight="SemiBold"/>
-        </StackPanel>
+      </StackPanel>
     </Grid>
+  </DockPanel>
 </UserControl>

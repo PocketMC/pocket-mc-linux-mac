@@ -1,191 +1,74 @@
-# PocketMC Linux & macOS - Full Parity Execution Plan
+# PocketMC Linux & macOS - Detailed Feature & UI/UX Parity Execution Plan
 
-## 1. Overview & Objectives
+## 1. Post-v1.0.4.0-beta.1 Re-alignment
 
-This document establishes the exhaustive, feature-by-feature, architectural, and visual execution plan for bringing PocketMC Linux & macOS (`pocket-mc-linux-mac`) to 100% production-ready parity with the authoritative Windows implementation (`pocket-mc-windows`).
+While `v1.0.4.0-beta.1` established core Avalonia navigation, basic instance management, Java 8-25 runtimes, cloud backup backends, Remote Control, and 231 passing automated tests, an exhaustive side-by-side audit against `pocket-mc-windows` (`feat/major-release-work`) identified visual token discrepancies (opaque surfaces blocking wallpaper translucency, theme dictionary accent precedence issues, missing shared styles) and simplified feature pages across Shell, Dashboard, New Instance, App Settings, Console, Players, Server Settings, Marketplace/Maps, Runtimes, Tunnels/Ports Map, Remote Control, and News/About.
 
-The goal is functional, experiential, and engineering parity:
-- Zero stubs, zero fake implementations, zero unhandled errors.
-- Dark-first aesthetic, dynamic accents, frosted surfaces over wallpapers with Skia blurred-wallpaper fallbacks for non-composited X11 and Wayland environments.
-- Strict architecture standards: Clean Architecture separation, config single-source-of-truth, atomic disk writes, path safety, and HTTP resilience.
-- Native Linux (systemd, D-Bus, XDG, `/proc`, `ss`/`lsof`) and macOS (Apple Silicon + Intel, Keychain, `caffeinate`, `/Library`, `ps`/`proc_pidinfo`) ergonomics.
+This plan governs Phases A through H to achieve high-fidelity visual, structural, and functional parity with PocketMC Windows without breaking Clean Architecture or Linux/macOS native ergonomics.
 
 ---
 
-## 2. Inventory & Parity Status Matrix
+## 2. Detailed Parity Phases (A - H)
 
-### Legend
-- **Done:** Fully implemented, verified against platform requirements with automated tests.
-- **Partial:** Basic implementation exists, but lacks advanced Windows workflows, edge-case hardening, or modular structure.
-- **Diverged:** Implemented using a different architecture that must be aligned or refactored for parity.
-- **Missing:** Not yet present in the Linux/macOS target repository.
+### Phase A: Design System, Theme Tokens, Shell, Backdrop & `AppConfig`
+- **A.1 `AppConfig` Single Source of Truth**: Port `PocketMC.Infrastructure/Configuration/AppConfig.cs` parsing `pocketmc.yml` (embedded/workspace config) dynamically for `version`, `channel`, `auth_proxies`, `telemetry_proxies`, and social/documentation URLs (`link_discord`, `link_github`, etc.). Wire `AppUrls` and `AboutViewModel.AppVersion` to `AppConfig`.
+- **A.2 Translucent Theme System & `AccentColorService` Fix**:
+  - Replace opaque `#1E1E24` / `#252528` / `#121214` fills in `App.axaml` Dark `ThemeDictionaries` with WPF-UI translucent white-alpha fills (`#0FFFFFFF`, `#15FFFFFF`, `#0BFFFFFF`) and subtle borders (`#18FFFFFF`) plus corresponding Light theme translucent surfaces.
+  - Create shared `PocketMC.App/Styles/ControlStyles.axaml` (primary/secondary/danger/AI buttons, translucent `CardExpander` accordion style, `TextBox`, `ComboBox`, `ToggleSwitch`, scrollbars).
+  - Fix `AccentColorService.ApplyAccentToApplication` to update both `ThemeDictionaries["Dark"]` and `ThemeDictionaries["Light"]` plus contrast-aware `TextOnAccentFillColorPrimaryBrush` and OS accent detection fallback on Linux/macOS.
+- **A.3 Shell & Visual Assets**:
+  - Fix `MainWindow.axaml` backdrop stack so `BackdropTintLayer` becomes transparent when FakeMica wallpaper blur is active.
+  - Match Windows collapsible `NavigationView` rail toggle (48px compact vs 240px expanded), Windows-exact right-aligned `TitleBarContext` pill alongside System RAM, `SplashWindow` startup initialization & update check, and `AboutPage` (`Team & Contributors` CardExpander with circular avatars + 2-column Community / Support & Feedback cards).
 
----
+### Phase B: Dashboard & Server Lifecycle Parity
+- Port `ServerLifecycleService` and `InstancePortUpdateService`.
+- Expand `InstanceCardViewModel` and `DashboardView.axaml` to match Windows: 4 skeleton loading cards, Online/Busy symbols + spinner, green active border, `Imported from Modpack` / VoiceChat / CrossPlay / Pumpkin badges, Uptime counter, all 4 connection skeleton rows + Bedrock LAN + Bedrock numeric + Geyser numeric rows, card keyboard navigation (`Enter`/`Space`), and Pin/Unpin dynamic section header.
 
-### Layer 1: Domain & Core Models
+### Phase C: New Instance Wizard, Pumpkin, Refreshable Providers & Import/Export
+- Port `PumpkinProvider` and `PumpkinConfiguration` with Pumpkin TCP/UDP port panel and NXS Playit callout (`PumpkinPremiumCallout`).
+- Add `IRefreshableServerSoftwareProvider` ("Refresh versions" button + status text), `LoaderVersionPanel` (Fabric/Forge/NeoForge loader picker), footer `ErrorCallout`, and download stage progress ring text in `NewInstancePage.axaml`.
+- Port `ModpackInstallDialogWindow` entry flow from "Import Modpack" and complete `InstanceImportService` / `InstanceExportService` parity.
 
-| Windows Component | Target File | Status | Notes & Scope |
-| :--- | :--- | :--- | :--- |
-| `PocketMC.Domain/Models/InstanceMetadata.cs` | `PocketMC.Core/Models/ServerInstance.cs` | Done | Full instance metadata with persistence and serialization. |
-| `PocketMC.Domain/Models/InstanceUpdateModels.cs` | `PocketMC.Core/Models/InstanceUpdateModels.cs` | Done | Target versions, update plans, and execution results. |
-| `PocketMC.Domain/Models/RebootScheduleSettings.cs` | `PocketMC.Core/Models/RebootScheduleSettings.cs` | Done | Daily and interval reboot schedule parameters. |
-| `PocketMC.Domain/Models/SessionSummary.cs` | `PocketMC.Core/Models/SessionSummary.cs` | Missing | Per-server AI session summary storage model. |
-| `PocketMC.Domain/Models/OllamaModels.cs` | `PocketMC.Core/Models/OllamaModels.cs` | Missing | Local Ollama model catalog, pull status, and tags. |
-| `PocketMC.Domain/Models/Port*.cs` (PortDiagnostics, PortLease, PortEngine, PortProtocol) | `PocketMC.Core/Models/PortReliabilityModels.cs` | Missing | Port reliability domain contracts and diagnostic snapshot models. |
-| `PocketMC.Domain/Models/BedrockPackModels.cs` | `PocketMC.Core/Models/BedrockPackModels.cs` | Missing | Behavior and resource pack manifest models for Bedrock instances. |
-| `PocketMC.Domain/Models/SettingsBackupModels.cs` | `PocketMC.Core/Models/SettingsBackupModels.cs` | Missing | Full app configuration export/import manifest models. |
-| `PocketMC.Domain/Models/CrashAnalysisResult.cs` | `PocketMC.Core/Models/CrashAnalysisResult.cs` | Missing | Structured crash categorization and recommendation model. |
-| `PocketMC.Domain/Models/GlobalResourceSummary.cs` | `PocketMC.Core/Models/GlobalResourceSummary.cs` | Missing | Aggregated host CPU, memory, and active instance statistics. |
-| `PocketMC.Domain/Security/PathSafety.cs` | `PocketMC.Core/Security/PathSafety.cs` | Done | Path traversal, link resolution, and directory boundary enforcement. |
-| `PocketMC.Domain/Storage/SafeZipExtractor.cs` | `PocketMC.Core/Storage/SafeZipExtractor.cs` | Done | Zip-Slip protected archive extraction. |
-| `PocketMC.Domain/Storage/MarketplaceFileNameSanitizer.cs` | `PocketMC.Core/Storage/MarketplaceFileNameSanitizer.cs` | Done | File name sanitation for downloaded addons and modpacks. |
+### Phase D: App Settings Full Accordion & Subsystems
+- Rebuild `AppSettingsPage.axaml` and `AppSettingsViewModel.cs` with all 10 Windows `CardExpander` sections:
+  1. App Behavior (start with OS, start/close to tray, telemetry, sleep prevention).
+  2. Storage & Root Directory (move/open/change).
+  3. Appearance (backdrop selector, accent presets + custom hex, blur/tint sliders, custom wallpaper).
+  4. Notifications.
+  5. Discord Rich Presence (all toggles + Live Profile Preview Active/Idle card).
+  6. Cloud Backups (connect Google Drive, Dropbox, OneDrive via `CloudBackupSettingsViewModel` + OAuth UI).
+  7. API Configuration (CurseForge key).
+  8. AI Session Summarization (provider selector, key validation, model combo, endpoint URL, Ollama Local/Cloud mode, daemon status check, `OllamaModelManagerDialog` + `OllamaService`, auto-summarize toggles).
+  9. Software Updates (check/channel/auto-check).
+  10. Keyboard Shortcuts reference card.
 
----
+### Phase E: Server Console, Session Summaries & Player Management
+- Rebuild `ServerConsolePage.axaml` and `ServerConsoleViewModel.cs`: live `Players` / `Stop` / `Restart` toolbar buttons, `ReadOnlyLogInfoBar`, `ResourceWarningBar` (80% RAM + Optimize action), `CrashBanner` (`Copy Report` + `Dismiss` + inline log box), inline collapsible **AI Intelligence** drawer with `MarkdownRenderer`, and log line context menu (`AI Analyze Selection`).
+- Port `SessionSummarizationService`, `SessionLogPreprocessor`, `SummaryEmojiFormatter`, and `SummaryStorageService`.
+- Upgrade `PlayerManagementPage.axaml`, `PlayerManagementViewModel`, `PlayerDataService`, `BedrockPlayerDataService`, `WhitelistService`, and `ServerStateFileService`: sidebar sub-navigation (`Online Players`, `Ban List`, `Whitelist`), Op toggle, Gamemode ComboBox, progress rings, and inline Ban/Kick reason prompt.
 
-### Layer 2: Application Use Cases & Infrastructure Services
+### Phase F: Server Settings (All 9 Tabs), Addons, World, Backups & Cloud Sync
+- Rebuild `ServerSettingsPage.axaml` across all 9 Windows tabs with sticky footer (`Auto-start server at PocketMC startup` + `Discard` + `Save Changes`):
+  - General: clickable dirt-textured `dark_dirt.png` Server Card preview with icon hover-edit -> `ImageCropPage` (SkiaSharp 64x64), inline collapsible `MotdEditorMode` with section color palette (`§0`-`§f`), formatting buttons (`§l`, `§o`, `§n`, `§m`, `§k`, `§r`), and green signal bars (`0/20`).
+  - Addons: Java `JavaModMetadataService` + Bedrock Behavior/Resource Packs (`BedrockAddonInstaller`, `AddonInventoryService`, `AddonToggleService`, `AddonUpdateCheckService`, `AddonAutoUpdateService`, `AddonIconService`, `AddonUpdateCheckDialogWindow`, `AddonUpdateDialogWindow`, `PendingAddonInstallService`).
+  - World: `WorldManager` / `WorldInventory` multi-world switching, seed display, dimension reset.
+  - Backups: KPI header (`TOTAL SIZE`, `LAST BACKUP`, `DISK SPACE`), `BedrockSnapshotService`, editable backup labels (`Add a label...`), delta size (`+0.0 MB`), and **Cloud Off-site Sync** per-provider toggles + remote backups list (`ServerCloudBackupViewModel`).
+  - Performance, Bedrock, Version Updates, Restart & Recovery / Advanced raw properties, and AI Summaries tabs.
 
-| Windows Component | Target File | Status | Notes & Scope |
-| :--- | :--- | :--- | :--- |
-| `InstanceVersionTargetService.cs` | `PocketMC.Infrastructure/Services/InstanceVersionTargetService.cs` | Done | Version target discovery across all 7 engine loaders. |
-| `InstanceUpdatePlanner.cs` | `PocketMC.Infrastructure/Services/InstanceUpdatePlanner.cs` | Done | Viability planning and installer resolution. |
-| `InstanceArtifactStager.cs` | `PocketMC.Infrastructure/Services/InstanceArtifactStager.cs` | Done | Non-destructive download staging with SHA1/SHA256 checksum validation. |
-| `InstanceUpdateApplier.cs` | `PocketMC.Infrastructure/Services/InstanceUpdateApplier.cs` | Done | Atomic two-phase update applier with journal rollback. |
-| `InstanceFileTransaction.cs` | `PocketMC.Infrastructure/Services/InstanceFileTransaction.cs` | Done | Rollback journal with uncommitted preservation. |
-| `InstanceOperationCoordinator.cs` | `PocketMC.Infrastructure/Services/InstanceOperationCoordinator.cs` | Done | Concurrent semaphore mutual exclusion. |
-| `RebootScheduleService.cs` | `PocketMC.Infrastructure/Services/RebootScheduleService.cs` | Done | Schedule validation and persistence. |
-| `ServerRebootSchedulerService.cs` | `PocketMC.Infrastructure/Services/ServerRebootSchedulerService.cs` | Done | 30s background supervisor, in-game warnings, and graceful restart. |
-| `PortCheckRequest.cs`, `PortProbeService.cs`, `PortLeaseRegistry.cs` | `PocketMC.Infrastructure/Networking/PortReliabilityEngine.cs` | Partial | Basic `PortProber` exists; needs full Windows port reliability engine porting. |
-| `InstanceTunnelOrchestrator.cs` | `PocketMC.Infrastructure/Services/InstanceTunnelOrchestrator.cs` | Missing | Java, Bedrock, and Simple Voice Chat UDP multi-tunnel orchestration. |
-| `SessionSummarizationService.cs` | `PocketMC.Infrastructure/Services/SessionSummarizationService.cs` | Missing | AI log preprocessor, summarization, and storage service. |
-| `OllamaService.cs` | `PocketMC.Infrastructure/Services/OllamaService.cs` | Missing | Local Ollama API integration (pull, list, delete, test connection). |
-| `WorldManager.cs`, `WorldInventory.cs` | `PocketMC.Infrastructure/Services/WorldManager.cs` | Missing | Multi-world management, switching, backups, and dimension cleanup. |
-| `AddonIconService.cs` | `PocketMC.Infrastructure/Services/AddonIconService.cs` | Missing | Addon icon disk caching and thumbnail management. |
-| `CloudBackupService.cs` | `PocketMC.Infrastructure/Services/CloudBackupService.cs` | Done | Google Drive, Dropbox, OneDrive OAuth PKCE and synchronization. |
-| `BanSidecarService.cs` | `PocketMC.Infrastructure/Services/BanSidecarService.cs` | Done | Bedrock dedicated server ban registry sidecar. |
-| `GeyserProvisioningService.cs` | `PocketMC.Infrastructure/Services/GeyserProvisioningService.cs` | Done | Automated Geyser and Floodgate download and UDP port patching. |
-| `SimpleVoiceChatConfigService.cs` | `PocketMC.Infrastructure/Services/SimpleVoiceChatConfigService.cs` | Done | Simple Voice Chat port auto-detection and atomic configuration. |
+### Phase G: Marketplace, Modpacks, Maps & Runtimes
+- Rebuild `PluginBrowserPage.axaml` (Mods/Plugins/Modpacks filters matching Windows) and full `MapBrowserPage.axaml`, plus `AddonIconService`, `ModpackService`, `AddonInstallDialogWindow` (version/loader picker), `DependencyConfirmationWindow`, and `ModpackInstallDialogWindow`.
+- Upgrade `JavaManagementPage.axaml` and `JavaManagementViewModel.cs` to match Windows `JavaSetupPage`: Java + PocketMine PHP runtimes (`8.2`, `8.3`, `8.0`, `8.1`), `READY`/`MISSING` badges, disk folder size in MB, status glyphs, footer summary, and `RuntimeDownloadDialog`.
 
----
-
-### Layer 3: Platform & OS Integration (`PocketMC.Platform`)
-
-| Windows Component | Target File | Status | Notes & Scope |
-| :--- | :--- | :--- | :--- |
-| `SafeSecretStore.cs` (DPAPI) | `PocketMC.Platform/Services/SecretStoreFactory.cs` | Done | Linux SecretService / macOS Keychain / AES-GCM fallback. |
-| Sleep Prevention | `PocketMC.Platform/Lifecycle/SleepPreventionService.cs` | Missing | Linux `systemd-inhibit` / D-Bus; macOS `caffeinate` / IOKit assertion. |
-| Single Instance & URL Protocol | `PocketMC.Platform/Lifecycle/SingleInstanceService.cs` | Missing | Unix domain socket lock; `pocketmc://` scheme registration. |
-| Native Notifications | `PocketMC.Platform/Notifications/NativeNotificationService.cs` | Missing | Linux `notify-send` / D-Bus; macOS UserNotifications / `osascript`. |
-| Discord Rich Presence | `PocketMC.Platform/Integrations/DiscordRpcService.cs` | Missing | Cross-platform Discord RPC integration for active servers. |
-| Native Metrics Sampling | `PocketMC.Platform/Metrics/NativeMetricsProvider.cs` | Missing | Linux `/proc/[pid]/stat`, `/proc/meminfo`; macOS `proc_pidinfo` and `ps`. |
+### Phase H: Tunnels, Ports Map, Remote Control & News
+- Rebuild `TunnelPage.axaml` + `PlayitStatusPage` + `PreStartAgentWarningWindow` + `PlayitAgentService` / `PlayitApiClient` / `InstanceTunnelOrchestrator` parity (Network Status header, Agent Status card with `Special Thanks to Playit.gg` gradient, framed public URL + green Port + Save + tag + toggle/delete/copy).
+- Polish `PortsMapPage.axaml` with expandable `CardExpander` headers, colored Canvas/SVG routing connectors, and status badges.
+- Port `CloudflaredInstaller` (including macOS tarball extraction), `PlayitHttpsTunnelProvider` full parity, and `RemoteControlPage.axaml` accent tabs + Discord DM expander.
+- Port `NewsPopupWindow` and `NewsContentRenderer` parity.
 
 ---
 
-### Layer 4: Shell, Navigation & Presentation (`PocketMC.App`)
+## 3. Quality & Verification Rules
 
-| Windows Component | Target File | Status | Notes & Scope |
-| :--- | :--- | :--- | :--- |
-| `MainWindow.xaml` | `PocketMC.App/Views/MainWindow.axaml` | Partial | Needs titlebar context, ExtendClientArea macOS traffic-light insets, and full visual hierarchy. |
-| `ShellViewModel.cs` | `PocketMC.App/ViewModels/MainWindowViewModel.cs` | Partial | Needs complete navigation history stack, active server badges, and keyboard shortcuts. |
-| `WallpaperMicaService.cs` | `PocketMC.App/Services/WallpaperBackdropService.cs` | Missing | Wallpaper rendering with configurable Skia blur and fallback for non-composited environments. |
-| `AccentColorService.cs` | `PocketMC.App/Services/AccentColorService.cs` | Missing | Extraction of system accent colors and runtime brush injection. |
-| `AdaptiveGridPanel.cs` | `PocketMC.App/Controls/AdaptiveGridPanel.cs` | Missing | Responsive card layout panel adapting dynamically to window resize. |
-| `SkeletonStyles.xaml` | `PocketMC.App/Styles/SkeletonStyles.axaml` | Missing | Shimmer skeleton loading placeholder styles. |
-| `AppDialogWindow.xaml` | `PocketMC.App/Views/Dialogs/AppDialogWindow.axaml` | Missing | Unified themed modal dialog window. |
-| `PasswordPromptDialogWindow.xaml` | `PocketMC.App/Views/Dialogs/PasswordPromptDialogWindow.axaml` | Missing | Themed password/secret entry dialog. |
-| `ProgressDialogWindow.xaml` | `PocketMC.App/Views/Dialogs/ProgressDialogWindow.axaml` | Missing | Determinate and indeterminate progress dialog with cancel support. |
-| `SplashWindow.xaml` | `PocketMC.App/Views/SplashWindow.axaml` | Missing | Startup splash window with `splash.png`. |
-| `TrayIconViewModel.cs` | `PocketMC.App/ViewModels/TrayIconViewModel.cs` | Partial | Minimal tray exists; needs full menu actions and minimize-to-tray preference. |
-
----
-
-### Layer 5: Feature Pages & ViewModels
-
-| Windows Component | Target File | Status | Notes & Scope |
-| :--- | :--- | :--- | :--- |
-| `DashboardPage.xaml` | `PocketMC.App/Views/DashboardView.axaml` | Partial | Needs decomposition into modular sub-VMs and live metric graphs. |
-| `DashboardActionsViewModel.cs` | `PocketMC.App/ViewModels/DashboardActionsViewModel.cs` | Missing | Modular actions VM for starting, stopping, and restarting instances. |
-| `DashboardMetricsViewModel.cs` | `PocketMC.App/ViewModels/DashboardMetricsViewModel.cs` | Missing | Modular metrics VM tracking host CPU, memory, and network. |
-| `InstanceCardViewModel.cs` | `PocketMC.App/ViewModels/InstanceCardViewModel.cs` | Missing | Rich instance card with status pill, quick actions, and tunnel badge. |
-| `ServerSettingsPage.xaml` (9 sub-VMs) | `PocketMC.App/Views/ServerSettingsPage.axaml` | Partial | Currently a single monolithic file. Must be decomposed into 9 modular tabs. |
-| `SettingsGeneralVM.cs` + `MinecraftMotdConverter.cs` | `PocketMC.App/ViewModels/Settings/SettingsGeneralViewModel.cs` | Partial | General properties + formatted Minecraft MOTD color preview. |
-| `ImageCropPage.xaml` (SkiaSharp) | `PocketMC.App/Views/Settings/ImageCropPage.axaml` | Missing | 64x64 `server-icon.png` interactive cropping and scaling tool. |
-| `SettingsAddonsVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsAddonsViewModel.cs` | Missing | Full addon inventory, toggle status, icon display, and update checks. |
-| `SettingsWorldVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsWorldViewModel.cs` | Missing | Multi-world management, switching, seed inspection, and dimension resets. |
-| `SettingsBackupsVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsBackupsViewModel.cs` | Missing | Unified local and cloud backup management for the instance. |
-| `SettingsPerformanceVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsPerformanceViewModel.cs` | Missing | JVM memory sliders, GC presets (Aikar, ZGC, Shenandoah), and CPU thread allocation. |
-| `SettingsBedrockVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsBedrockViewModel.cs` | Missing | BDS and PocketMine-MP configuration and pack management. |
-| `SettingsVersionUpdatesVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsVersionUpdatesViewModel.cs` | Done | Integrated in settings; needs dedicated sub-VM binding. |
-| `SettingsSummariesVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsSummariesViewModel.cs` | Missing | AI session summaries history for the instance. |
-| `SettingsAdvancedVM.cs` | `PocketMC.App/ViewModels/Settings/SettingsAdvancedViewModel.cs` | Partial | Raw properties, custom JVM args, RCON, and scheduled maintenance. |
-| `AppSettingsPage.xaml` | `PocketMC.App/Views/AppSettingsPage.axaml` | Missing | Global application settings page matching Windows. |
-| `SettingsBackupDialogWindow.xaml` | `PocketMC.App/Views/Dialogs/SettingsBackupDialogWindow.axaml` | Missing | App configuration export/import dialog. |
-| `InstanceExportPage.xaml`, `InstanceImportPage.xaml` | `PocketMC.App/Views/Instances/` | Missing | Dedicated import and export wizard pages with manifest metadata. |
-| `PluginBrowserPage.xaml`, `MapBrowserPage.xaml` | `PocketMC.App/Views/Marketplace/` | Missing | Split marketplace into separate plugin and world map browser tabs. |
-| `PortConflictWindow.xaml` | `PocketMC.App/Views/Networking/PortConflictWindow.axaml` | Missing | Interactive port conflict resolution window with owner detection. |
-| `CreateTunnelDialog.xaml`, `PlayitConsoleWindow.xaml` | `PocketMC.App/Views/Tunnel/` | Missing | Tunnel creation dialog and live Playit process log console. |
-| `OllamaModelManagerDialog.xaml` | `PocketMC.App/Views/Intelligence/OllamaModelManagerDialog.axaml` | Missing | Local Ollama model download and configuration manager. |
-| `ServerCrashDialogWindow.xaml` | `PocketMC.App/Views/Instances/ServerCrashDialogWindow.axaml` | Missing | Crash diagnosis dialog with automated log inspection. |
-| `NewsPage.xaml`, `NewsPopupWindow.xaml` | `PocketMC.App/Views/News/` | Missing | Community news feed, article reader, and popup notifications. |
-
----
-
-## 3. Phased Execution Roadmap
-
-### Phase 1: Shell, Navigation, Theming & Native Desktop Lifecycle
-1. Import visual assets from Windows: `dark_dirt.png`, `default_wallpaper.png`, `splash.png`, contributor avatars.
-2. Port `AdaptiveGridPanel.cs`, `SkeletonStyles.axaml`, and `ScrollViewerHelper.cs`.
-3. Port `WallpaperBackdropService.cs` and `AccentColorService.cs` with Skia blurred-wallpaper fallback.
-4. Implement unified dialog system: `AppDialogWindow.axaml`, `PasswordPromptDialogWindow.axaml`, and `ProgressDialogWindow.axaml`.
-5. Implement `PocketMC.Platform` lifecycle services:
-   - `SingleInstanceService`: Unix domain socket single-instance handoff and `pocketmc://` URL protocol handling.
-   - `SleepPreventionService`: `systemd-inhibit` on Linux and `caffeinate` on macOS.
-   - `NativeNotificationService`: Linux D-Bus and macOS `osascript`/NotificationCenter.
-   - `DiscordRpcService`: Rich presence for running servers.
-6. Upgrade `MainWindow.axaml` and `MainWindowViewModel.cs` with navigation stack, back-button handling, and titlebar context.
-
-### Phase 2: Global App Settings & First-Run Setup Parity
-1. Port `AppSettingsPage.axaml` and `AppSettingsViewModel.cs` covering Appearance, Wallpaper, Accent, Startup, Sleep Prevention, Remote Control, Cloud Backups, AI Providers, and Storage.
-2. Port `SettingsBackupDialogWindow.axaml` for full configuration export and import.
-3. Enhance `JavaManagementPage.axaml` to detect standard Linux and macOS JDK installation paths (`/usr/lib/jvm`, Homebrew, SDKMAN, `/Library/Java/JavaVirtualMachines`).
-4. Upgrade `RootDirectorySetupWindow.axaml` with storage validation and custom directory selection.
-
-### Phase 3: Dashboard, Lifecycle & Live Resource Monitoring
-1. Decompose `DashboardViewModel` into modular components: `DashboardViewModel`, `DashboardActionsViewModel`, `DashboardInstanceListViewModel`, `DashboardMetricsViewModel`, and `InstanceCardViewModel`.
-2. Port `NativeMetricsProvider.cs` using Linux `/proc/[pid]/stat` and macOS `proc_pidinfo`/`ps`.
-3. Upgrade `DashboardView.axaml` with `AdaptiveGridPanel`, live metric charts, status pills, and skeleton placeholders.
-
-### Phase 4: Server Settings (Full Modular Parity)
-1. Split `ServerSettingsViewModel` and `ServerSettingsPage.axaml` into 9 modular tabs:
-   - General (with `MinecraftMotdConverter` live preview and `ImageCropPage.axaml` SkiaSharp 64x64 icon cropper).
-   - Addons (with enable/disable toggle, icon caching, and update check dialog).
-   - World (with `WorldManager` multi-world switching and dimension cleanup).
-   - Backups (with local retention and cloud sync).
-   - Performance (JVM flags, memory sliders, GC presets).
-   - Bedrock (BDS and PocketMine-MP options).
-   - Version Updates (transactional version changer).
-   - Summaries (per-server AI session summary history).
-   - Advanced (raw properties, custom JVM args, RCON, reboot schedules).
-
-### Phase 5: Instance Creation, Import/Export, Marketplace & Modpacks
-1. Upgrade `NewInstancePage.axaml` with engine download progress and runtime provisioning.
-2. Port `InstanceExportPage.axaml` and `InstanceImportPage.axaml` with the standardized cross-platform `InstanceExportManifest` format.
-3. Port `PluginBrowserPage.axaml` and `MapBrowserPage.axaml`, with `AddonInstallDialogWindow.axaml` and `ModpackInstallDialogWindow.axaml`.
-
-### Phase 6: Networking, Port Reliability Engine & Tunnel Orchestration
-1. Port full Port Reliability Engine: `PortCheckRequest`, `PortCheckResult`, `PortConflictInfo`, `PortLease`, `PortProbeFailureClassifier`, `PortFailureMessageService`, `PortRecoveryRecommendation`, and `PortConflictWindow.axaml`.
-2. Implement POSIX owner identification via `ss` and `lsof`.
-3. Port `InstanceTunnelOrchestrator.cs` and `CreateTunnelDialog.axaml`, `PlayitConsoleWindow.axaml`, and `PlayitStatusPage.axaml`.
-
-### Phase 7: Console, Players, AI Intelligence, News, About & Remote Control UI
-1. Console: Port `ConsoleLogFilter`, `ConsoleLogHistoryService`, and `LogLineClassifier` to `ServerConsolePage.axaml`.
-2. Players: Upgrade `PlayerManagementPage.axaml` with `PlayerViewModel`, gamemode parser, and ban sidecar.
-3. AI / Intelligence: Port `OllamaModelManagerDialog.axaml`, `ServerCrashDialogWindow.axaml`, and `SessionSummarizationService`.
-4. News & About: Port `NewsPage.axaml` and `AboutPage.axaml` with contributor avatars.
-5. Remote Control UI: Port full modern UI in `RemoteControlPage.axaml`.
-
-### Phase 8: POSIX Hardening, Packaging & Verification Gate
-1. Process group management verification (`setpgid`/`SIGTERM`/`SIGKILL`).
-2. Automatic `chmod +x` application for extracted binaries.
-3. Strict case-sensitive filesystem path verification.
-4. Packaging scripts: `install.sh`, `uninstall.sh`, `build-dmg.sh`, `shell.nix`.
-5. Full test suite execution: unit tests, integration tests, and architecture tests.
+- Write one failing test first, verify RED, implement minimal production-grade fix, verify GREEN.
+- Build and run full test suite (`dotnet build PocketMC.sln -c Release` and `dotnet test PocketMC.sln -c Release`) after every phase.
+- Update `docs/WINDOWS_PARITY_MATRIX.md`, `docs/UI_UX_PARITY_MATRIX.md`, and `.ai/STATE.md` honestly after each phase.

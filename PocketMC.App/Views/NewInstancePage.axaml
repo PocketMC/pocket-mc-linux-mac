@@ -1,230 +1,254 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
-             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
+             xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.NewInstancePage"
-             x:DataType="vm:NewInstanceViewModel"
-             x:CompileBindings="True">
+             x:DataType="vm:NewInstanceViewModel">
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="28,20,28,24">
-        <!-- HEADER: Matches Windows TitleBar & Import Modpack / Import Instance actions -->
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Command="{Binding CancelCommand}"
-                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        MinWidth="88" Margin="0,0,14,0" Padding="12,6"
-                        CornerRadius="6" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <lucide:LucideIcon Kind="ArrowLeft" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="Back" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <TextBlock Text="Create a New Instance" FontSize="24" FontWeight="Bold"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+  <Grid RowDefinitions="Auto, *, Auto">
+
+    <!-- Top Header & 1-Click Presets Bar -->
+    <Border Grid.Row="0" Padding="28,20,28,14" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Button Command="{Binding CancelCommand}" Classes="secondary" Padding="10,7" ToolTip.Tip="Back (Esc)">
+            <lucide:LucideIcon Kind="ArrowLeft" Size="16"/>
+          </Button>
+          <StackPanel>
+            <TextBlock Text="Create a New Instance" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Choose a 1-click template preset or configure server software, ports, and world settings." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Command="{Binding BrowseModpacksCommand}" Classes="secondary" Padding="12,7">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="Globe" Size="14"/>
+              <TextBlock Text="Browse Modpacks"/>
             </StackPanel>
-
-            <!-- Right Header: Import Modpack & Import Instance Buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsEnabled="{Binding !IsCreating}">
-                <Button Command="{Binding ImportModpackCommand}"
-                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="6" Padding="12,6" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <lucide:LucideIcon Kind="Package" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="Import Modpack" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <Border Background="#33FFB347" BorderBrush="#FFFFB347" BorderThickness="1" CornerRadius="4" Padding="4,0" VerticalAlignment="Center">
-                            <TextBlock Text="BETA" FontSize="10" FontWeight="Bold" Foreground="#FFFFB347" VerticalAlignment="Center"/>
-                        </Border>
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding ImportInstanceCommand}"
-                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        MinWidth="136" CornerRadius="6" Padding="12,6" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <lucide:LucideIcon Kind="Upload" Size="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="Import Instance" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+          </Button>
+          <Button Command="{Binding ImportModpackCommand}" Classes="secondary" Padding="12,7">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="PackagePlus" Size="14"/>
+              <TextBlock Text="Import Modpack (.mrpack / .zip)"/>
             </StackPanel>
-        </Grid>
+          </Button>
+          <Button Command="{Binding ImportInstanceCommand}" Classes="secondary" Padding="12,7">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="ArchiveRestore" Size="14"/>
+              <TextBlock Text="Import Archive"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
 
-        <!-- MAIN 2-COLUMN CARDS -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16" IsEnabled="{Binding !IsCreating}">
-            <Grid ColumnDefinitions="*, 20, *">
-                <!-- LEFT COLUMN: Server Identity & Software -->
-                <Border Grid.Column="0"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        BoxShadow="0 8 24 0 #20000000"
-                        Padding="24"
-                        VerticalAlignment="Top">
-                    <StackPanel Spacing="16">
-                        <!-- Card Header -->
-                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-                            <lucide:LucideIcon Kind="Server" Size="20" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="Server Identity &amp; Software" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        </StackPanel>
+        <!-- Presets Wrap Bar -->
+        <WrapPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
+          <TextBlock Text="1-Click Presets:" FontSize="12" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,10,6"/>
+          <Button Command="{Binding ApplyPresetVanillaJavaCommand}" Content="Vanilla Java" Classes="secondary" Padding="10,5" Margin="0,0,6,6"/>
+          <Button Command="{Binding ApplyPresetCrossplayGeyserCommand}" Content="Java + Geyser Crossplay" Classes="secondary" Padding="10,5" Margin="0,0,6,6"/>
+          <Button Command="{Binding ApplyPresetBedrockCommand}" Content="Bedrock Dedicated" Classes="secondary" Padding="10,5" Margin="0,0,6,6"/>
+          <Button Command="{Binding ApplyPresetPumpkinCommand}" Content="Pumpkin (Fast Native)" Classes="secondary" Padding="10,5" Margin="0,0,6,6"/>
+          <Button Command="{Binding ApplyPresetPocketMineCommand}" Content="PocketMine PHP" Classes="secondary" Padding="10,5" Margin="0,0,6,6"/>
+        </WrapPanel>
+      </Grid>
+    </Border>
 
-                        <!-- Server Name -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Server Name" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="My Cool Server" MaxLength="32" CornerRadius="6"/>
-                            <ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors)}" Foreground="#ef4444" FontSize="12"/>
-                        </StackPanel>
+    <!-- Scrollable Form Columns -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="28,20,28,20" Spacing="16">
 
-                        <!-- Description -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Description" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBox Text="{Binding Description, Mode=TwoWay}" Watermark="What this instance is for" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4"/>
-
-                        <!-- Server Type / Engine -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Server Type" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox ItemsSource="{Binding EngineTypes}" SelectedItem="{Binding SelectedEngine, Mode=TwoWay}" HorizontalAlignment="Stretch" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <!-- Minecraft Version -->
-                        <StackPanel Spacing="6">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBlock Grid.Column="0" Text="Minecraft Version" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                                <CheckBox Grid.Column="1" IsChecked="{Binding ShowSnapshots, Mode=TwoWay}" VerticalAlignment="Center">
-                                    <TextBlock Text="Show Snapshots" FontSize="12" Opacity="0.8" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                </CheckBox>
-                            </Grid>
-                            <Grid ColumnDefinitions="*, Auto">
-                                <ComboBox Grid.Column="0" ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion, Mode=TwoWay}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsLoadingVersions}" CornerRadius="6"/>
-                                <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsLoadingVersions}" Width="20" Height="20" Margin="12,0,0,0"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4" IsVisible="{Binding IsJavaEngine}"/>
-
-                        <!-- Cross-play Addon (Geyser) -->
-                        <StackPanel Spacing="4" IsVisible="{Binding IsJavaEngine}">
-                            <CheckBox IsChecked="{Binding EnableGeyser, Mode=TwoWay}">
-                                <TextBlock Text="Enable Cross-play (Geyser + Floodgate)" FontWeight="SemiBold" FontSize="13"/>
-                            </CheckBox>
-                            <TextBlock Text="Allows Minecraft Bedrock players to join this Java server." FontSize="12" Opacity="0.8" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="28,0,0,0"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- RIGHT COLUMN: World & Gameplay Settings -->
-                <Border Grid.Column="2"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        BoxShadow="0 8 24 0 #20000000"
-                        Padding="24"
-                        VerticalAlignment="Top">
-                    <StackPanel Spacing="16">
-                        <!-- Card Header -->
-                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-                            <lucide:LucideIcon Kind="Globe" Size="20" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="World &amp; Gameplay Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <!-- World Seed -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="World Seed" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBox Text="{Binding WorldSeed, Mode=TwoWay}" Watermark="Leave empty for random seed" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <!-- World Generation Type -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="World Generation Type" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox ItemsSource="{Binding LevelTypes}" SelectedItem="{Binding SelectedLevelType, Mode=TwoWay}" HorizontalAlignment="Stretch" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4"/>
-
-                        <!-- Gamemode -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Default Gamemode" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox ItemsSource="{Binding Gamemodes}" SelectedItem="{Binding SelectedGamemode, Mode=TwoWay}" HorizontalAlignment="Stretch" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <!-- World Difficulty -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="World Difficulty" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox ItemsSource="{Binding Difficulties}" SelectedItem="{Binding SelectedDifficulty, Mode=TwoWay}" HorizontalAlignment="Stretch" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <!-- Max Players -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Players Limit" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBox Text="{Binding MaxPlayers, Mode=TwoWay}" CornerRadius="6"/>
-                        </StackPanel>
-
-                        <Border Height="1" Background="{DynamicResource CardStrokeColorDefaultBrush}" Margin="0,4"/>
-
-                        <!-- Custom World Upload -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Custom World Upload (.zip / .mcworld)" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Grid.Column="0" Text="{Binding CustomWorldPath, Mode=OneWay}" Watermark="Optional (.zip / .mcworld)" IsReadOnly="True" CornerRadius="6" Margin="0,0,8,0"/>
-                                <Button Grid.Column="1" Command="{Binding BrowseWorldCommand}" Content="Browse" CornerRadius="6" Padding="12,6"/>
-                            </Grid>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </ScrollViewer>
-
-        <!-- STICKY FOOTER ACTION BAR -->
-        <Border Grid.Row="2"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="12"
-                Padding="20,16">
-            <Grid ColumnDefinitions="*, Auto">
-                <StackPanel Grid.Column="0" Spacing="8" VerticalAlignment="Center">
-                    <!-- EULA Checkbox -->
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <CheckBox IsChecked="{Binding AcceptEula, Mode=TwoWay}" VerticalAlignment="Center"/>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="I accept the Minecraft End User License Agreement" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBlock FontSize="12" Opacity="0.8" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                                PocketMC will write eula.txt automatically. Review Mojang's EULA before creating the instance.
-                            </TextBlock>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Download Progress Indicator -->
-                    <StackPanel Spacing="6" IsVisible="{Binding IsCreating}" Margin="0,8,28,0">
-                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" Height="4" HorizontalAlignment="Stretch" CornerRadius="2"/>
-                        <TextBlock Text="{Binding ProgressText}" FontSize="12" Foreground="{DynamicResource AccentPrimaryBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Action Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Command="{Binding CancelCommand}" Content="Cancel" Padding="16,8" CornerRadius="6"
-                            Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                            Cursor="Hand"/>
-                    <Button Command="{Binding CreateInstanceCommand}" Padding="16,8" CornerRadius="6"
-                            Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                            Cursor="Hand">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <lucide:LucideIcon Kind="Download" Size="16" VerticalAlignment="Center"/>
-                            <TextBlock Text="Create and Download" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
+        <!-- Inline ErrorCallout Banner matching Windows -->
+        <Border IsVisible="{Binding HasError}"
+                Background="#2B1A1A" BorderBrush="#F38BA8" BorderThickness="1"
+                CornerRadius="8" Padding="14,10">
+          <Grid ColumnDefinitions="Auto, *, Auto">
+            <lucide:LucideIcon Grid.Column="0" Kind="TriangleAlert" Size="18" Foreground="#F38BA8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" Foreground="#F38BA8" TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center"/>
+            <Button Grid.Column="2" Command="{Binding DismissErrorCommand}" Classes="subtle" Padding="6,4">
+              <lucide:LucideIcon Kind="X" Size="14" Foreground="#F38BA8"/>
+            </Button>
+          </Grid>
         </Border>
-    </Grid>
+
+        <Grid ColumnDefinitions="*, 18, *">
+
+          <!-- Left Column: Server Identity, Software, Loader & Pumpkin Ports -->
+          <Border Grid.Column="0" Classes="card" Padding="20" VerticalAlignment="Top">
+            <StackPanel Spacing="14">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <lucide:LucideIcon Kind="Server" Size="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                <TextBlock Text="Server Identity &amp; Software" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Server Name" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="my-survival-server"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Description / MOTD" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding Description, Mode=TwoWay}" Watermark="A Minecraft server powered by PocketMC"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Server Software / Engine" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <ComboBox ItemsSource="{Binding EngineTypes}" SelectedItem="{Binding SelectedEngine}" HorizontalAlignment="Stretch"/>
+              </StackPanel>
+
+              <!-- Version Row + Refresh Button -->
+              <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*, Auto">
+                  <TextBlock Grid.Column="0" Text="Minecraft / Software Version" FontSize="12" FontWeight="Medium"
+                             Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                  <Button Grid.Column="1" Command="{Binding RefreshVersionsCommand}" Classes="subtle"
+                          Padding="6,2" ToolTip.Tip="Refresh Version Catalog"
+                          IsEnabled="{Binding !IsLoadingVersions}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <lucide:LucideIcon Kind="RefreshCw" Size="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <TextBlock Text="Refresh" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                  </Button>
+                </Grid>
+
+                <ComboBox ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}"
+                          HorizontalAlignment="Stretch" IsEnabled="{Binding !IsLoadingVersions}"/>
+
+                <TextBlock Text="{Binding RefreshVersionsStatus}" FontSize="11"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           IsVisible="{Binding RefreshVersionsStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <CheckBox IsChecked="{Binding ShowSnapshots, Mode=TwoWay}" Content="Include Snapshots / Pre-releases / Previews" FontSize="12"/>
+              </StackPanel>
+
+              <!-- Mod Loader Version Panel (Fabric / Forge / NeoForge) -->
+              <StackPanel Spacing="4" IsVisible="{Binding IsLoaderVersionPanelVisible}">
+                <TextBlock Text="Loader Version" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <ComboBox ItemsSource="{Binding LoaderVersions}" SelectedItem="{Binding SelectedLoaderVersion}"
+                          HorizontalAlignment="Stretch" IsEnabled="{Binding !IsLoadingLoaderVersions}"/>
+                <TextBlock Text="Fetching available loader builds..." FontSize="11"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           IsVisible="{Binding IsLoadingLoaderVersions}"/>
+              </StackPanel>
+
+              <!-- Geyser Crossplay (Java only) -->
+              <Border Classes="card-secondary" IsVisible="{Binding IsJavaEngine}" Padding="12">
+                <StackPanel Spacing="6">
+                  <CheckBox IsChecked="{Binding EnableGeyser, Mode=TwoWay}" FontWeight="SemiBold"
+                            Content="Enable Geyser + Floodgate (Bedrock Crossplay)"/>
+                  <TextBlock Text="Allows Xbox, PlayStation, Switch, iOS, and Android players to join Paper/Fabric/Forge servers."
+                             FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+
+              <!-- Pumpkin Dual-Protocol Panel -->
+              <Border Classes="card-secondary" IsVisible="{Binding ShowPumpkinNetworkPanel}" Padding="14">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Pumpkin Listeners (Java TCP + Bedrock UDP)" FontSize="13" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextPrimaryBrush}"/>
+                  <Grid ColumnDefinitions="*, 10, *">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                      <CheckBox IsChecked="{Binding PumpkinJavaEnabled, Mode=TwoWay}" Content="Java Listener" FontSize="12"/>
+                      <TextBox Text="{Binding ServerPort, Mode=TwoWay}" Watermark="25565"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                      <CheckBox IsChecked="{Binding PumpkinBedrockEnabled, Mode=TwoWay}" Content="Bedrock (NetherNet)" FontSize="12"/>
+                      <TextBox Text="{Binding PumpkinBedrockPort, Mode=TwoWay}" Watermark="19132"/>
+                    </StackPanel>
+                  </Grid>
+                  <Border Background="#183B82F6" BorderBrush="#403B82F6" BorderThickness="1" CornerRadius="6" Padding="10"
+                          IsVisible="{Binding ShowPumpkinPlayitCallout}">
+                    <TextBlock Text="{Binding PumpkinPlayitCalloutText}" FontSize="11" Foreground="#93C5FD" TextWrapping="Wrap"/>
+                  </Border>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <!-- Right Column: World & Gameplay Settings -->
+          <Border Grid.Column="2" Classes="card" Padding="20" VerticalAlignment="Top">
+            <StackPanel Spacing="14">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <lucide:LucideIcon Kind="Globe" Size="18" Foreground="#10B981"/>
+                <TextBlock Text="World &amp; Gameplay Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="World Seed" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBox Text="{Binding WorldSeed, Mode=TwoWay}" Watermark="Leave empty for random seed"/>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="World Generation Type" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <ComboBox ItemsSource="{Binding LevelTypes}" SelectedItem="{Binding SelectedLevelType}" HorizontalAlignment="Stretch"/>
+              </StackPanel>
+
+              <Grid ColumnDefinitions="*, 12, *">
+                <StackPanel Grid.Column="0" Spacing="4">
+                  <TextBlock Text="Default Gamemode" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <ComboBox ItemsSource="{Binding Gamemodes}" SelectedItem="{Binding SelectedGamemode}" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="4">
+                  <TextBlock Text="World Difficulty" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <ComboBox ItemsSource="{Binding Difficulties}" SelectedItem="{Binding SelectedDifficulty}" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+              </Grid>
+
+              <Grid ColumnDefinitions="*, 12, *">
+                <StackPanel Grid.Column="0" Spacing="4">
+                  <TextBlock Text="Players Limit" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <TextBox Text="{Binding MaxPlayers, Mode=TwoWay}" Watermark="20"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="4">
+                  <TextBlock Text="Server Port" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <TextBox Text="{Binding ServerPort, Mode=TwoWay}" Watermark="25565"/>
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Custom World Archive (.zip / .mcworld)" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Grid ColumnDefinitions="*, 8, Auto">
+                  <TextBox Grid.Column="0" Text="{Binding CustomWorldPath, Mode=TwoWay}" Watermark="Optional (.zip / .mcworld)"/>
+                  <Button Grid.Column="2" Command="{Binding BrowseWorldCommand}" Content="Browse" Classes="secondary"/>
+                </Grid>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Sticky Bottom EULA & Download Footer -->
+    <Border Grid.Row="2" Padding="28,14"
+            Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*, Auto">
+        <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center" Margin="0,0,20,0">
+          <CheckBox IsChecked="{Binding AcceptEula, Mode=TwoWay}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="I accept the Minecraft End User License Agreement (EULA)" FontSize="13" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <Button Command="{Binding OpenEulaLinkCommand}" Classes="subtle" Padding="4,0" Content="View EULA" FontSize="12"/>
+            </StackPanel>
+          </CheckBox>
+
+          <StackPanel Spacing="4" IsVisible="{Binding IsCreating}">
+            <TextBlock Text="{Binding ProgressText}" FontSize="11" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" Height="5" CornerRadius="3"/>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Command="{Binding CancelCommand}" Content="Cancel" Classes="secondary" Padding="16,8"/>
+          <Button Command="{Binding CreateInstanceCommand}" Classes="primary" Padding="18,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <lucide:LucideIcon Kind="Download" Size="15"/>
+              <TextBlock Text="Create and Download"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
 </UserControl>

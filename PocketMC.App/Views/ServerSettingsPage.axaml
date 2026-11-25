@@ -1,905 +1,1105 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PocketMC.App.ViewModels"
+             xmlns:settings="using:PocketMC.App.ViewModels.Settings"
              xmlns:conv="using:PocketMC.App.Converters"
+             xmlns:models="using:PocketMC.Core.Models"
              xmlns:lucide="using:Lucide.Avalonia"
              x:Class="PocketMC.App.Views.ServerSettingsPage"
              x:DataType="vm:ServerSettingsViewModel"
-             x:CompileBindings="True"
-             Margin="24">
-
-    <UserControl.Resources>
-        <conv:MinecraftMotdConverter x:Key="MotdConverter"/>
-    </UserControl.Resources>
-
-    <UserControl.Styles>
-        <Style Selector="Border.setting-card">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="24,18"/>
-            <Setter Property="Margin" Value="0,0,0,14"/>
-        </Style>
-        <Style Selector="TextBlock.setting-title">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-        </Style>
-        <Style Selector="TextBlock.setting-description">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
-    </UserControl.Styles>
-
-    <Grid RowDefinitions="Auto, 16, *, Auto">
-        <!-- Header -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, 16, *, Auto">
-            <Button Grid.Column="0" Command="{Binding GoBackCommand}"
-                    Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" ToolTip.Tip="Go Back">
-                <lucide:LucideIcon Kind="ArrowLeft" Size="20" StrokeWidth="2" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            </Button>
-            <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                <TextBlock Text="{Binding SelectedInstance.Name, StringFormat='{}Server Configuration - {0}'}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                <TextBlock Text="Manage server properties, world generator rules, performance allocations, and remote options." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-            </StackPanel>
-            <Border Grid.Column="3" Background="#26E74C3C" CornerRadius="16" Padding="12,6" IsVisible="{Binding HasUnsavedChanges}" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <lucide:LucideIcon Kind="Info" Size="14" Foreground="#E74C3C" VerticalAlignment="Center"/>
-                    <TextBlock Text="Unsaved Changes" Foreground="#E74C3C" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <!-- Settings Tabs (9 Modular Categories) -->
-        <TabControl Grid.Row="2" Margin="0" Padding="0">
-            <!-- 1. GENERAL TAB -->
-            <TabItem Header="General" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
-                        
-                        <!-- SERVER ICON -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Server Icon" Classes="setting-title" />
-                                    <TextBlock Text="64x64 PNG icon shown in the Minecraft server list." Classes="setting-description" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                                    <Border Width="64" Height="64" CornerRadius="8" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" ClipToBounds="True">
-                                        <Image Source="{Binding General.ServerIcon}" Stretch="UniformToFill"/>
-                                    </Border>
-                                    <Button Command="{Binding General.BrowseIconCommand}" Content="Change Icon..."
-                                            Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
-                                            VerticalAlignment="Center" Cursor="Hand"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- MOTD WITH PREVIEW -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 360">
-                                <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Server Message (MOTD)" Classes="setting-title" />
-                                    <TextBlock Text="Description displayed in player server list. Supports § and &amp; color codes." Classes="setting-description" />
-                                    <!-- MOTD Live Formatted Inlines Preview -->
-                                    <Border Background="#1A000000" CornerRadius="6" Padding="10,6" Margin="0,4,0,0">
-                                        <ContentControl Content="{Binding General.Motd, Converter={StaticResource MotdConverter}}"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding General.Motd, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- PORT -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Server Port" Classes="setting-title" />
-                                    <TextBlock Text="Network port players connect to (Java: 25565, Bedrock: 19132)." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding General.ServerPort, Mode=TwoWay}" Minimum="1" Maximum="65535" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- GEYSER BEDROCK PORT -->
-                        <Border Classes="setting-card" IsVisible="{Binding HasGeyser}">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Bedrock Cross-play Port (UDP)" Classes="setting-title" />
-                                    <TextBlock Text="UDP port for Bedrock edition players connecting via Geyser (default: 19132)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding General.GeyserBedrockPort, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- SERVER IP -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 260">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Server IP Binding" Classes="setting-title" />
-                                    <TextBlock Text="Bind to specific network interface IP address (blank = all)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding General.ServerIp, Mode=TwoWay}" Watermark="0.0.0.0" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- AUTO START -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Auto-Start With PocketMC" Classes="setting-title" />
-                                    <TextBlock Text="Automatically launch this server when PocketMC application starts." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding General.AutoStartWithApp, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 2. WORLD TAB -->
-            <TabItem Header="World" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
-                        
-                        <!-- LEVEL NAME -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 260">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Level Name (World Folder)" Classes="setting-title" />
-                                    <TextBlock Text="Folder name storing regions and world data." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding World.LevelName, Mode=TwoWay}" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- DIFFICULTY -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Difficulty" Classes="setting-title" />
-                                    <TextBlock Text="Mob damage, hazard behavior and player survival rules." Classes="setting-description" />
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.Difficulties}" SelectedItem="{Binding World.Difficulty, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- GAMEMODE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Default Game Mode" Classes="setting-title" />
-                                    <TextBlock Text="Default mode assigned to new players entering the server." Classes="setting-description" />
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.Gamemodes}" SelectedItem="{Binding World.Gamemode, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- LEVEL SEED -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 260">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="World Generation Seed" Classes="setting-title" />
-                                    <TextBlock Text="Seed string for generating terrain and biome structures." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding World.Seed, Mode=TwoWay}" Watermark="e.g. 123456789" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- LEVEL TYPE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="World Type" Classes="setting-title" />
-                                    <TextBlock Text="Generator preset (default, flat, large biomes, amplified)." Classes="setting-description" />
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding World.LevelTypes}" SelectedItem="{Binding World.LevelType, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- MAX PLAYERS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Maximum Online Players" Classes="setting-title" />
-                                    <TextBlock Text="Limits total simultaneous player connections." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding World.MaxPlayers, Mode=TwoWay}" Minimum="1" Maximum="1000" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- ONLINE MODE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Online Mode (Authentication)" Classes="setting-title" />
-                                    <TextBlock Text="Requires official Mojang/Microsoft account verification." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.OnlineMode, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- WHITELIST -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enforce Whitelist" Classes="setting-title" />
-                                    <TextBlock Text="Only players listed in whitelist.json can join." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.WhiteList, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- SPAWN PROTECTION -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Spawn Protection Radius" Classes="setting-title" />
-                                    <TextBlock Text="Block radius around spawn protected from non-OP changes." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding World.SpawnProtection, Mode=TwoWay}" Minimum="0" Maximum="500" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- STRUCTURES & MOBS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Generate Structures" Classes="setting-title" />
-                                    <TextBlock Text="Generate villages, strongholds, temples, and dungeons." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.GenerateStructures, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Spawn Hostile Monsters" Classes="setting-title" />
-                                    <TextBlock Text="Allow zombies, skeletons, and hostile mobs to spawn." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.SpawnMonsters, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Spawn Passive Animals" Classes="setting-title" />
-                                    <TextBlock Text="Allow cows, sheep, pigs, and animals to spawn." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding World.SpawnAnimals, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 3. PERFORMANCE TAB -->
-            <TabItem Header="Performance" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
-                        
-                        <!-- RAM SLIDERS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 300">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="{Binding Performance.MaxRamDisplay, StringFormat='{}Max Memory Allocation: {0}'}" Classes="setting-title" />
-                                    <TextBlock Text="Maximum RAM allocated to the server process (-Xmx)." Classes="setting-description" />
-                                    <TextBlock Text="Warning: Exceeds 85% of total system memory." Foreground="#E74C3C" FontSize="11" IsVisible="{Binding Performance.ShowRamWarning}"/>
-                                </StackPanel>
-                                <Slider Grid.Column="1" Minimum="512" Maximum="32768" Value="{Binding Performance.MaxRam, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="512" VerticalAlignment="Center" Margin="0,4,0,0"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- MIN RAM -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 300">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="{Binding Performance.MinRamDisplay, StringFormat='{}Initial Memory Allocation: {0}'}" Classes="setting-title" />
-                                    <TextBlock Text="Initial RAM allocated at server startup (-Xms)." Classes="setting-description" />
-                                </StackPanel>
-                                <Slider Grid.Column="1" Minimum="512" Maximum="16384" Value="{Binding Performance.MinRam, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="512" VerticalAlignment="Center" Margin="0,4,0,0"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- CUSTOM JAVA PATH -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Custom Java Executable" Classes="setting-title" />
-                                    <TextBlock Text="Path to custom Java runtime (leave blank to use auto-detected runtime)." Classes="setting-description" />
-                                    <TextBox Text="{Binding Performance.JavaPath, Mode=TwoWay}" Watermark="/usr/bin/java or auto-detected" Margin="0,6,0,0" CornerRadius="8"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding Performance.BrowseJavaCommand}" Content="Browse..."
-                                        Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
-                                        VerticalAlignment="Bottom" Cursor="Hand" Margin="0,0,0,2"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- ADVANCED JVM ARGS -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="Advanced JVM Flags" Classes="setting-title" />
-                                <TextBlock Text="Custom Java Virtual Machine arguments passed at launch (e.g. Aikar flags)." Classes="setting-description" />
-                                <TextBox Text="{Binding Performance.AdvancedJvmArgs, Mode=TwoWay}" Watermark="-XX:+UseG1GC -XX:+ParallelRefProcEnabled ..." Margin="0,4,0,0" CornerRadius="8"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- VIEW DISTANCE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="View Distance (Chunks)" Classes="setting-title" />
-                                    <TextBlock Text="Render distance sent to clients (2 to 32 chunks)." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding World.ViewDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- SIMULATION DISTANCE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Simulation Distance (Chunks)" Classes="setting-title" />
-                                    <TextBlock Text="Distance around players where entity and block ticking occurs." Classes="setting-description" />
-                                </StackPanel>
-                                <NumericUpDown Grid.Column="1" Value="{Binding World.SimulationDistance, Mode=TwoWay}" Minimum="2" Maximum="32" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 4. BEDROCK TAB -->
-            <TabItem Header="Bedrock" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
-                        
-                        <!-- IPV6 PORT -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Bedrock IPv6 Port" Classes="setting-title" />
-                                    <TextBlock Text="UDP IPv6 listening port (default: 19133)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding Bedrock.ServerPortV6, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- CHEATS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Allow In-Game Cheats" Classes="setting-title" />
-                                    <TextBlock Text="Allows operator commands such as /gamemode and /give." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Bedrock.AllowCheats, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- TEXTURE PACK REQUIRED -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Require Server Texture Pack" Classes="setting-title" />
-                                    <TextBlock Text="Forces connecting clients to download and use the server texture pack." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Bedrock.TexturepackRequired, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- DEFAULT PERMISSION LEVEL -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Default Player Permission Level" Classes="setting-title" />
-                                    <TextBlock Text="Permission level for new players (visitor, member, operator)." Classes="setting-description" />
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding Bedrock.PermissionLevels}" SelectedItem="{Binding Bedrock.DefaultPlayerPermissionLevel, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- TICK DISTANCE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 220">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Tick Distance (Chunks)" Classes="setting-title" />
-                                    <TextBlock Text="Chunk radius around players updated every server tick (4 to 12)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding Bedrock.TickDistance, Mode=TwoWay}" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 5. BACKUPS TAB -->
-            <TabItem Header="Backups" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
-                        
-                        <!-- BACKUP CONTROLS & RETENTION -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="Automated Backup Retention" Classes="setting-title" />
-                                <TextBlock Text="Configure automated snapshot frequency and maximum retained archives." Classes="setting-description" />
-
-                                <Grid ColumnDefinitions="*, 220" Margin="0,6,0,0">
-                                    <TextBlock Grid.Column="0" Text="Backup Interval (Hours)" VerticalAlignment="Center" FontSize="13"/>
-                                    <NumericUpDown Grid.Column="1" Value="{Binding Backups.BackupIntervalHours, Mode=TwoWay}" Minimum="1" Maximum="168" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                                </Grid>
-
-                                <Grid ColumnDefinitions="*, 220">
-                                    <TextBlock Grid.Column="0" Text="Max Backups to Retain" VerticalAlignment="Center" FontSize="13"/>
-                                    <NumericUpDown Grid.Column="1" Value="{Binding Backups.MaxBackupsToKeep, Mode=TwoWay}" Minimum="1" Maximum="50" FormatString="F0" VerticalAlignment="Center" Width="200" HorizontalAlignment="Right" CornerRadius="8"/>
-                                </Grid>
-
-                                <Grid ColumnDefinitions="*, 100">
-                                    <TextBlock Grid.Column="0" Text="Automatic Backup Pruning" VerticalAlignment="Center" FontSize="13"/>
-                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding Backups.AutomaticBackupPruningEnabled, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- SNAPSHOT ACTION BAR -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Create Server Snapshot" Classes="setting-title" />
-                                    <TextBlock Text="Creates an immediate ZIP archive of the entire world and server files." Classes="setting-description" />
-                                    <TextBlock Text="{Binding Backups.BackupStatusText}" FontSize="12" Foreground="#1E90FF" IsVisible="{Binding Backups.IsBackingUp}"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding Backups.CreateBackupCommand}" Content="Create Backup Now"
-                                        Background="#1E90FF" Foreground="White" FontWeight="SemiBold" CornerRadius="8" Padding="18,10"
-                                        IsEnabled="{Binding !Backups.IsBackingUp}" Cursor="Hand" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- BACKUP LIST -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="Existing Backups" Classes="setting-title" />
-                                
-                                <ItemsControl ItemsSource="{Binding Backups.BackupList}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
-                                                <Grid ColumnDefinitions="*, Auto, Auto">
-                                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13"/>
-                                                        <StackPanel Orientation="Horizontal" Spacing="12">
-                                                            <TextBlock Text="{Binding FormattedDate}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                            <TextBlock Text="{Binding Trigger}" FontSize="11" Foreground="#1E90FF"/>
-                                                        </StackPanel>
-                                                    </StackPanel>
-                                                    
-                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.RestoreBackupCommand}"
-                                                            Content="Restore" Background="#262ECC71" Foreground="#2ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,8,0" Cursor="Hand"/>
-
-                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.DeleteBackupCommand}"
-                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="10,6" Cursor="Hand"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 6. ADDONS TAB -->
-            <TabItem Header="Addons" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
-                        
-                        <!-- ADDON TOOLBAR -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, Auto, Auto">
-                                <TextBox Grid.Column="0" Text="{Binding Addons.SearchText, Mode=TwoWay}" Watermark="Search installed plugins and mods..." CornerRadius="8" Margin="0,0,12,0"/>
-                                <Button Grid.Column="1" Command="{Binding Addons.OpenFolderCommand}" Content="Open Folder" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,0,8,0" Cursor="Hand"/>
-                                <Button Grid.Column="2" Command="{Binding Addons.RefreshCommand}" Content="Refresh" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8" Cursor="Hand"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- PLUGINS SECTION -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="Installed Plugins" Classes="setting-title" />
-                                <TextBlock Text="No plugins installed in /plugins folder." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" IsVisible="{Binding !Addons.Plugins.Count}"/>
-
-                                <ItemsControl ItemsSource="{Binding Addons.Plugins}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
-                                                <Grid ColumnDefinitions="*, Auto, Auto">
-                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleAddonCommand}" CommandParameter="{Binding}"
-                                                            Content="{Binding IsEnabled, Converter={x:Static ObjectConverters.IsNull}}" Background="Transparent" BorderThickness="0" Margin="0,0,8,0" Cursor="Hand">
-                                                        <TextBlock Text="{Binding IsEnabled, StringFormat='{}Enabled: {0}'}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                    </Button>
-                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}" CommandParameter="{Binding}"
-                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- MODS SECTION -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="Installed Mods" Classes="setting-title" />
-                                <TextBlock Text="No mods installed in /mods folder." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" IsVisible="{Binding !Addons.Mods.Count}"/>
-
-                                <ItemsControl ItemsSource="{Binding Addons.Mods}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
-                                                <Grid ColumnDefinitions="*, Auto, Auto">
-                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleAddonCommand}" CommandParameter="{Binding}"
-                                                            Content="{Binding IsEnabled, Converter={x:Static ObjectConverters.IsNull}}" Background="Transparent" BorderThickness="0" Margin="0,0,8,0" Cursor="Hand">
-                                                        <TextBlock Text="{Binding IsEnabled, StringFormat='{}Enabled: {0}'}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                    </Button>
-                                                    <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}" CommandParameter="{Binding}"
-                                                            Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="8,4" Cursor="Hand"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 7. VERSION UPDATES TAB -->
-            <TabItem Header="Version Updates" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
-                        
-                        <!-- CURRENT VERSION STATUS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
-                                    <TextBlock Text="Installed Server Engine" Classes="setting-title" />
-                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                        <Border Background="#1E90FF" CornerRadius="6" Padding="8,4">
-                                            <TextBlock Text="{Binding SelectedInstance.EngineType}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                        </Border>
-                                        <TextBlock Text="{Binding SelectedInstance.EngineVersion, StringFormat='{}Version: {0}'}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="Transactionally upgrade or switch software versions without manual file replacement." Classes="setting-description" />
-                                </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding VersionUpdates.LoadTargetVersionsCommand}" Content="Check for Updates"
-                                        Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8"
-                                        IsEnabled="{Binding !VersionUpdates.IsUpdating}" Cursor="Hand" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- TARGET VERSION PICKER -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="12">
-                                <TextBlock Text="Target Version Upgrade" Classes="setting-title" />
-                                <TextBlock Text="Select a verified upstream version release to install." Classes="setting-description" />
-
-                                <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
-                                    <ComboBox Grid.Column="0" ItemsSource="{Binding VersionUpdates.AvailableTargetVersions}"
-                                              SelectedItem="{Binding VersionUpdates.SelectedTargetVersion, Mode=TwoWay}"
-                                              IsEnabled="{Binding !VersionUpdates.IsUpdating}"
-                                              HorizontalAlignment="Stretch" CornerRadius="8">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                                    <TextBlock Text="{Binding Id}" FontWeight="SemiBold"/>
-                                                    <Border Background="#2ECC71" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsUpgrade}">
-                                                        <TextBlock Text="UPGRADE" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                                    </Border>
-                                                    <Border Background="#95A5A6" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsCurrent}">
-                                                        <TextBlock Text="CURRENT" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                                    </Border>
-                                                    <TextBlock Text="{Binding Type}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-
-                                    <Button Grid.Column="1" Command="{Binding VersionUpdates.ApplyUpdateCommand}" Content="Upgrade Server"
-                                            Background="#2ECC71" Foreground="White" FontWeight="Bold"
-                                            IsEnabled="{Binding !VersionUpdates.IsUpdating}" CornerRadius="8" Padding="20,10"
-                                            Cursor="Hand" Margin="14,0,0,0" VerticalAlignment="Center"/>
-                                </Grid>
-
-                                <!-- RUNTIME REQUIREMENT CHANGE NOTICE -->
-                                <Border Background="#1A1E90FF" CornerRadius="8" Padding="14,10"
-                                        IsVisible="{Binding VersionUpdates.UpdateRuntimeChangeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <lucide:LucideIcon Kind="Cpu" Size="16" Foreground="#1E90FF" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding VersionUpdates.UpdateRuntimeChangeText}" Foreground="#1E90FF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- UPDATE IN PROGRESS PANEL -->
-                        <Border Classes="setting-card" IsVisible="{Binding VersionUpdates.IsUpdating}">
-                            <StackPanel Spacing="10">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <ProgressBar IsIndeterminate="{Binding VersionUpdates.UpdateProgress, Converter={x:Static ObjectConverters.IsNull}}"
-                                                 Value="{Binding VersionUpdates.UpdateProgress}" Minimum="0" Maximum="1" Width="200" Height="8" CornerRadius="4"/>
-                                    <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="The server will be safely stopped before update. World files and server properties are protected by rollback journal." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- UPDATE SUCCESS BANNER -->
-                        <Border Background="#262ECC71" BorderBrush="#2ECC71" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding VersionUpdates.IsUpdateSuccess}">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <lucide:LucideIcon Kind="Check" Size="18" Foreground="#2ECC71" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" Foreground="#2ECC71" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- UPDATE ERROR BANNER -->
-                        <Border Background="#26E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="16,12" IsVisible="{Binding VersionUpdates.HasUpdateError}">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <lucide:LucideIcon Kind="Info" Size="18" Foreground="#E74C3C" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Server Upgrade Failed" Foreground="#E74C3C" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding VersionUpdates.UpdateErrorText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- TRANSACTION RECOVERY AND INTEGRITY NOTICE -->
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="Atomic Update &amp; Rollback Guarantee" Classes="setting-title" />
-                                <TextBlock Text="PocketMC downloads and verifies update artifacts in an isolated staging workspace before touching server files. If any error occurs during file replacement, the transaction journal automatically restores your existing server files to prevent world corruption." Classes="setting-description" />
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 8. AI SUMMARIES TAB -->
-            <TabItem Header="AI Summaries" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="14" HorizontalAlignment="Stretch">
-                        
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="Game Session Summaries" Classes="setting-title" />
-                                <TextBlock Text="AI-generated session logs, player achievements, and world events." Classes="setting-description" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="setting-card" IsVisible="{Binding !Summaries.HasSummaries}">
-                            <TextBlock Text="No session summaries recorded yet. Summaries are automatically generated after server play sessions when AI is configured in Settings." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                        </Border>
-
-                        <!-- SUMMARIES LIST -->
-                        <ItemsControl ItemsSource="{Binding Summaries.Summaries}" IsVisible="{Binding Summaries.HasSummaries}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Classes="setting-card">
-                                        <Grid ColumnDefinitions="*, Auto, Auto">
-                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="14"/>
-                                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                                    <TextBlock Text="{Binding FormattedDuration, StringFormat='{}Duration: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                    <TextBlock Text="{Binding AiProvider, StringFormat='{}Model: {0}'}" FontSize="12" Foreground="#1E90FF"/>
-                                                </StackPanel>
-                                            </StackPanel>
-
-                                            <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.ViewSummaryCommand}" CommandParameter="{Binding}"
-                                                    Content="View Summary" Background="#1E90FF" Foreground="White" CornerRadius="6" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"/>
-
-                                            <Button Grid.Column="2" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.DeleteSummaryCommand}" CommandParameter="{Binding}"
-                                                    Content="Delete" Background="#26E74C3C" Foreground="#E74C3C" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="6" Padding="12,6" Cursor="Hand"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- VIEWING SUMMARY MODAL / PANEL -->
-                        <Border Classes="setting-card" IsVisible="{Binding Summaries.IsViewingSummary}" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="#1E90FF" BorderThickness="1">
-                            <StackPanel Spacing="10">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBlock Grid.Column="0" Text="{Binding Summaries.SelectedSummary.FormattedDate, StringFormat='{}Session Summary: {0}'}" FontWeight="Bold" FontSize="15"/>
-                                    <Button Grid.Column="1" Command="{Binding Summaries.CloseSummaryCommand}" Content="Close" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
-                                </Grid>
-                                <TextBox Text="{Binding Summaries.SummaryContent}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="300" FontFamily="Consolas, Monospace" FontSize="12" Background="Transparent" BorderThickness="0"/>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- 9. ADVANCED TAB -->
-            <TabItem Header="Advanced" FontSize="14" FontWeight="Medium" Padding="0,0,16,12">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel Spacing="0" HorizontalAlignment="Stretch">
-                        
-                        <!-- PVP -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable PvP" Classes="setting-title" />
-                                    <TextBlock Text="Allows player vs player combat damage." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.Pvp, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- ALLOW FLIGHT -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Allow Flight" Classes="setting-title" />
-                                    <TextBlock Text="Allows clients to fly without automatic kick." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.AllowFlight, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- COMMAND BLOCKS -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable Command Blocks" Classes="setting-title" />
-                                    <TextBlock Text="Allows command block execution in-game." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableCommandBlock, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- QUERY -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable GameSpy Query" Classes="setting-title" />
-                                    <TextBlock Text="Exposes server query logs and active statistics." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableQuery, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- RCON -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 280">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Enable RCON Remote Access" Classes="setting-title" />
-                                    <TextBlock Text="Enables remote console command execution." Classes="setting-description" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBox Text="{Binding Advanced.RconPassword, Mode=TwoWay}" Watermark="RCON Password" PasswordChar="*" Width="160" CornerRadius="8"/>
-                                    <ToggleSwitch IsChecked="{Binding Advanced.EnableRcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- RESOURCE PACK -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 360">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Custom Resource Pack URL" Classes="setting-title" />
-                                    <TextBlock Text="Direct HTTP link to server resource pack ZIP file." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding Advanced.ResourcePack, Mode=TwoWay}" Watermark="https://..." VerticalAlignment="Center" HorizontalAlignment="Stretch" CornerRadius="8"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- SCHEDULED MAINTENANCE SECTION -->
-                        <TextBlock Text="Scheduled Maintenance" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
-
-                        <!-- SCHEDULED REBOOT TOGGLE -->
-                        <Border Classes="setting-card">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Scheduled Server Reboot" Classes="setting-title" />
-                                    <TextBlock Text="Periodically reboot the server to clear memory leaks and maintain peak responsiveness." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableScheduledReboot, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- REBOOT FREQUENCY -->
-                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Reboot Frequency" Classes="setting-title" />
-                                    <TextBlock Text="Configure whether the server reboots at a fixed daily time (24h format) or after a recurring interval." Classes="setting-description" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <ComboBox ItemsSource="{Binding Advanced.RebootModes}" SelectedItem="{Binding Advanced.ScheduledRebootMode, Mode=TwoWay}" Width="110" VerticalAlignment="Center"/>
-                                    <TextBox Text="{Binding Advanced.ScheduledRebootTime, Mode=TwoWay}" IsVisible="{Binding Advanced.IsDailyMode}" Width="100" Watermark="04:00" CornerRadius="8" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Advanced.IsIntervalMode}" VerticalAlignment="Center">
-                                        <TextBlock Text="Every (Hours):" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <TextBox Text="{Binding Advanced.ScheduledRebootIntervalHours, Mode=TwoWay}" Width="70" Watermark="24" CornerRadius="8" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- IN-GAME WARNING -->
-                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
-                            <Grid ColumnDefinitions="*, 100">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="In-Game Warning Countdown" Classes="setting-title" />
-                                    <TextBlock Text="Broadcast countdown notifications in Minecraft server chat before restarting." Classes="setting-description" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.ScheduledRebootWarning, Mode=TwoWay}" OnContent="" OffContent="" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- WARNING DURATION -->
-                        <Border Classes="setting-card" IsEnabled="{Binding Advanced.IsWarningSettingsEnabled}">
-                            <Grid ColumnDefinitions="*, 120">
-                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,24,0">
-                                    <TextBlock Text="Warning Duration (Seconds)" Classes="setting-title" />
-                                    <TextBlock Text="Seconds before reboot to initiate broadcast warnings (1-3600)." Classes="setting-description" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" Text="{Binding Advanced.ScheduledRebootWarningSeconds, Mode=TwoWay}" Width="100" Watermark="60" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- RAW PROPERTIES INSPECTOR -->
-                        <TextBlock Text="Raw Properties" Margin="0,24,0,8" FontWeight="SemiBold" FontSize="15" />
-                        <Border Classes="setting-card">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="server.properties editor" Classes="setting-title" />
-                                <TextBox Text="{Binding Advanced.RawPropertiesText, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas, Monospace" FontSize="12" Height="180" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10"/>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-        </TabControl>
-
-        <!-- STICKY BOTTOM ACTION BAR -->
-        <Border Grid.Row="3"
-                Background="{DynamicResource CardBackgroundBrush}"
-                BorderBrush="{DynamicResource CardBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="20,14"
-                Margin="0,16,0,0">
-            <Grid ColumnDefinitions="*, Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <lucide:LucideIcon Kind="Info" Size="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="Changes will be saved to server.properties and instance.json" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <Button Command="{Binding CancelCommand}" Content="Cancel" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,8" Cursor="Hand"/>
-                    <Button Command="{Binding SaveCommand}" Content="Save Configuration" Background="#1E90FF" Foreground="White" CornerRadius="8" Padding="18,8" Cursor="Hand" FontWeight="SemiBold"/>
-                </StackPanel>
-            </Grid>
+             Background="Transparent">
+
+  <UserControl.Resources>
+    <conv:MinecraftMotdConverter x:Key="MotdConverter"/>
+  </UserControl.Resources>
+
+  <DockPanel LastChildFill="True" Margin="24,18">
+
+    <!-- HEADER SECTION -->
+    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,18">
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
+        <Button Classes="subtle" Command="{Binding GoBackCommand}" Padding="6">
+          <lucide:LucideIcon Kind="ArrowLeft" Size="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+        </Button>
+        <TextBlock Text="Server Configurations" FontSize="24" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+        <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+          <TextBlock Text="{Binding SelectedInstance.Name}" FontSize="12" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
         </Border>
+      </StackPanel>
+      <TextBlock Text="Modify your instance setup, install addons, configure automated tasks and manage world files."
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13" Margin="40,0,0,0" TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <!-- STICKY BOTTOM ACTION BAR -->
+    <Border DockPanel.Dock="Bottom"
+            Margin="0,16,0,0"
+            Padding="18,14"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1" CornerRadius="10">
+      <Grid ColumnDefinitions="*, Auto">
+        <!-- Non-update footer -->
+        <WrapPanel Grid.Column="0" VerticalAlignment="Center" IsVisible="{Binding !IsVersionUpdatesTabActive}">
+          <ToggleSwitch IsChecked="{Binding General.AutoStartWithApp, Mode=TwoWay}"
+                        Content="Auto-start server at PocketMC startup"
+                        OnContent="" OffContent="" Margin="0,2,20,2" VerticalAlignment="Center"/>
+
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                      IsVisible="{Binding HasUnsavedChanges}" Margin="0,2,20,2">
+            <lucide:LucideIcon Kind="TriangleAlert" Size="15" Foreground="#F59E0B" VerticalAlignment="Center"/>
+            <TextBlock Text="Unsaved changes detected" Foreground="#F59E0B" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                      IsVisible="{Binding IsRestartRequired}" Margin="0,2,20,2">
+            <lucide:LucideIcon Kind="RotateCw" Size="15" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Text="Server restart required to apply changes"
+                       Foreground="{DynamicResource AccentPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+        </WrapPanel>
+
+        <!-- Version updates progress footer -->
+        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0" IsVisible="{Binding IsVersionUpdatesTabActive}" Spacing="6">
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding VersionUpdates.IsUpdating}">
+            <lucide:LucideIcon Kind="RefreshCw" Size="14" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding VersionUpdates.UpdateStatusText}" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+          </StackPanel>
+          <ProgressBar Value="{Binding VersionUpdates.UpdateProgress}" Maximum="100" Height="4"
+                       IsVisible="{Binding VersionUpdates.IsUpdating}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <Button Content="Discard" Classes="secondary" Command="{Binding CancelCommand}" Padding="16,9"/>
+          <Button Content="Save Changes" Classes="primary" Command="{Binding SaveCommand}" Padding="20,9" MinWidth="136"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- MAIN 2-COLUMN BODY: LEFT SIDEBAR NAV + RIGHT CONTENT CARD -->
+    <Grid ColumnDefinitions="230, 22, *">
+
+      <!-- Left Navigation Rail -->
+      <Border Grid.Column="0"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" Padding="10" VerticalAlignment="Top">
+        <StackPanel Spacing="4">
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="0"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab0Selected}" Classes.subtle="{Binding !IsTab0Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Settings" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Identity &amp; Performance" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="1"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab1Selected}" Classes.subtle="{Binding !IsTab1Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="RefreshCw" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Version &amp; Updates" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="2"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab2Selected}" Classes.subtle="{Binding !IsTab2Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Globe" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Gameplay Rules" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="3"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab3Selected}" Classes.subtle="{Binding !IsTab3Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="FolderOpen" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="World &amp; Files" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="4"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab4Selected}" Classes.subtle="{Binding !IsTab4Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Plus" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Addons (Plugins/Mods)" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="5"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab5Selected}" Classes.subtle="{Binding !IsTab5Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Save" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Automated Backups" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="6"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab6Selected}" Classes.subtle="{Binding !IsTab6Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="RotateCw" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Restart &amp; Recovery" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="7"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  Classes.primary="{Binding IsTab7Selected}" Classes.subtle="{Binding !IsTab7Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Terminal" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="Configuration" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Command="{Binding SelectTabCommand}" CommandParameter="8"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="6"
+                  IsVisible="{Binding IsAiSummarizationAvailable}"
+                  Classes.primary="{Binding IsTab8Selected}" Classes.subtle="{Binding !IsTab8Selected}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <lucide:LucideIcon Kind="Sparkles" Size="15" VerticalAlignment="Center"/>
+              <TextBlock Text="AI Summaries" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Border>
+
+      <!-- Right Tab Content Area -->
+      <Grid Grid.Column="2">
+
+        <!-- TAB 0: IDENTITY & PERFORMANCE -->
+        <ScrollViewer IsVisible="{Binding IsTab0Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+
+            <!-- Visual Identity CardExpander -->
+            <Expander Classes="card-expander" IsExpanded="True">
+              <Expander.Header>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <lucide:LucideIcon Kind="Settings" Size="16" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+                  <TextBlock Text="Visual Identity" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Expander.Header>
+
+              <StackPanel Spacing="16" Margin="4,8">
+                <Grid ColumnDefinitions="*, 20, *">
+                  <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="Instance Name (Label)" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="The display name for this instance in your dashboard." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding General.InstanceName, Mode=TwoWay}" Watermark="My Epic Server" Margin="0,4,0,0"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2" Spacing="4">
+                    <TextBlock Text="Instance Description" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="A short note about this instance's purpose or configuration." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding General.InstanceDescription, Mode=TwoWay}" Watermark="Testing new mods..." Margin="0,4,0,0"/>
+                  </StackPanel>
+                </Grid>
+
+                <!-- Clickable dark_dirt.png Interactive Server List Preview Card -->
+                <Border BorderBrush="#000000" BorderThickness="2" Padding="8" IsVisible="{Binding IsJavaSettings}">
+                  <Border.Background>
+                    <ImageBrush Source="avares://PocketMC.App/Assets/dark_dirt.png"
+                                TileMode="Tile" Stretch="Fill" DestinationRect="0,0,45,46"/>
+                  </Border.Background>
+
+                  <Grid ColumnDefinitions="Auto, 10, *, Auto">
+                    <!-- Server Icon 64x64 + Edit Button -->
+                    <Grid Grid.Column="0" Width="64" Height="64">
+                      <Border BorderBrush="#333333" BorderThickness="1" Background="#111111">
+                        <Image Source="{Binding General.ServerIcon}" Stretch="UniformToFill"/>
+                      </Border>
+                      <Button Command="{Binding General.BrowseIconCommand}" Classes="primary"
+                              Padding="4" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-6,-6,0"
+                              ToolTip.Tip="Change Server Icon (Crop to 64x64)">
+                        <lucide:LucideIcon Kind="Pen" Size="12" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+                      </Button>
+                    </Grid>
+
+                    <!-- Name + Live Formatted MOTD Preview -->
+                    <Grid Grid.Column="2" RowDefinitions="Auto, *">
+                      <TextBlock Grid.Row="0" Text="{Binding General.InstanceName, FallbackValue='Minecraft Server'}"
+                                 FontFamily="Cascadia Code, Consolas, Monospace" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,4"/>
+                      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                        <ContentControl Content="{Binding General.Motd, Converter={StaticResource MotdConverter}}"/>
+                        <Button Classes="subtle" Command="{Binding ToggleMotdEditorCommand}" Padding="4" ToolTip.Tip="Edit MOTD">
+                          <lucide:LucideIcon Kind="Pen" Size="12" Foreground="#D4D4D8"/>
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+
+                    <!-- Player count + 4 green ping signal bars -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                      <TextBlock Text="{Binding World.MaxPlayers, StringFormat='0/{0}'}"
+                                 FontFamily="Cascadia Code, Consolas, Monospace" FontSize="14" FontWeight="SemiBold" Foreground="#AAAAAA"/>
+                      <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Bottom" Height="14">
+                        <Rectangle Width="3" Height="4" Fill="#00FF00" VerticalAlignment="Bottom"/>
+                        <Rectangle Width="3" Height="7" Fill="#00FF00" VerticalAlignment="Bottom"/>
+                        <Rectangle Width="3" Height="10" Fill="#00FF00" VerticalAlignment="Bottom"/>
+                        <Rectangle Width="3" Height="14" Fill="#00FF00" VerticalAlignment="Bottom"/>
+                      </StackPanel>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <!-- Inline MOTD Color & Format Editor -->
+                <Border IsVisible="{Binding MotdEditorVisible}"
+                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="14">
+                  <Grid ColumnDefinitions="Auto, 16, *">
+                    <StackPanel Grid.Column="0" Spacing="6">
+                      <TextBlock Text="Colors" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                      <WrapPanel MaxWidth="220">
+                        <Button Content="§0" Click="BtnInsertMotdColor_Click" Tag="§0" Background="#000000" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§1" Click="BtnInsertMotdColor_Click" Tag="§1" Background="#0000AA" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§2" Click="BtnInsertMotdColor_Click" Tag="§2" Background="#00AA00" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§3" Click="BtnInsertMotdColor_Click" Tag="§3" Background="#00AAAA" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§4" Click="BtnInsertMotdColor_Click" Tag="§4" Background="#AA0000" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§5" Click="BtnInsertMotdColor_Click" Tag="§5" Background="#AA00AA" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§6" Click="BtnInsertMotdColor_Click" Tag="§6" Background="#FFAA00" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§7" Click="BtnInsertMotdColor_Click" Tag="§7" Background="#AAAAAA" Foreground="Black" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§8" Click="BtnInsertMotdColor_Click" Tag="§8" Background="#555555" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§9" Click="BtnInsertMotdColor_Click" Tag="§9" Background="#5555FF" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§a" Click="BtnInsertMotdColor_Click" Tag="§a" Background="#55FF55" Foreground="Black" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§b" Click="BtnInsertMotdColor_Click" Tag="§b" Background="#55FFFF" Foreground="Black" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§c" Click="BtnInsertMotdColor_Click" Tag="§c" Background="#FF5555" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§d" Click="BtnInsertMotdColor_Click" Tag="§d" Background="#FF55FF" Foreground="White" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§e" Click="BtnInsertMotdColor_Click" Tag="§e" Background="#FFFF55" Foreground="Black" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="§f" Click="BtnInsertMotdColor_Click" Tag="§f" Background="#FFFFFF" Foreground="Black" Padding="5,2" Margin="0,0,3,3" FontSize="11"/>
+                      </WrapPanel>
+                      <TextBlock Text="Formatting" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                      <WrapPanel>
+                        <Button Content="B" Click="BtnInsertMotdColor_Click" Tag="§l" Background="#333333" Foreground="#E5E5E5" FontWeight="Bold" Padding="6,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="I" Click="BtnInsertMotdColor_Click" Tag="§o" Background="#333333" Foreground="#E5E5E5" FontStyle="Italic" Padding="6,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="U" Click="BtnInsertMotdColor_Click" Tag="§n" Background="#333333" Foreground="#E5E5E5" Padding="6,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="S" Click="BtnInsertMotdColor_Click" Tag="§m" Background="#333333" Foreground="#E5E5E5" Padding="6,2" Margin="0,0,3,3" FontSize="11"/>
+                        <Button Content="R" Click="BtnInsertMotdColor_Click" Tag="§r" Background="#444444" Foreground="#FF6B6B" FontWeight="Bold" Padding="6,2" Margin="0,0,3,3" FontSize="11"/>
+                      </WrapPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="8">
+                      <TextBlock Text="Raw MOTD Text" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                      <TextBox x:Name="TxtMotdRaw" Text="{Binding General.Motd, Mode=TwoWay}" FontFamily="Cascadia Code, Consolas, Monospace"/>
+                      <Button Content="Done" Classes="primary" Command="{Binding ToggleMotdEditorCommand}" HorizontalAlignment="Right" Padding="14,6"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <!-- Non-Java MOTD Input -->
+                <StackPanel IsVisible="{Binding !IsJavaSettings}" Spacing="6">
+                  <TextBlock Text="{Binding DisplayNameLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                  <TextBox Text="{Binding General.Motd, Mode=TwoWay}" Watermark="My Server"/>
+                </StackPanel>
+              </StackPanel>
+            </Expander>
+
+            <!-- Port Configuration -->
+            <Expander Classes="card-expander" IsExpanded="True">
+              <Expander.Header>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <lucide:LucideIcon Kind="Network" Size="16" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+                  <TextBlock Text="Network &amp; Port Configuration" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Expander.Header>
+              <Grid ColumnDefinitions="*, 20, *" Margin="4,8">
+                <StackPanel Grid.Column="0" Spacing="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Server Port" FontSize="13" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding General.ServerPort, Mode=TwoWay}"/>
+                  </StackPanel>
+                  <StackPanel Spacing="4" IsVisible="{Binding HasGeyser}">
+                    <TextBlock Text="Geyser Bedrock UDP Port" FontSize="13" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding General.GeyserBedrockPort, Mode=TwoWay}"/>
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Bind Server IP (Optional)" FontSize="13" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding General.ServerIp, Mode=TwoWay}" Watermark="0.0.0.0 (All interfaces)"/>
+                  </StackPanel>
+                </StackPanel>
+              </Grid>
+            </Expander>
+
+            <!-- Performance & Memory Allocation -->
+            <Expander Classes="card-expander" IsExpanded="True" IsVisible="{Binding IsJavaSettings}">
+              <Expander.Header>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <lucide:LucideIcon Kind="Cpu" Size="16" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+                  <TextBlock Text="Memory &amp; JVM Runtime Tuning" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Expander.Header>
+              <StackPanel Spacing="14" Margin="4,8">
+                <Grid ColumnDefinitions="180, *, 90">
+                  <TextBlock Grid.Column="0" Text="Maximum RAM (-Xmx):" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <Slider Grid.Column="1" Value="{Binding Performance.MaxRam, Mode=TwoWay}" Minimum="512" Maximum="16384" TickFrequency="512" IsSnapToTickEnabled="True" Margin="8,0"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Performance.MaxRamDisplay}" FontSize="13" Foreground="{DynamicResource AccentPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="180, *, 90">
+                  <TextBlock Grid.Column="0" Text="Minimum RAM (-Xms):" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <Slider Grid.Column="1" Value="{Binding Performance.MinRam, Mode=TwoWay}" Minimum="256" Maximum="8192" TickFrequency="256" IsSnapToTickEnabled="True" Margin="8,0"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Performance.MinRamDisplay}" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <Border IsVisible="{Binding Performance.ShowRamWarning}" Background="#1AF59E0B" BorderBrush="#55F59E0B" BorderThickness="1" CornerRadius="6" Padding="10">
+                  <TextBlock Text="Warning: Assigned RAM exceeds 85% of detected system memory. Leave headroom for OS stability."
+                             FontSize="12" Foreground="#F59E0B" TextWrapping="Wrap"/>
+                </Border>
+
+                <Grid ColumnDefinitions="*, Auto">
+                  <TextBox Grid.Column="0" Text="{Binding Performance.JavaPath, Mode=TwoWay}" Watermark="Custom Java executable (optional override)" Margin="0,0,8,0"/>
+                  <Button Grid.Column="1" Content="Browse..." Classes="secondary" Command="{Binding Performance.BrowseJavaCommand}" Padding="14,7"/>
+                </Grid>
+
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Custom JVM Arguments" FontSize="13" FontWeight="SemiBold"/>
+                  <TextBox Text="{Binding Performance.AdvancedJvmArgs, Mode=TwoWay}" Watermark="e.g., -XX:+UseG1GC"/>
+                </StackPanel>
+              </StackPanel>
+            </Expander>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 1: VERSION & UPDATES -->
+        <ScrollViewer IsVisible="{Binding IsTab1Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+            <Border Classes="card" Padding="24">
+              <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="Current Version" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding SelectedInstance.EngineVersion}" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="{Binding SelectedInstance.EngineType}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                  </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20,0">
+                  <lucide:LucideIcon Kind="ArrowRight" Size="20" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0" Spacing="4">
+                  <TextBlock Text="Update to" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ComboBox ItemsSource="{Binding VersionUpdates.AvailableTargetVersions}"
+                              SelectedItem="{Binding VersionUpdates.SelectedTargetVersion, Mode=TwoWay}"
+                              MinWidth="190">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:UpdateTargetVersionInfo">
+                          <TextBlock Text="{Binding Id}"/>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Command="{Binding VersionUpdates.LoadTargetVersionsCommand}" Classes="secondary" Padding="9" ToolTip.Tip="Refresh versions">
+                      <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+                    </Button>
+                  </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="3" Classes="primary" Command="{Binding VersionUpdates.ApplyUpdateCommand}" VerticalAlignment="Center" Padding="16,10">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <lucide:LucideIcon Kind="Download" Size="15" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Update Server" FontSize="13" FontWeight="SemiBold"/>
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </Border>
+
+            <Border Classes="card-secondary" Padding="14" IsVisible="{Binding VersionUpdates.UpdateRuntimeChangeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <lucide:LucideIcon Kind="Info" Size="15" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding VersionUpdates.UpdateRuntimeChangeText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+
+            <Border IsVisible="{Binding VersionUpdates.HasUpdateError}" Background="#22EF4444" BorderBrush="#66EF4444" BorderThickness="1" CornerRadius="8" Padding="14">
+              <TextBlock Text="{Binding VersionUpdates.UpdateErrorText}" FontSize="12" Foreground="#FCA5A5" TextWrapping="Wrap"/>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 2: GAMEPLAY RULES -->
+        <ScrollViewer IsVisible="{Binding IsTab2Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+            <Border Classes="card" Padding="20" IsVisible="{Binding IsJavaSettings}">
+              <StackPanel Spacing="14">
+                <TextBlock Text="Core Rules" FontSize="16" FontWeight="SemiBold"/>
+                <WrapPanel>
+                  <StackPanel Width="250" Margin="0,0,18,14" Spacing="4">
+                    <TextBlock Text="Default Gamemode" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding World.Gamemodes}" SelectedItem="{Binding World.Gamemode, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                  </StackPanel>
+                  <StackPanel Width="250" Margin="0,0,18,14" Spacing="4">
+                    <TextBlock Text="World Difficulty" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding World.Difficulties}" SelectedItem="{Binding World.Difficulty, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                  </StackPanel>
+                  <StackPanel Width="250" Margin="0,0,18,14" Spacing="4">
+                    <TextBlock Text="Maximum Players" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding World.MaxPlayers, Mode=TwoWay}"/>
+                  </StackPanel>
+                  <StackPanel Width="250" Margin="0,0,18,14" Spacing="4">
+                    <TextBlock Text="Spawn Protection Radius" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding World.SpawnProtection, Mode=TwoWay}"/>
+                  </StackPanel>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="20" IsVisible="{Binding IsJavaSettings}">
+              <StackPanel Spacing="12">
+                <TextBlock Text="World Simulation (Requires Restart)" FontSize="16" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="160, 90, *">
+                  <TextBlock Grid.Column="0" Text="View Distance:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding World.ViewDistance, StringFormat='{}{0} chunks'}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                  <Slider Grid.Column="2" Value="{Binding World.ViewDistance, Mode=TwoWay}" Minimum="3" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                </Grid>
+                <Grid ColumnDefinitions="160, 90, *">
+                  <TextBlock Grid.Column="0" Text="Simulation Distance:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding World.SimulationDistance, StringFormat='{}{0} chunks'}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                  <Slider Grid.Column="2" Value="{Binding World.SimulationDistance, Mode=TwoWay}" Minimum="3" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="20">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Security &amp; Environment" FontSize="16" FontWeight="SemiBold"/>
+                <WrapPanel>
+                  <ToggleSwitch Content="Online Mode (Mojang Auth)" IsChecked="{Binding World.OnlineMode, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Enforce Whitelist" IsChecked="{Binding World.WhiteList, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Generate Structures" IsChecked="{Binding World.GenerateStructures, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Spawn Monsters" IsChecked="{Binding World.SpawnMonsters, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Spawn Animals" IsChecked="{Binding World.SpawnAnimals, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Force Gamemode" IsChecked="{Binding World.ForceGamemode, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <!-- Bedrock Specific Rules -->
+            <Border Classes="card" Padding="20" IsVisible="{Binding IsBedrockSettings}">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Bedrock Dedicated Server Options" FontSize="16" FontWeight="SemiBold"/>
+                <WrapPanel>
+                  <StackPanel Width="220" Margin="0,0,18,12" Spacing="4">
+                    <TextBlock Text="IPv6 Port" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding Bedrock.ServerPortV6, Mode=TwoWay}"/>
+                  </StackPanel>
+                  <StackPanel Width="220" Margin="0,0,18,12" Spacing="4">
+                    <TextBlock Text="Default Permission Level" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding Bedrock.PermissionLevels}" SelectedItem="{Binding Bedrock.DefaultPlayerPermissionLevel, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                  </StackPanel>
+                  <StackPanel Width="220" Margin="0,0,18,12" Spacing="4">
+                    <TextBlock Text="Tick Distance" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding Bedrock.TickDistance, Mode=TwoWay}"/>
+                  </StackPanel>
+                </WrapPanel>
+                <WrapPanel>
+                  <ToggleSwitch Content="Allow Cheats" IsChecked="{Binding Bedrock.AllowCheats, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Require Texture Packs" IsChecked="{Binding Bedrock.TexturepackRequired, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 3: WORLD & FILES -->
+        <ScrollViewer IsVisible="{Binding IsTab3Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+            <Border Classes="card" Padding="18">
+              <Grid ColumnDefinitions="Auto, *, Auto">
+                <lucide:LucideIcon Grid.Column="0" Kind="FolderOpen" Size="22" Foreground="{DynamicResource AccentPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock Text="Current World Status" FontSize="15" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding World.WorldSizeText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="{Binding World.WorldStatusText}" FontSize="13" FontWeight="SemiBold" Foreground="#10B981" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+
+            <Border Classes="card" Padding="20">
+              <StackPanel Spacing="12">
+                <TextBlock Text="World Generation" FontSize="16" FontWeight="SemiBold"/>
+                <WrapPanel>
+                  <StackPanel Width="260" Margin="0,0,18,12" Spacing="4">
+                    <TextBlock Text="World Folder / Level Name" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding World.LevelName, Mode=TwoWay}"/>
+                  </StackPanel>
+                  <StackPanel Width="260" Margin="0,0,18,12" Spacing="4">
+                    <TextBlock Text="World Generation Seed" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding World.Seed, Mode=TwoWay}" Watermark="Leave empty for random"/>
+                  </StackPanel>
+                  <StackPanel Width="260" Margin="0,0,18,12" Spacing="4" IsVisible="{Binding SupportsJavaWorldGenerator}">
+                    <TextBlock Text="World Generator Type" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding World.LevelTypes}" SelectedItem="{Binding World.LevelType, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                  </StackPanel>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="20">
+              <StackPanel Spacing="12">
+                <TextBlock Text="File Management" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="Import a new map archive or wipe existing world data to regenerate cleanly." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                <WrapPanel>
+                  <Button Content="{Binding World.ImportWorldButtonText}" Command="{Binding World.UploadWorldCommand}"
+                          Classes="primary" Padding="14,9" Margin="0,4,10,4" IsVisible="{Binding SupportsWorldImport}"/>
+                  <Button Command="{Binding World.BrowseMapsCommand}" Classes="secondary" Padding="14,9" Margin="0,4,10,4"
+                          IsVisible="{Binding SupportsWorldImport}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <lucide:LucideIcon Kind="Globe" Size="14"/>
+                      <TextBlock Text="Browse Maps"/>
+                    </StackPanel>
+                  </Button>
+                  <Button Command="{Binding World.DeleteWorldCommand}" Classes="danger" Padding="14,9" Margin="0,4,0,4">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                      <TextBlock Text="Wipe World Data"/>
+                    </StackPanel>
+                  </Button>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 4: ADDONS -->
+        <ScrollViewer IsVisible="{Binding IsTab4Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+
+            <!-- Search & Sort Bar -->
+            <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding Addons.HasSupportedAddonTypes}">
+              <TextBox Grid.Column="0" Text="{Binding Addons.SearchText, Mode=TwoWay}" Watermark="{Binding Addons.SearchPlaceholder}" Margin="0,0,12,0"/>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Sort:" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Addons.SortOptions}" SelectedItem="{Binding Addons.SelectedSortOption, Mode=TwoWay}" MinWidth="145"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Server Plugins Section -->
+            <StackPanel Spacing="10" IsVisible="{Binding Addons.SupportsPlugins}">
+              <TextBlock Text="Server Plugins" FontSize="16" FontWeight="SemiBold"/>
+              <Border Classes="card" Padding="14">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Add Plugin JAR" Command="{Binding Addons.AddPluginCommand}" Classes="secondary" Padding="12,7"/>
+                    <Button Content="Browse Marketplace" Command="{Binding Addons.BrowseModrinthPluginsCommand}" Classes="primary" Padding="12,7"
+                            IsVisible="{Binding Addons.SupportsModrinth}"/>
+                    <Button Content="Open Folder" Command="{Binding Addons.OpenFolderCommand}" Classes="subtle" Padding="10,7"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding Addons.SupportsModrinth}">
+                    <TextBlock Text="Auto-Update" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    <ToggleSwitch IsChecked="{Binding Addons.AutoUpdateAddons, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                    <Button Content="Update All" Command="{Binding Addons.UpdateAllPluginsCommand}" Classes="secondary" Padding="12,7"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+
+              <ItemsControl ItemsSource="{Binding Addons.Plugins}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="settings:AddonItemViewModel">
+                    <Border Classes="card" Padding="14,10" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6" Background="{DynamicResource ControlFillColorSecondaryBrush}" Margin="0,0,12,0">
+                          <Image Source="{Binding Icon}" Stretch="UniformToFill"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold"/>
+                            <Border Classes="badge-pill">
+                              <TextBlock Text="{Binding StatusLabel}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </Border>
+                          </StackPanel>
+                          <TextBlock Text="{Binding MetadataSummary}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Button Content="{Binding ToggleActionLabel}"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleModActiveCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Content="Update"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.UpdatePluginCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}"
+                                  CommandParameter="{Binding}" Classes="danger" Padding="8,5">
+                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Server Mods Section -->
+            <StackPanel Spacing="10" IsVisible="{Binding Addons.SupportsMods}">
+              <TextBlock Text="Server Mods" FontSize="16" FontWeight="SemiBold"/>
+              <Border Classes="card" Padding="14">
+                <Grid ColumnDefinitions="*, Auto">
+                  <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Add Mod JAR" Command="{Binding Addons.AddModCommand}" Classes="secondary" Padding="12,7"/>
+                    <Button Content="Browse Marketplace" Command="{Binding Addons.BrowseModrinthModsCommand}" Classes="primary" Padding="12,7"/>
+                    <Button Content="Open Folder" Command="{Binding Addons.OpenFolderCommand}" Classes="subtle" Padding="10,7"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="Auto-Update" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    <ToggleSwitch IsChecked="{Binding Addons.AutoUpdateAddons, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                    <Button Content="Update All" Command="{Binding Addons.UpdateAllModsCommand}" Classes="secondary" Padding="12,7"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+
+              <ItemsControl ItemsSource="{Binding Addons.Mods}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="settings:AddonItemViewModel">
+                    <Border Classes="card" Padding="14,10" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6" Background="{DynamicResource ControlFillColorSecondaryBrush}" Margin="0,0,12,0">
+                          <Image Source="{Binding Icon}" Stretch="UniformToFill"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold"/>
+                            <Border Classes="badge-pill">
+                              <TextBlock Text="{Binding StatusLabel}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </Border>
+                          </StackPanel>
+                          <TextBlock Text="{Binding MetadataSummary}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Button Content="{Binding ToggleActionLabel}"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleModActiveCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Content="Update"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.UpdateModCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteAddonCommand}"
+                                  CommandParameter="{Binding}" Classes="danger" Padding="8,5">
+                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Bedrock Behavior & Resource Packs Section -->
+            <StackPanel Spacing="12" IsVisible="{Binding Addons.SupportsBedrockAddons}">
+              <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                  <RadioButton Content="Behavior Packs" IsChecked="{Binding Addons.IsBehaviorPacksTabSelected, Mode=TwoWay}" GroupName="BdsPacks"/>
+                  <RadioButton Content="Resource Packs" IsChecked="{Binding Addons.IsResourcePacksTabSelected, Mode=TwoWay}" GroupName="BdsPacks" Margin="6,0,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="2" Content="Import Add-on (.mcpack/.mcaddon)" Command="{Binding Addons.ImportBedrockAddonCommand}" Classes="primary" Padding="14,8"/>
+              </Grid>
+
+              <ItemsControl ItemsSource="{Binding Addons.BehaviorPacks}" IsVisible="{Binding Addons.IsBehaviorPacksTabSelected}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="settings:BedrockPackItemViewModel">
+                    <Border Classes="card" Padding="14,10" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"/>
+                          <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Button Content="{Binding ToggleActionLabel}"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleBedrockPackCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteBedrockPackCommand}"
+                                  CommandParameter="{Binding}" Classes="danger" Padding="8,5">
+                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <ItemsControl ItemsSource="{Binding Addons.ResourcePacks}" IsVisible="{Binding Addons.IsResourcePacksTabSelected}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="settings:BedrockPackItemViewModel">
+                    <Border Classes="card" Padding="14,10" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"/>
+                          <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Button Content="{Binding ToggleActionLabel}"
+                                  Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.ToggleBedrockPackCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Addons.DeleteBedrockPackCommand}"
+                                  CommandParameter="{Binding}" Classes="danger" Padding="8,5">
+                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 5: AUTOMATED BACKUPS & CLOUD SYNC -->
+        <ScrollViewer IsVisible="{Binding IsTab5Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="12" Margin="0,0,8,12">
+
+            <!-- Health Warning Banner -->
+            <Border IsVisible="{Binding Backups.HasHealthWarning}" Background="#22F59E0B" BorderBrush="#55F59E0B" BorderThickness="1" CornerRadius="8" Padding="14">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <lucide:LucideIcon Kind="TriangleAlert" Size="18" Foreground="#F59E0B" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Backups.HealthWarningText}" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+
+            <!-- KPI Stats Header -->
+            <Border Classes="card-secondary" Padding="16">
+              <UniformGrid Columns="3">
+                <StackPanel HorizontalAlignment="Center" Spacing="2">
+                  <TextBlock Text="TOTAL SIZE" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                  <TextBlock Text="{Binding Backups.TotalBackupsSizeText}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Spacing="2">
+                  <TextBlock Text="LAST BACKUP" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                  <TextBlock Text="{Binding Backups.LastBackupTimeText}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Spacing="2">
+                  <TextBlock Text="DISK SPACE" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                  <TextBlock Text="{Binding Backups.DiskSpaceText}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                </StackPanel>
+              </UniformGrid>
+            </Border>
+
+            <!-- Storage Destination & Manual Backup -->
+            <Border Classes="card" Padding="16">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,16,0">
+                  <TextBlock Text="Local Storage Destination" FontSize="14" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="*, Auto, Auto">
+                    <TextBox Grid.Column="0" Text="{Binding Backups.CustomBackupDirectory, Mode=TwoWay}" Watermark="Default: [Server Folder]/backups" IsReadOnly="True" Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" Content="Browse" Command="{Binding Backups.BrowseBackupDirCommand}" Classes="secondary" Margin="0,0,6,0"/>
+                    <Button Grid.Column="2" Content="Reset" Command="{Binding Backups.ResetBackupDirCommand}" Classes="secondary"/>
+                  </Grid>
+                </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                  <Button Content="Create Backup Now" Command="{Binding Backups.CreateBackupCommand}" Classes="primary" Padding="16,9"/>
+                  <ProgressBar Minimum="0" Maximum="100" Value="{Binding Backups.BackupProgressValue}"
+                               IsIndeterminate="{Binding Backups.IsBackupProgressIndeterminate}"
+                               Height="3" IsVisible="{Binding Backups.IsBackingUp}"/>
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <!-- Data Retention Config -->
+            <Border Classes="card" Padding="16">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="Automated Data Retention" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Backup interval and scheduled snapshot pruning limit" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock Text="Interval (h):" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12"/>
+                  <TextBox Text="{Binding Backups.BackupIntervalHours, Mode=TwoWay}" Width="64" Margin="0,0,12,0"/>
+                  <CheckBox Content="Automatic pruning" IsChecked="{Binding Backups.AutomaticBackupPruningEnabled, Mode=TwoWay}" Margin="0,0,12,0"/>
+                  <TextBlock Text="Keep:" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12"/>
+                  <TextBox Text="{Binding Backups.MaxBackupsToKeep, Mode=TwoWay}" Width="64" IsEnabled="{Binding Backups.AutomaticBackupPruningEnabled}"/>
+                </WrapPanel>
+              </Grid>
+            </Border>
+
+            <!-- Cloud Off-site Sync Card -->
+            <Border Classes="card" Padding="16" IsVisible="{Binding CloudBackups, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Cloud Off-site Sync" FontSize="14" FontWeight="SemiBold"/>
+                <TextBlock Text="Replicate server backups to connected cloud storage configured in App Settings."
+                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                <TextBlock Text="{Binding CloudBackups.ProviderStatusMessage}"
+                           IsVisible="{Binding CloudBackups.ShowNoConnectedProvidersMessage}"
+                           FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+
+                <ItemsControl ItemsSource="{Binding CloudBackups.Targets}" IsVisible="{Binding CloudBackups.HasConnectedProviders}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="settings:ServerCloudBackupTargetViewModel">
+                      <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,8">
+                        <ToggleSwitch Grid.Column="0" Content="{Binding ProviderType}" IsChecked="{Binding IsEnabled, Mode=TwoWay}" OnContent="" OffContent=""/>
+                        <CheckBox Grid.Column="1" Content="Auto-prune" IsChecked="{Binding AutomaticPruningEnabled, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}" Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="2" Text="{Binding RetentionCount, Mode=TwoWay}" Width="64" IsEnabled="{Binding IsEnabled}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding CloudBackups.HasConnectedProviders}">
+                  <TextBlock Grid.Column="0" Text="Remote Backups" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <Button Grid.Column="1" Content="Refresh" Command="{Binding CloudBackups.RefreshRemoteBackupsCommand}" Classes="secondary" Padding="10,5" FontSize="12"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding CloudBackups.RemoteBackups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="settings:RemoteBackupItemViewModel">
+                      <Border Classes="card-secondary" Padding="10,8" Margin="0,0,0,6">
+                        <Grid ColumnDefinitions="*, Auto">
+                          <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                              <Run Text="{Binding Provider}"/>
+                              <Run Text=" | "/>
+                              <Run Text="{Binding SizeText}"/>
+                              <Run Text=" | "/>
+                              <Run Text="{Binding DateText}"/>
+                            </TextBlock>
+                          </StackPanel>
+                          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <Button Content="Restore"
+                                    Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).CloudBackups.RestoreRemoteBackupCommand}"
+                                    CommandParameter="{Binding}" Classes="secondary" Padding="10,5" FontSize="11"/>
+                            <Button Content="Delete"
+                                    Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).CloudBackups.DeleteRemoteBackupCommand}"
+                                    CommandParameter="{Binding}" Classes="danger" Padding="10,5" FontSize="11"/>
+                          </StackPanel>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Local Backups List -->
+            <ItemsControl ItemsSource="{Binding Backups.BackupList}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="settings:BackupItemViewModel">
+                  <Border Classes="card" Padding="14" Margin="0,0,0,8">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                      <Border Grid.Column="0" Background="{DynamicResource ControlFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Top">
+                        <TextBlock Text="{Binding VersionText}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentPrimaryBrush}"/>
+                      </Border>
+
+                      <StackPanel Grid.Column="1" Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                          <Border Classes="badge-pill"><TextBlock Text="{Binding TriggerText}" FontSize="10"/></Border>
+                          <Border Classes="badge-pill"><TextBlock Text="{Binding LocationText}" FontSize="10"/></Border>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding SizeText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                          <TextBlock Text="{Binding SizeDeltaText}" FontSize="11" Foreground="#10B981" IsVisible="{Binding SizeDeltaText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                          <TextBlock Text="{Binding CreatedAtText}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                        </StackPanel>
+
+                        <!-- Label Editor -->
+                        <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasMetadata}" Margin="0,4,0,0">
+                          <TextBox Text="{Binding Label, Mode=TwoWay}" Watermark="Add a backup label..." Width="240" FontSize="12"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.SaveLabelCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="8,5" ToolTip.Tip="Save label">
+                            <lucide:LucideIcon Kind="Save" Size="13"/>
+                          </Button>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding IntegrityStatusText}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   IsVisible="{Binding IntegrityStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                      </StackPanel>
+
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                        <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.VerifyIntegrityCommand}"
+                                CommandParameter="{Binding}" Classes="subtle" Padding="8,6" ToolTip.Tip="Verify archive SHA-256">
+                          <lucide:LucideIcon Kind="ShieldCheck" Size="15"/>
+                        </Button>
+                        <Button Content="Restore"
+                                Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.RestoreBackupCommand}"
+                                CommandParameter="{Binding FullPath}" Classes="secondary" Padding="12,6"/>
+                        <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Backups.DeleteBackupCommand}"
+                                CommandParameter="{Binding FullPath}" Classes="danger" Padding="8,6">
+                          <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 6: RESTART & RECOVERY -->
+        <ScrollViewer IsVisible="{Binding IsTab6Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="12" Margin="0,0,8,12">
+            <TextBlock Text="Crash Recovery" FontSize="16" FontWeight="SemiBold"/>
+            <Border Classes="card" Padding="16">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="Auto-Restart Engine" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Automatically restart the server if it exits unexpectedly." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableAutoRestart, Mode=TwoWay}" OnContent="" OffContent=""/>
+              </Grid>
+            </Border>
+
+            <Border Classes="card" Padding="16" IsEnabled="{Binding Advanced.EnableAutoRestart}">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="Failure Tolerance" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Maximum consecutive crash restart attempts." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding Advanced.MaxAutoRestarts, Mode=TwoWay}" Width="84"/>
+              </Grid>
+            </Border>
+
+            <Border Classes="card" Padding="16" IsEnabled="{Binding Advanced.EnableAutoRestart}">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="Restart Cooldown (Seconds)" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Delay before attempting recovery start." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding Advanced.AutoRestartDelay, Mode=TwoWay}" Width="84"/>
+              </Grid>
+            </Border>
+
+            <TextBlock Text="Scheduled Maintenance" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0"/>
+            <Border Classes="card" Padding="16">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="Scheduled Reboot" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Periodically reboot to reclaim memory and maintain responsiveness." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Advanced.EnableScheduledReboot, Mode=TwoWay}" OnContent="" OffContent=""/>
+              </Grid>
+            </Border>
+
+            <Border Classes="card" Padding="16" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
+              <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Grid.Column="0" Text="Reboot Frequency" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <ComboBox ItemsSource="{Binding Advanced.RebootModes}" SelectedItem="{Binding Advanced.ScheduledRebootMode, Mode=TwoWay}" Width="110"/>
+                  <TextBox Text="{Binding Advanced.ScheduledRebootTime, Mode=TwoWay}" Width="96" Watermark="04:00" IsVisible="{Binding Advanced.IsDailyMode}"/>
+                  <TextBox Text="{Binding Advanced.ScheduledRebootIntervalHours, Mode=TwoWay}" Width="80" Watermark="24" IsVisible="{Binding Advanced.IsIntervalMode}"/>
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <Border Classes="card" Padding="16" IsEnabled="{Binding Advanced.EnableScheduledReboot}">
+              <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="In-Game Countdown Warning" FontSize="14" FontWeight="SemiBold"/>
+                  <TextBlock Text="Broadcast countdown warning seconds before restart." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                  <ToggleSwitch IsChecked="{Binding Advanced.ScheduledRebootWarning, Mode=TwoWay}" OnContent="" OffContent=""/>
+                  <TextBox Text="{Binding Advanced.ScheduledRebootWarningSeconds, Mode=TwoWay}" Width="76" IsEnabled="{Binding Advanced.IsWarningSettingsEnabled}"/>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 7: CONFIGURATION (ADVANCED SERVER PROPERTIES & PROTOCOLS) -->
+        <ScrollViewer IsVisible="{Binding IsTab7Selected}" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14" Margin="0,0,8,12">
+            <Border Classes="card" Padding="20">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Network Protocols &amp; Gameplay Toggles" FontSize="16" FontWeight="SemiBold"/>
+                <WrapPanel>
+                  <ToggleSwitch Content="PvP Combat" IsChecked="{Binding Advanced.Pvp, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Allow Flight" IsChecked="{Binding Advanced.AllowFlight, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Enable Command Blocks" IsChecked="{Binding Advanced.EnableCommandBlock, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Enable Query" IsChecked="{Binding Advanced.EnableQuery, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                  <ToggleSwitch Content="Enable RCON" IsChecked="{Binding Advanced.EnableRcon, Mode=TwoWay}" Margin="0,4,24,4" OnContent="" OffContent=""/>
+                </WrapPanel>
+                <Grid ColumnDefinitions="*, 16, *, 16, *" IsVisible="{Binding Advanced.EnableRcon}">
+                  <TextBox Grid.Column="0" Text="{Binding Advanced.RconPort, Mode=TwoWay}" Watermark="RCON Port (25575)"/>
+                  <TextBox Grid.Column="2" Text="{Binding Advanced.RconPassword, Mode=TwoWay}" PasswordChar="*" Watermark="RCON Password"/>
+                  <TextBox Grid.Column="4" Text="{Binding Advanced.ResourcePack, Mode=TwoWay}" Watermark="Resource Pack URL"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="20">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Raw server.properties" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="Direct property snapshot edited alongside structured controls." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                <TextBox Text="{Binding Advanced.RawPropertiesText, Mode=TwoWay}"
+                         AcceptsReturn="True" MinHeight="280"
+                         FontFamily="Cascadia Code, JetBrains Mono, Fira Code, Consolas, Menlo, Monospace" FontSize="12"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- TAB 8: AI SUMMARIES -->
+        <ScrollViewer IsVisible="{Binding IsTab8Selected}" VerticalScrollBarVisibility="Auto">
+          <Grid Margin="0,0,8,12">
+            <!-- List View -->
+            <StackPanel Spacing="12" IsVisible="{Binding !Summaries.IsViewingSummary}">
+              <Border Classes="card" Padding="20">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Session Summaries" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock Text="AI-generated summaries of your server play sessions including player activity, warnings, and recommendations."
+                             FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" Padding="32" IsVisible="{Binding !Summaries.HasSummaries}">
+                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                  <lucide:LucideIcon Kind="Sparkles" Size="32" Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center"/>
+                  <TextBlock Text="No summaries yet" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                  <TextBlock Text="Generate a session summary from Console or enable Auto-Summarize in App Settings."
+                             FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+
+              <ItemsControl ItemsSource="{Binding Summaries.Summaries}" IsVisible="{Binding Summaries.HasSummaries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="settings:SessionSummaryItem">
+                    <Border Classes="card" Padding="14,12" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding FormattedDate}" FontSize="14" FontWeight="SemiBold"/>
+                            <Border Classes="badge-pill"><TextBlock Text="{Binding FormattedDuration}" FontSize="11"/></Border>
+                            <Border Classes="badge-pill"><TextBlock Text="{Binding AiProvider}" FontSize="11"/></Border>
+                          </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Button Content="View" Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.ViewSummaryCommand}"
+                                  CommandParameter="{Binding}" Classes="secondary" Padding="12,6"/>
+                          <Button Command="{Binding $parent[UserControl].((vm:ServerSettingsViewModel)DataContext).Summaries.DeleteSummaryCommand}"
+                                  CommandParameter="{Binding}" Classes="danger" Padding="8,6">
+                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="White"/>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Summary Detail Markdown View -->
+            <StackPanel Spacing="12" IsVisible="{Binding Summaries.IsViewingSummary}">
+              <Button Content="Back to Summaries" Command="{Binding Summaries.CloseSummaryCommand}" Classes="secondary" HorizontalAlignment="Left" Padding="12,6"/>
+              <Border Classes="card" Padding="18">
+                <ContentControl x:Name="SummaryMarkdownHost"/>
+              </Border>
+            </StackPanel>
+          </Grid>
+        </ScrollViewer>
+      </Grid>
     </Grid>
+  </DockPanel>
 </UserControl>

@@ -1,15 +1,26 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using PocketMC.Core.Services;
+using PocketMC.Infrastructure.Configuration;
 using PocketMC.Infrastructure.Utils;
 
 namespace PocketMC.Infrastructure.Services
 {
+    public sealed record PhpDownloadSpec(
+        string Version,
+        string Tag,
+        string AssetPattern,
+        string AssetFileName,
+        string FallbackDownloadUrl);
+
     public class PHPService : IPHPService
     {
         private readonly ISettingsService _settingsService;
@@ -93,6 +104,111 @@ namespace PocketMC.Infrastructure.Services
             }
         }
 
+        public static PhpDownloadSpec ResolveDownloadSpec(string version, bool isMacOs, Architecture arch)
+        {
+            string os = isMacOs ? "MacOS" : "Linux";
+            string archName = isMacOs && arch == Architecture.Arm64
+                ? "arm64"
+                : (!isMacOs && arch == Architecture.Arm64 ? "aarch64" : "x86_64");
+
+            bool isLegacyPm4 = string.Equals(version, "8.0", StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(version, "8.1", StringComparison.OrdinalIgnoreCase);
+
+            string majorTagPrefix = isLegacyPm4 ? "pm4-php" : "pm5-php";
+            string pmSuffix = isLegacyPm4 ? "PM4" : "PM5";
+            string tag = $"{majorTagPrefix}-{version}-latest";
+            string assetPattern = $"{os}-{archName}-{pmSuffix}";
+            string fileName = isLegacyPm4
+                ? $"PHP-{os}-{archName}-{pmSuffix}.tar.gz"
+                : $"PHP-{version}-{os}-{archName}-{pmSuffix}.tar.gz";
+
+            string releasesBase = AppConfig.ProviderPhpReleases;
+            string directBase = releasesBase.Replace("api.github.com/repos", "github.com", StringComparison.OrdinalIgnoreCase);
+            string fallbackUrl = $"{directBase}/download/{tag}/{fileName}";
+
+            return new PhpDownloadSpec(version, tag, assetPattern, fileName, fallbackUrl);
+        }
+
+        public string? GetPHPRuntimeDirectory(string version)
+        {
+            var runtimes = _settingsService.Settings.DownloadedRuntimes;
+            if (runtimes.TryGetValue("php", out var phpVersions) &&
+                phpVersions.TryGetValue(version, out var configuredPath) &&
+                !string.IsNullOrWhiteSpace(configuredPath))
+            {
+                return Directory.Exists(configuredPath) ? configuredPath : null;
+            }
+
+            string managedDir = Path.Combine(_settingsService.GetSettingsDirectory(), "Runtimes", $"php-{version}");
+            return Directory.Exists(managedDir) ? managedDir : null;
+        }
+
+        public async Task<bool> IsPHPRuntimeInstalledAsync(string version)
+        {
+            string? dir = GetPHPRuntimeDirectory(version);
+            if (string.IsNullOrWhiteSpace(dir))
+            {
+                return false;
+            }
+
+            string execPath = GetExecutableFromRoot(dir);
+            if (!await ValidatePHPRuntimeAsync(execPath, version))
+            {
+                return false;
+            }
+
+            var runtimes = _settingsService.Settings.DownloadedRuntimes;
+            if (!runtimes.ContainsKey("php"))
+            {
+                runtimes["php"] = new Dictionary<string, string>();
+            }
+
+            if (!runtimes["php"].ContainsKey(version))
+            {
+                runtimes["php"][version] = dir;
+                _settingsService.Save();
+            }
+
+            return true;
+        }
+
+        public Task DeletePHPRuntimeAsync(string version)
+        {
+            var runtimes = _settingsService.Settings.DownloadedRuntimes;
+            if (runtimes.TryGetValue("php", out var phpVersions))
+            {
+                if (phpVersions.TryGetValue(version, out var configuredDir) &&
+                    !string.IsNullOrWhiteSpace(configuredDir) &&
+                    Directory.Exists(configuredDir))
+                {
+                    try
+                    {
+                        Directory.Delete(configuredDir, true);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                phpVersions.Remove(version);
+                _settingsService.Save();
+            }
+
+            string managedDir = Path.Combine(_settingsService.GetSettingsDirectory(), "Runtimes", $"php-{version}");
+            if (Directory.Exists(managedDir))
+            {
+                try
+                {
+                    Directory.Delete(managedDir, true);
+                }
+                catch
+                {
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
         public async Task ProvisionPHPRuntimeAsync(string version, IProgress<double>? progress = null)
         {
             var runtimes = _settingsService.Settings.DownloadedRuntimes;
@@ -106,24 +222,45 @@ namespace PocketMC.Infrastructure.Services
                 }
             }
 
-            string os;
-            string arch;
+            var spec = ResolveDownloadSpec(
+                version,
+                RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
+                RuntimeInformation.OSArchitecture);
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                os = "MacOS";
-                arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x86_64";
-            }
-            else
-            {
-                os = "Linux";
-                arch = "x86_64"; // Default Linux desktop/server architectures
-            }
+            string downloadUrl = spec.FallbackDownloadUrl;
+            string assetName = spec.AssetFileName;
 
-            string assetName = $"PHP-{version}-{os}-{arch}-PM5.tar.gz";
-            string downloadUrl = $"https://github.com/pmmp/PHP-Binaries/releases/download/pm5-php-{version}-latest/{assetName}";
+            try
+            {
+                var releaseJson = await _httpClient.GetFromJsonAsync<JsonObject>($"{AppConfig.ProviderPhpReleases}/tags/{spec.Tag}");
+                var assets = releaseJson?["assets"] as JsonArray;
+                if (assets != null)
+                {
+                    var match = assets.FirstOrDefault(a =>
+                        a is JsonObject obj &&
+                        obj["name"]?.ToString().Contains(spec.AssetPattern, StringComparison.OrdinalIgnoreCase) == true &&
+                        obj["name"]?.ToString().EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase) == true &&
+                        obj["name"]?.ToString().Contains("symbol", StringComparison.OrdinalIgnoreCase) != true &&
+                        obj["name"]?.ToString().Contains("debug", StringComparison.OrdinalIgnoreCase) != true) as JsonObject;
+
+                    string? resolvedUrl = match?["browser_download_url"]?.ToString();
+                    string? resolvedName = match?["name"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(resolvedUrl))
+                    {
+                        downloadUrl = resolvedUrl;
+                    }
+                    if (!string.IsNullOrWhiteSpace(resolvedName))
+                    {
+                        assetName = resolvedName;
+                    }
+                }
+            }
+            catch
+            {
+            }
 
             var downloadsDir = _settingsService.GetDownloadsDirectory();
+            Directory.CreateDirectory(downloadsDir);
             var archivePath = Path.Combine(downloadsDir, assetName);
 
             // Download file

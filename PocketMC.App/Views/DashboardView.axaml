@@ -1,465 +1,470 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PocketMC.App.ViewModels"
-             xmlns:controls="using:PocketMC.App.Controls"
-             xmlns:lucide="clr-namespace:Lucide.Avalonia;assembly=Lucide.Avalonia"
-             xmlns:converters="using:PocketMC.App.Converters"
+             xmlns:lucide="using:Lucide.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="680"
              x:Class="PocketMC.App.Views.DashboardView"
-             x:DataType="vm:DashboardViewModel"
-             Margin="24">
+             x:DataType="vm:DashboardViewModel">
 
-    <Grid RowDefinitions="Auto, *">
-        <!-- Page Header: Matches Windows Title + "New Instance" Button -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24" Orientation="Horizontal">
-            <TextBlock Text="Instances" FontSize="26" FontWeight="Bold"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,16,0" VerticalAlignment="Center"/>
-            <Button Command="{Binding NewInstanceCommand}"
-                    Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                    CornerRadius="8" Padding="16,8" Cursor="Hand" VerticalAlignment="Center" Margin="0,4,0,0">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="New Instance" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
+  <UserControl.Styles>
+    <Style Selector="Border.instance-card">
+      <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="16,14"/>
+      <Setter Property="Focusable" Value="True"/>
+    </Style>
+    <Style Selector="Border.instance-card:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+    </Style>
+    <Style Selector="Border.instance-card.running-border">
+      <Setter Property="BorderBrush" Value="#8010B981"/>
+      <Setter Property="BorderThickness" Value="1.5"/>
+    </Style>
+    <Style Selector="Border.status-pulse">
+      <Style.Animations>
+        <Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate">
+          <KeyFrame Cue="0%">
+            <Setter Property="Opacity" Value="0.35"/>
+          </KeyFrame>
+          <KeyFrame Cue="100%">
+            <Setter Property="Opacity" Value="1.0"/>
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto, *">
+    <!-- Top Header -->
+    <Grid Grid.Row="0" Margin="28,20,28,12" ColumnDefinitions="Auto, Auto, *, Auto">
+      <TextBlock Grid.Column="0" Text="Instances" FontSize="24" FontWeight="Bold"
+                 Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+      <Button Grid.Column="1" Command="{Binding NewInstanceCommand}"
+              Classes="primary" Padding="14,7" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <lucide:LucideIcon Kind="Plus" Size="16"/>
+          <TextBlock Text="New Instance"/>
         </StackPanel>
+      </Button>
 
-        <!-- Main Body -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
-            <Grid>
-                <!-- Skeleton Loader Grid (Active during initial data load) -->
-                <controls:AdaptiveGridPanel IsVisible="{Binding IsLoading}" MinColumnWidth="320" HorizontalSpacing="16" VerticalSpacing="16">
-                    <!-- 4 Skeleton Cards -->
-                    <Border Classes="skeleton-card">
-                        <StackPanel Spacing="12">
-                            <StackPanel Spacing="6">
-                                <Border Classes="skeleton-element" Height="18" Width="140" HorizontalAlignment="Left"/>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Border Classes="skeleton-element" Height="18" Width="52"/>
-                                    <Border Classes="skeleton-element" Height="18" Width="48"/>
-                                    <Border Classes="skeleton-element" Height="18" Width="60"/>
-                                </StackPanel>
-                                <Border Classes="skeleton-element" Height="12" Width="90" HorizontalAlignment="Left"/>
-                            </StackPanel>
-                            <Border Classes="skeleton-element" Height="34"/>
-                            <Border Classes="skeleton-element" Height="36"/>
-                            <Border Classes="skeleton-element" Height="32"/>
-                            <Grid ColumnDefinitions="*, 8, Auto, 6, Auto">
-                                <Border Grid.Column="0" Classes="skeleton-element" Height="32"/>
-                                <Border Grid.Column="2" Classes="skeleton-element" Height="32" Width="36"/>
-                                <Border Grid.Column="4" Classes="skeleton-element" Height="32" Width="36"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                    <Border Classes="skeleton-card">
-                        <StackPanel Spacing="12">
-                            <StackPanel Spacing="6">
-                                <Border Classes="skeleton-element" Height="18" Width="140" HorizontalAlignment="Left"/>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Border Classes="skeleton-element" Height="18" Width="52"/>
-                                    <Border Classes="skeleton-element" Height="18" Width="48"/>
-                                </StackPanel>
-                                <Border Classes="skeleton-element" Height="12" Width="90" HorizontalAlignment="Left"/>
-                            </StackPanel>
-                            <Border Classes="skeleton-element" Height="34"/>
-                            <Border Classes="skeleton-element" Height="36"/>
-                            <Border Classes="skeleton-element" Height="32"/>
-                            <Grid ColumnDefinitions="*, 8, Auto, 6, Auto">
-                                <Border Grid.Column="0" Classes="skeleton-element" Height="32"/>
-                                <Border Grid.Column="2" Classes="skeleton-element" Height="32" Width="36"/>
-                                <Border Grid.Column="4" Classes="skeleton-element" Height="32" Width="36"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                </controls:AdaptiveGridPanel>
-
-                <!-- Empty State (when instances list is empty and not loading) -->
-                <Border IsVisible="{Binding !HasInstances}"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Margin="0,0,0,64" Padding="64,48"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1" CornerRadius="16">
-                    <StackPanel Spacing="16" HorizontalAlignment="Center">
-                        <Border Width="80" Height="80" CornerRadius="40"
-                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                HorizontalAlignment="Center">
-                            <lucide:LucideIcon Kind="Package" Size="40"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="No instances found" FontSize="20" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Get started by creating your first local Minecraft server instance."
-                                   FontSize="14" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                   HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                        <Button Command="{Binding NewInstanceCommand}"
-                                Background="{DynamicResource AccentPrimaryBrush}" Foreground="White"
-                                CornerRadius="8" Padding="32,10" HorizontalAlignment="Center"
-                                Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <lucide:LucideIcon Kind="Plus" Size="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="Create Instance" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Border>
-
-                <!-- Cards Grid -->
-                <ItemsControl ItemsSource="{Binding Instances}" IsVisible="{Binding HasInstances}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <controls:AdaptiveGridPanel MinColumnWidth="320" HorizontalSpacing="16" VerticalSpacing="16"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:InstanceCardViewModel">
-                            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="16,14"
-                                    BoxShadow="0 4 16 0 #20000000">
-                                <Grid RowDefinitions="Auto, Auto, Auto, Auto, *">
-                                    <!-- Header Row -->
-                                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
-                                        <StackPanel Grid.Column="0">
-                                            <!-- Title & Pin Icon -->
-                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                                <lucide:LucideIcon Kind="Pin" Size="14"
-                                                                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                                                                   IsVisible="{Binding IsPinned}"
-                                                                   VerticalAlignment="Center"
-                                                                   ToolTip.Tip="Pinned to Top"/>
-                                            </StackPanel>
-
-                                            <!-- Engine & Feature Badges -->
-                                            <WrapPanel Margin="0,6,0,0">
-                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3">
-                                                    <TextBlock Text="{Binding MinecraftVersion}" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                </Border>
-                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3">
-                                                    <TextBlock Text="{Binding ServerType}" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                </Border>
-                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,5,3"
-                                                        IsVisible="{Binding ShowCrossPlayBadge}"
-                                                        ToolTip.Tip="{Binding CrossPlayBadgeTooltip}">
-                                                    <TextBlock Text="{Binding CrossPlayBadgeText}" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                </Border>
-                                                <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,5,3"
-                                                        IsVisible="{Binding ShowVoiceChatBadge}"
-                                                        ToolTip.Tip="{Binding VoiceChatBadgeTooltip}">
-                                                    <lucide:LucideIcon Kind="Mic" Size="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </WrapPanel>
-
-                                            <!-- Description -->
-                                            <TextBlock Text="{Binding Description}" FontSize="12"
-                                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                       Margin="0,4,0,0" MaxLines="2" TextTrimming="CharacterEllipsis"
-                                                       IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                                            <!-- Status Indicator -->
-                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0" VerticalAlignment="Center">
-                                                <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Bold"
-                                                           Foreground="{Binding StatusBrush}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </StackPanel>
-
-                                        <!-- More Options Menu -->
-                                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                                Padding="6,4" Cursor="Hand" VerticalAlignment="Top"
-                                                ToolTip.Tip="More options">
-                                            <lucide:LucideIcon Kind="EllipsisVertical" Size="16" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                                            <Button.Flyout>
-                                                <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                                    <MenuItem Header="Pin Instance"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).TogglePinCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="Pin" Size="14"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <Separator/>
-                                                    <MenuItem Header="Copy Crash Report"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyCrashReportCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="Copy" Size="14"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <MenuItem Header="Open Folder"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="FolderOpen" Size="14"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <MenuItem Header="Export Instance"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).ExportInstanceCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="Radio" Size="14"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                    <Separator/>
-                                                    <MenuItem Header="Delete Instance"
-                                                              Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInstanceCommand}"
-                                                              CommandParameter="{Binding}">
-                                                        <MenuItem.Icon>
-                                                            <lucide:LucideIcon Kind="Trash2" Size="14" Foreground="#ef4444"/>
-                                                        </MenuItem.Icon>
-                                                    </MenuItem>
-                                                </MenuFlyout>
-                                            </Button.Flyout>
-                                        </Button>
-                                    </Grid>
-
-                                    <!-- Metadata Row (3 Columns: Last Played, Created, Platform) -->
-                                    <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                            BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,10">
-                                        <UniformGrid Columns="3">
-                                            <StackPanel Margin="0,0,8,0">
-                                                <TextBlock Text="{Binding LastPlayedLabelText}" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                                                <TextBlock Text="{Binding LastPlayedValueText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                            <StackPanel Margin="4,0,4,0" HorizontalAlignment="Center">
-                                                <TextBlock Text="Created" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" TextAlignment="Center"/>
-                                                <TextBlock Text="{Binding CreatedValueText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextAlignment="Center"/>
-                                            </StackPanel>
-                                            <StackPanel Margin="8,0,0,0" HorizontalAlignment="Right">
-                                                <TextBlock Text="Platform" FontSize="9" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" TextAlignment="Right"/>
-                                                <TextBlock Text="{Binding PlatformSummaryText}" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextAlignment="Right"/>
-                                            </StackPanel>
-                                        </UniformGrid>
-                                    </Border>
-
-                                    <!-- Metrics Row (3 Columns: CPU, RAM, PLAYERS) -->
-                                    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
-                                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                            BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
-                                        <UniformGrid Columns="3">
-                                            <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="CPU" FontSize="10" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding CpuText}" FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                            <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="RAM" FontSize="10" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding RamText}" FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                            <Button Background="Transparent" BorderThickness="0"
-                                                    Padding="12,4" Margin="0,-4" HorizontalAlignment="Center" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenPlayersCommand}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip.Tip="Manage online players">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="PLAYERS" FontSize="10" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding PlayerStatus}" FontSize="13" FontWeight="Bold"
-                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </UniformGrid>
-                                    </Border>
-
-                                    <!-- Connections Row (Active when Running) -->
-                                    <StackPanel Grid.Row="3" Spacing="4" Margin="0,0,0,16" IsVisible="{Binding IsRunning}">
-                                        <!-- Primary Connection IP -->
-                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                                CornerRadius="6" Padding="10,8" Margin="0,0,0,4"
-                                                IsVisible="{Binding HasTunnelAddress}">
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                                <lucide:LucideIcon Grid.Column="0" Kind="Globe" Size="14"
-                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding TunnelAddress}" FontSize="12"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
-                                                        Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyIpCommand}"
-                                                        CommandParameter="{Binding}" ToolTip.Tip="Copy IP address" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-
-                                        <!-- Local Network (LAN) IP -->
-                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                                CornerRadius="6" Padding="10,8" Margin="0,0,0,4"
-                                                IsVisible="{Binding HasLanAddress}">
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                                <lucide:LucideIcon Grid.Column="0" Kind="Radio" Size="14"
-                                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="Local Network (LAN)" FontSize="10" FontWeight="Bold"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                    <TextBlock Text="{Binding LanAddressDisplayText}" FontSize="12"
-                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
-                                                        Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyLanIpCommand}"
-                                                        CommandParameter="{Binding}" ToolTip.Tip="Copy Local Network LAN IP" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-
-                                        <!-- Bedrock Tunnel IP -->
-                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                                CornerRadius="6" Padding="10,8"
-                                                IsVisible="{Binding HasBedrockTunnelAddress}">
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                                <lucide:LucideIcon Grid.Column="0" Kind="Box" Size="14"
-                                                                   Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="Bedrock" FontSize="10" FontWeight="Bold"
-                                                               Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
-                                                    <TextBlock Text="{Binding BedrockTunnelAddress}" FontSize="12"
-                                                               Foreground="{DynamicResource SystemFillColorCautionBrush}" TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="4"
-                                                        Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).CopyBedrockIpCommand}"
-                                                        CommandParameter="{Binding}" ToolTip.Tip="Copy Bedrock IP address" Cursor="Hand">
-                                                    <lucide:LucideIcon Kind="Copy" Size="12" Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-                                    </StackPanel>
-
-                                    <!-- Actions Row (2x2 UniformGrid) -->
-                                    <Grid Grid.Row="4">
-                                        <!-- Stopped Controls -->
-                                        <UniformGrid Columns="2" IsVisible="{Binding ShowStoppedControls}">
-                                            <Button Background="{DynamicResource AccentPrimaryBrush}"
-                                                    Foreground="White" CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).StartServerCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Play" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Start" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Terminal" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Logs" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="FolderOpen" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Files" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Settings" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Settings" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </UniformGrid>
-
-                                        <!-- Running Controls -->
-                                        <UniformGrid Columns="2" IsVisible="{Binding ShowRunningControls}">
-                                            <Button Background="#ef4444" Foreground="White"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).StopServerCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Square" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding StopButtonText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).RestartServerCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="RefreshCw" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Restart" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource AccentPrimaryBrush}"
-                                                    Foreground="White"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Terminal" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Console" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                    CornerRadius="6" Margin="2" Padding="8"
-                                                    HorizontalAlignment="Stretch" Cursor="Hand"
-                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                    <lucide:LucideIcon Kind="Settings" Size="14" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Settings" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </UniformGrid>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
-        </ScrollViewer>
+      <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Button Command="{Binding NavigateToImportCommand}"
+                Classes="secondary" Padding="12,7">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <lucide:LucideIcon Kind="ArchiveRestore" Size="14"/>
+            <TextBlock Text="Import"/>
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding RefreshInstancesCommand}"
+                Classes="secondary" Padding="12,7" ToolTip.Tip="Refresh Instances">
+          <lucide:LucideIcon Kind="RefreshCw" Size="14"/>
+        </Button>
+      </StackPanel>
     </Grid>
+
+    <!-- Main Scroll Content -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="28,0,28,28" Spacing="16">
+
+        <!-- Loading Skeleton Cards (matches Windows 4 skeleton placeholders) -->
+        <WrapPanel IsVisible="{Binding IsLoading}">
+          <Border Classes="skeleton-card" Width="320" Margin="0,0,16,16">
+            <StackPanel Spacing="12">
+              <Border Classes="skeleton-element" Height="20" Width="170" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="16" Width="120" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="36" CornerRadius="6"/>
+              <Border Classes="skeleton-element" Height="42" CornerRadius="6"/>
+              <Grid ColumnDefinitions="*, 8, *">
+                <Border Grid.Column="0" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+                <Border Grid.Column="2" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="skeleton-card" Width="320" Margin="0,0,16,16">
+            <StackPanel Spacing="12">
+              <Border Classes="skeleton-element" Height="20" Width="150" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="16" Width="110" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="36" CornerRadius="6"/>
+              <Border Classes="skeleton-element" Height="42" CornerRadius="6"/>
+              <Grid ColumnDefinitions="*, 8, *">
+                <Border Grid.Column="0" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+                <Border Grid.Column="2" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="skeleton-card" Width="320" Margin="0,0,16,16">
+            <StackPanel Spacing="12">
+              <Border Classes="skeleton-element" Height="20" Width="180" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="16" Width="105" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="36" CornerRadius="6"/>
+              <Border Classes="skeleton-element" Height="42" CornerRadius="6"/>
+              <Grid ColumnDefinitions="*, 8, *">
+                <Border Grid.Column="0" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+                <Border Grid.Column="2" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="skeleton-card" Width="320" Margin="0,0,16,16">
+            <StackPanel Spacing="12">
+              <Border Classes="skeleton-element" Height="20" Width="160" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="16" Width="115" HorizontalAlignment="Left"/>
+              <Border Classes="skeleton-element" Height="36" CornerRadius="6"/>
+              <Border Classes="skeleton-element" Height="42" CornerRadius="6"/>
+              <Grid ColumnDefinitions="*, 8, *">
+                <Border Grid.Column="0" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+                <Border Grid.Column="2" Classes="skeleton-element" Height="34" CornerRadius="6"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </WrapPanel>
+
+        <!-- Empty State -->
+        <Border Classes="card" Padding="48,56" IsVisible="{Binding !HasInstances}">
+          <StackPanel Spacing="12" HorizontalAlignment="Center" MaxWidth="420">
+            <lucide:LucideIcon Kind="ServerOff" Size="42" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+            <TextBlock Text="No server instances yet" FontSize="17" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+            <TextBlock Text="Create your first Minecraft server in seconds, or import an existing archive."
+                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,6,0,0">
+              <Button Command="{Binding NewInstanceCommand}" Classes="primary" Padding="18,9">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <lucide:LucideIcon Kind="Plus" Size="16"/>
+                  <TextBlock Text="Create Server"/>
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding NavigateToImportCommand}" Classes="secondary" Padding="14,9">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <lucide:LucideIcon Kind="ArchiveRestore" Size="15"/>
+                  <TextBlock Text="Import"/>
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Responsive Instances Grid -->
+        <ItemsControl ItemsSource="{Binding Instances}" IsVisible="{Binding HasInstances}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:InstanceCardViewModel">
+              <Border Classes="instance-card"
+                      Classes.running-border="{Binding ShowRunningBorder}"
+                      Width="320" Margin="0,0,16,16"
+                      KeyDown="InstanceCard_OnKeyDown">
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+
+                  <!-- 1. Card Header -->
+                  <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
+                    <StackPanel Grid.Column="0" Spacing="5">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                   MaxWidth="220"/>
+                        <lucide:LucideIcon Kind="Pin" Size="13" Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                           IsVisible="{Binding IsPinned}" VerticalAlignment="Center"
+                                           ToolTip.Tip="{Binding PinButtonTooltip}"/>
+                      </StackPanel>
+
+                      <!-- Software / Capabilities Badges -->
+                      <WrapPanel Orientation="Horizontal">
+                        <Border Classes="badge-pill" Margin="0,0,4,4">
+                          <TextBlock Text="{Binding MinecraftVersion}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </Border>
+                        <Border Classes="badge-pill" Margin="0,0,4,4">
+                          <TextBlock Text="{Binding ServerType}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Border>
+                        <Border Background="#1E10B981" BorderBrush="#4010B981" BorderThickness="1" CornerRadius="4" Padding="6,2"
+                                Margin="0,0,4,4"
+                                IsVisible="{Binding ShowCrossPlayBadge}" ToolTip.Tip="{Binding CrossPlayBadgeTooltip}">
+                          <TextBlock Text="{Binding CrossPlayBadgeText}" FontSize="11" Foreground="#34D399" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#1E3B82F6" BorderBrush="#403B82F6" BorderThickness="1" CornerRadius="4" Padding="6,2"
+                                Margin="0,0,4,4"
+                                IsVisible="{Binding ShowVoiceChatBadge}" ToolTip.Tip="{Binding VoiceChatBadgeTooltip}">
+                          <TextBlock Text="{Binding VoiceChatBadgeText}" FontSize="11" Foreground="#60A5FA" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#1EA855F7" BorderBrush="#40A855F7" BorderThickness="1" CornerRadius="4" Padding="6,2"
+                                Margin="0,0,4,4"
+                                IsVisible="{Binding IsImportedFromModpack}" ToolTip.Tip="{Binding ModpackBadgeTooltip}">
+                          <TextBlock Text="{Binding ModpackBadgeText}" FontSize="11" Foreground="#C084FC" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#2AEF4444" BorderBrush="#60EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2"
+                                Margin="0,0,4,4"
+                                IsVisible="{Binding HasPortIssue}" ToolTip.Tip="{Binding PortIssueTooltip}">
+                          <TextBlock Text="{Binding PortIssueBadgeText}" FontSize="11" Foreground="#F87171" FontWeight="SemiBold"/>
+                        </Border>
+                      </WrapPanel>
+
+                      <!-- Status Indicator Row -->
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Border Classes="status-pulse" Width="8" Height="8" CornerRadius="4"
+                                Background="{Binding StatusBrush}" VerticalAlignment="Center"
+                                IsVisible="{Binding IsBusy}"/>
+                        <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center"
+                                 IsVisible="{Binding !IsBusy}"/>
+                        <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{Binding StatusBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding RestartCountdownText}" FontSize="11"
+                                   Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                   IsVisible="{Binding IsRestartCountdownActive}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </StackPanel>
+
+                    <!-- Overflow Menu Button -->
+                    <Button Grid.Column="1" Classes="subtle" Padding="6" VerticalAlignment="Top"
+                            ToolTip.Tip="Instance Options">
+                      <lucide:LucideIcon Kind="EllipsisVertical" Size="16" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                          <MenuItem Header="{Binding PinMenuHeader}"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).TogglePinCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <MenuItem Header="Open Console"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <MenuItem Header="Manage Players"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenPlayersCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <MenuItem Header="Export Instance"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).ExportInstanceCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <MenuItem Header="Copy Crash Report"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyCrashReportCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <MenuItem Header="Open Folder"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
+                                    CommandParameter="{Binding}"/>
+                          <Separator/>
+                          <MenuItem Header="Delete Instance" Foreground="#F87171"
+                                    Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).DeleteInstanceCommand}"
+                                    CommandParameter="{Binding}"/>
+                        </MenuFlyout>
+                      </Button.Flyout>
+                    </Button>
+                  </Grid>
+
+                  <!-- 2. Summary Info Row -->
+                  <Border Grid.Row="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
+                          Padding="0,10,0,10" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="*, *, *">
+                      <StackPanel Grid.Column="0" HorizontalAlignment="Left" ToolTip.Tip="{Binding LastPlayedTooltip}">
+                        <TextBlock Text="{Binding LastPlayedLabelText}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding LastPlayedValueText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                        <TextBlock Text="Created" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CreatedValueText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                        <TextBlock Text="Platform" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding PlatformSummaryText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+
+                  <!-- 3. Telemetry Bar -->
+                  <Border Grid.Row="2" Classes="card-secondary" Padding="12,8" Margin="0,0,0,12">
+                    <Grid ColumnDefinitions="*, *, *">
+                      <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                        <TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CpuText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                        <TextBlock Text="RAM" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding RamText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                        <TextBlock Text="PLAYERS" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding PlayerStatus}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+
+                  <!-- 4. Running Connection Strings (Hostname, Numeric IP, LAN, Bedrock/Geyser, Voice Chat) -->
+                  <StackPanel Grid.Row="3" Spacing="4" Margin="0,0,0,14" IsVisible="{Binding IsRunning}">
+                    <!-- Primary Playit Tunnel Address or Shimmer Skeleton -->
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding HasTunnelAddress}">
+                      <TextBlock Grid.Column="0" Text="IP:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <TextBlock Grid.Column="1" Text="{Binding TunnelAddress}" FontSize="11" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                      <Button Grid.Column="2" Classes="subtle" Padding="5,3" ToolTip.Tip="Copy IP"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyIpCommand}"
+                              CommandParameter="{Binding}">
+                        <lucide:LucideIcon Kind="Copy" Size="12"/>
+                      </Button>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding ShowPrimaryTunnelSkeleton}">
+                      <TextBlock Grid.Column="0" Text="IP:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <Border Grid.Column="1" Classes="skeleton-element" Height="16" CornerRadius="4"/>
+                    </Grid>
+
+                    <!-- Numeric Tunnel Address -->
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding HasNumericTunnelAddress}">
+                      <TextBlock Grid.Column="0" Text="Num:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <TextBlock Grid.Column="1" Text="{Binding NumericTunnelAddress}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                 TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                      <Button Grid.Column="2" Classes="subtle" Padding="5,3" ToolTip.Tip="Copy Numeric IP"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyNumericIpCommand}"
+                              CommandParameter="{Binding}">
+                        <lucide:LucideIcon Kind="Copy" Size="12"/>
+                      </Button>
+                    </Grid>
+
+                    <!-- LAN IP Address -->
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding HasLanAddress}">
+                      <TextBlock Grid.Column="0" Text="LAN:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <TextBlock Grid.Column="1" Text="{Binding LanAddressDisplayText}" FontSize="11" FontFamily="Monospace"
+                                 Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                      <Button Grid.Column="2" Classes="subtle" Padding="5,3" ToolTip.Tip="Copy LAN IP"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyLanIpCommand}"
+                              CommandParameter="{Binding}">
+                        <lucide:LucideIcon Kind="Copy" Size="12"/>
+                      </Button>
+                    </Grid>
+
+                    <!-- Bedrock / Geyser IP Address -->
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding ShowBedrockIp}">
+                      <TextBlock Grid.Column="0" Text="{Binding BedrockIpLabel}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <TextBlock Grid.Column="1" Text="{Binding BedrockIpDisplayText}" FontSize="11" Foreground="#34D399"
+                                 TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                      <Button Grid.Column="2" Classes="subtle" Padding="5,3" ToolTip.Tip="Copy Bedrock IP"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyBedrockIpCommand}"
+                              CommandParameter="{Binding}">
+                        <lucide:LucideIcon Kind="Copy" Size="12"/>
+                      </Button>
+                    </Grid>
+
+                    <!-- Voice Chat Tunnel -->
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding ShowVoiceChatRow}">
+                      <TextBlock Grid.Column="0" Text="Voice:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                      <TextBlock Grid.Column="1" Text="{Binding VoiceChatTunnelAddress, FallbackValue='Local UDP configured'}" FontSize="11"
+                                 Foreground="#60A5FA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                      <Button Grid.Column="2" Classes="subtle" Padding="5,3" IsVisible="{Binding HasVoiceChatTunnelAddress}" ToolTip.Tip="Copy Voice Chat Address"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).CopyVoiceChatIpCommand}"
+                              CommandParameter="{Binding}">
+                        <lucide:LucideIcon Kind="Copy" Size="12"/>
+                      </Button>
+                    </Grid>
+                  </StackPanel>
+
+                  <!-- 5. Action Buttons -->
+                  <Grid Grid.Row="4" RowDefinitions="Auto, 6, Auto">
+                    <!-- Stopped Controls -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, 6, *" IsVisible="{Binding ShowStoppedControls}">
+                      <Button Grid.Column="0"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).StartServerCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="primary"
+                              HorizontalAlignment="Stretch" Padding="0,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Play" Size="14"/>
+                          <TextBlock Text="Start"/>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="2"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary"
+                              HorizontalAlignment="Stretch" Padding="0,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Terminal" Size="14"/>
+                          <TextBlock Text="Logs"/>
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+
+                    <!-- Running Controls -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, 6, *" IsVisible="{Binding ShowRunningControls}">
+                      <Button Grid.Column="0"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).StopServerCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="danger"
+                              HorizontalAlignment="Stretch" Padding="0,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Square" Size="13"/>
+                          <TextBlock Text="{Binding StopButtonText}"/>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="2"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).RestartServerCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary"
+                              HorizontalAlignment="Stretch" Padding="0,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="RotateCw" Size="14"/>
+                          <TextBlock Text="Restart"/>
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+
+                    <!-- Bottom Row: Logs/Players + Files + Settings -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, 6, *, 6, *" IsVisible="{Binding ShowRunningControls}">
+                      <Button Grid.Column="0"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenConsoleCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary" HorizontalAlignment="Stretch" Padding="0,7" ToolTip.Tip="Console Logs">
+                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Terminal" Size="13"/>
+                          <TextBlock Text="Logs" FontSize="12"/>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="2"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenPlayersCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary" HorizontalAlignment="Stretch" Padding="0,7" ToolTip.Tip="Player Management">
+                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Users" Size="13"/>
+                          <TextBlock Text="Players" FontSize="12"/>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="4"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary" HorizontalAlignment="Stretch" Padding="0,7" ToolTip.Tip="Server Settings">
+                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Settings" Size="13"/>
+                          <TextBlock Text="Settings" FontSize="12"/>
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*, 6, *" IsVisible="{Binding ShowStoppedControls}">
+                      <Button Grid.Column="0"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).OpenFolderCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary" HorizontalAlignment="Stretch" Padding="0,7">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="FolderOpen" Size="14"/>
+                          <TextBlock Text="Files"/>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="2"
+                              Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).ServerSettingsCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="secondary" HorizontalAlignment="Stretch" Padding="0,7">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                          <lucide:LucideIcon Kind="Settings" Size="14"/>
+                          <TextBlock Text="Settings"/>
+                        </StackPanel>
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
 </UserControl>

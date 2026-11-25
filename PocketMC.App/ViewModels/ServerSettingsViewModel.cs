@@ -12,6 +12,7 @@ using PocketMC.Core.Services;
 using PocketMC.Infrastructure.Services;
 using PocketMC.App.Services;
 using PocketMC.App.ViewModels.Settings;
+using PocketMC.Infrastructure.Mods;
 
 namespace PocketMC.App.ViewModels
 {
@@ -56,8 +57,51 @@ namespace PocketMC.App.ViewModels
         public SettingsVersionUpdatesVM VersionUpdates { get; }
         public SettingsSummariesVM Summaries { get; }
         public SettingsAdvancedVM Advanced { get; }
+        public ServerCloudBackupViewModel? CloudBackups { get; }
 
         public int SubViewModelCount => 9;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsTab0Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab1Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab2Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab3Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab4Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab5Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab6Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab7Selected))]
+        [NotifyPropertyChangedFor(nameof(IsTab8Selected))]
+        [NotifyPropertyChangedFor(nameof(IsVersionUpdatesTabActive))]
+        private int _selectedTabIndex;
+
+        [ObservableProperty]
+        private bool _motdEditorVisible;
+
+        public bool IsTab0Selected => SelectedTabIndex == 0;
+        public bool IsTab1Selected => SelectedTabIndex == 1;
+        public bool IsTab2Selected => SelectedTabIndex == 2;
+        public bool IsTab3Selected => SelectedTabIndex == 3;
+        public bool IsTab4Selected => SelectedTabIndex == 4;
+        public bool IsTab5Selected => SelectedTabIndex == 5;
+        public bool IsTab6Selected => SelectedTabIndex == 6;
+        public bool IsTab7Selected => SelectedTabIndex == 7;
+        public bool IsTab8Selected => SelectedTabIndex == 8;
+        public bool IsVersionUpdatesTabActive => SelectedTabIndex == 1;
+
+        public bool IsJavaSettings => SelectedInstance == null ||
+            SelectedInstance.EngineType is not EngineType.Bedrock and not EngineType.PocketMine;
+
+        public bool IsBedrockSettings => SelectedInstance?.EngineType == EngineType.Bedrock;
+        public bool SupportsJavaWorldGenerator => SelectedInstance == null ||
+            SelectedInstance.EngineType is not EngineType.Bedrock and not EngineType.PocketMine;
+        public bool SupportsWorldImport => SelectedInstance?.EngineType != EngineType.Pumpkin;
+        public string DisplayNameLabel => IsJavaSettings ? "Server Message (MOTD)" : "Server Name (MOTD)";
+        public bool IsAiSummarizationAvailable =>
+            (_settingsService.Settings.EnableAiSummarization && _settingsService.Settings.IsAiConfigured()) ||
+            Summaries.HasSummaries;
+
+        public IRelayCommand<string> SelectTabCommand { get; }
+        public IRelayCommand ToggleMotdEditorCommand { get; }
 
         // Backward compatibility convenience accessors
         public string Motd { get => General.Motd; set => General.Motd = value; }
@@ -79,7 +123,10 @@ namespace PocketMC.App.ViewModels
             IDialogService? dialogService = null,
             IImageProcessingService? imageProcessingService = null,
             BackupService? backupService = null,
-            SummaryStorageService? summaryStorageService = null)
+            SummaryStorageService? summaryStorageService = null,
+            WorldManager? worldManager = null,
+            BedrockAddonInstaller? bedrockInstaller = null,
+            IEnumerable<ICloudBackupProvider>? cloudProviders = null)
         {
             _instanceService = instanceService;
             _settingsService = settingsService;
@@ -89,22 +136,42 @@ namespace PocketMC.App.ViewModels
             _rebootScheduleService = rebootScheduleService;
             _dialogService = dialogService ?? new AvaloniaDialogService();
             _imageProcessingService = imageProcessingService ?? new ImageProcessingService();
-            _backupService = backupService;
+            _backupService = backupService ?? (App.Services?.GetService(typeof(BackupService)) as BackupService);
             _summaryStorageService = summaryStorageService ?? new SummaryStorageService();
 
+            var manifestService = App.Services?.GetService(typeof(AddonManifestService)) as AddonManifestService ?? new AddonManifestService();
+            var addonUpdateService = App.Services?.GetService(typeof(AddonUpdateService)) as AddonUpdateService;
+            var processRunner = App.Services?.GetService(typeof(IProcessRunner)) as IProcessRunner;
+            bool IsRunningCheck() => SelectedInstance != null && processRunner?.TryGetRunningInfo(SelectedInstance.Slug, out _, out var st) == true &&
+                                     (st == "Running" || st == "Online" || st == "Starting");
+
             General = new SettingsGeneralVM(string.Empty, _dialogService, _imageProcessingService, MarkDirty);
-            World = new SettingsWorldVM(MarkDirty);
+            World = new SettingsWorldVM(MarkDirty, worldManager, _dialogService, IsRunningCheck);
             Performance = new SettingsPerformanceVM(MarkDirty, _dialogService);
             Bedrock = new SettingsBedrockVM(MarkDirty);
-            Backups = new SettingsBackupsVM(_dialogService, MarkDirty, _backupService);
-            Addons = new SettingsAddonsVM(_dialogService, MarkDirty);
-            VersionUpdates = new SettingsVersionUpdatesVM(_updateService);
+            Backups = new SettingsBackupsVM(_dialogService, MarkDirty, _backupService, IsRunningCheck);
+            Addons = new SettingsAddonsVM(_dialogService, MarkDirty, manifestService, addonUpdateService, bedrockInstaller, IsRunningCheck);
+            VersionUpdates = new SettingsVersionUpdatesVM(_updateService, IsRunningCheck);
             Summaries = new SettingsSummariesVM(string.Empty, _summaryStorageService, _dialogService);
             Advanced = new SettingsAdvancedVM(MarkDirty);
+
+            var resolvedCloudProviders = cloudProviders ?? (App.Services?.GetService(typeof(IEnumerable<ICloudBackupProvider>)) as IEnumerable<ICloudBackupProvider>);
+            if (resolvedCloudProviders != null)
+            {
+                CloudBackups = new ServerCloudBackupViewModel(_settingsService, resolvedCloudProviders, _dialogService, _backupService, IsRunningCheck);
+            }
 
             SaveCommand = new AsyncRelayCommand(SaveSettingsAsync);
             CancelCommand = new RelayCommand(CancelEdits);
             GoBackCommand = new RelayCommand(GoBack);
+            SelectTabCommand = new RelayCommand<string>(idx =>
+            {
+                if (int.TryParse(idx, out int parsed))
+                {
+                    SelectedTabIndex = Math.Clamp(parsed, 0, 8);
+                }
+            });
+            ToggleMotdEditorCommand = new RelayCommand(() => MotdEditorVisible = !MotdEditorVisible);
         }
 
         private void MarkDirty()
@@ -125,18 +192,34 @@ namespace PocketMC.App.ViewModels
                 General.UpdateServerDir(value.Path);
                 General.InstanceName = value.Name;
                 General.InstanceDescription = value.Description ?? string.Empty;
+                General.AutoStartWithApp = value.AutoStartOnLaunch;
                 General.ServerPort = value.ServerPort.HasValue && value.ServerPort.Value > 0 ? value.ServerPort.Value : 25565;
+                General.GeyserBedrockPort = (value.GeyserBedrockPort ?? 19132).ToString();
+                General.PumpkinBedrockPort = (value.PumpkinBedrockPort ?? 19132).ToString();
 
-                World.UpdateServerDir(value.Path);
+                World.SetInstance(value);
                 Performance.MaxRam = value.MaxRamMb > 0 ? value.MaxRamMb : 2048;
                 Performance.MinRam = value.MinRamMb > 0 ? value.MinRamMb : 1024;
                 Performance.AdvancedJvmArgs = value.JvmArgs;
 
+                Backups.MaxBackupsToKeep = value.MaxBackupsToKeep > 0 ? value.MaxBackupsToKeep : 5;
+                Backups.CustomBackupDirectory = value.CustomBackupDirectory;
                 Backups.SetInstance(value);
-                Addons.UpdateServerDir(value.Path);
+                Addons.SetInstance(value);
                 VersionUpdates.SetInstance(value);
                 Summaries.UpdateServerDir(value.Path);
+                Advanced.EnableAutoRestart = value.EnableAutoRestart;
+                Advanced.MaxAutoRestarts = value.MaxAutoRestarts.ToString();
+                Advanced.AutoRestartDelay = value.AutoRestartDelaySeconds.ToString();
                 Advanced.UpdateServerDir(value.Path);
+                CloudBackups?.SetInstance(value);
+
+                OnPropertyChanged(nameof(IsJavaSettings));
+                OnPropertyChanged(nameof(IsBedrockSettings));
+                OnPropertyChanged(nameof(SupportsJavaWorldGenerator));
+                OnPropertyChanged(nameof(SupportsWorldImport));
+                OnPropertyChanged(nameof(DisplayNameLabel));
+                OnPropertyChanged(nameof(IsAiSummarizationAvailable));
 
                 LoadSettings();
             }
@@ -354,10 +437,19 @@ namespace PocketMC.App.ViewModels
             // Save RAM changes to JVM args in metadata
             int ramGb = (int)(Performance.MaxRam / 1024.0);
             if (ramGb < 1) ramGb = 1;
+            SelectedInstance.Name = string.IsNullOrWhiteSpace(General.InstanceName) ? SelectedInstance.Name : General.InstanceName.Trim();
+            SelectedInstance.Description = General.InstanceDescription ?? string.Empty;
+            SelectedInstance.AutoStartOnLaunch = General.AutoStartWithApp;
             SelectedInstance.JvmArgs = SetMaxRam(_originalJvmArgs, ramGb);
             SelectedInstance.MaxRamMb = (int)Performance.MaxRam;
             SelectedInstance.MinRamMb = (int)Performance.MinRam;
             SelectedInstance.ServerPort = General.ServerPort;
+            SelectedInstance.MaxPlayers = World.MaxPlayers;
+            SelectedInstance.MaxBackupsToKeep = Backups.MaxBackupsToKeep;
+            SelectedInstance.CustomBackupDirectory = Backups.CustomBackupDirectory;
+            SelectedInstance.EnableAutoRestart = Advanced.EnableAutoRestart;
+            if (int.TryParse(Advanced.MaxAutoRestarts, out int maxRestarts)) SelectedInstance.MaxAutoRestarts = maxRestarts;
+            if (int.TryParse(Advanced.AutoRestartDelay, out int restartDelay)) SelectedInstance.AutoRestartDelaySeconds = restartDelay;
 
             // Scheduled Maintenance
             var schedule = new RebootScheduleSettings

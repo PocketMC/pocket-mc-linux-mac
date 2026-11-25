@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="using:PocketMC.App.Views.Dialogs"
+        x:Class="PocketMC.App.Views.Dialogs.RuntimeDownloadDialog"
+        x:DataType="dialogs:RuntimeDownloadDialogViewModel"
+        Title="{Binding Title}"
+        Width="450" Height="230"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource ApplicationBackgroundBrush}">
+
+  <Grid Margin="24" RowDefinitions="Auto, *, Auto">
+    <TextBlock Grid.Row="0"
+               Text="{Binding Title}"
+               FontSize="18" FontWeight="Bold"
+               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+               Margin="0,0,0,18"/>
+
+    <StackPanel Grid.Row="1" VerticalAlignment="Center" Spacing="10">
+      <TextBlock Text="{Binding StatusMessage}"
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                 FontSize="13"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap"/>
+
+      <ProgressBar Value="{Binding ProgressPercentage}"
+                   Minimum="0" Maximum="100"
+                   Height="8"
+                   IsIndeterminate="{Binding IsIndeterminate}"/>
+    </StackPanel>
+
+    <TextBlock Grid.Row="2"
+               Text="This may take a few minutes depending on your connection."
+               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+               FontSize="11"
+               HorizontalAlignment="Center"
+               Margin="0,16,0,0"/>
+  </Grid>
+</Window>

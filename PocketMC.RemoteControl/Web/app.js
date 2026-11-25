@@ -462,7 +462,7 @@ function renderSelectionView(instances) {
 
 function updateBulkControls() {
   const count = document.querySelector("#bulkSelectionCount");
-  if (count) count.textContent = `${selectedBatchIds.size} selected${bulkBusy ? " — working…" : ""}`;
+  if (count) count.textContent = `${selectedBatchIds.size} selected${bulkBusy ? " - working..." : ""}`;
   document.querySelectorAll("[data-bulk-action]").forEach(button => {
     button.disabled = bulkBusy || selectedBatchIds.size === 0;
   });
@@ -482,7 +482,7 @@ async function executeBulkAction(action) {
     const results = await api("/api/instances/batch", { method: "POST", body: JSON.stringify({ action, instanceIds: ids }) });
     if (feedback) feedback.textContent = results.map(result => {
       const name = cachedInstances.find(instance => instance.id === result.instanceId)?.name || result.instanceId;
-      return `${name}: ${result.status}${result.message ? ` — ${result.message}` : ""}`;
+      return `${name}: ${result.status}${result.message ? ` - ${result.message}` : ""}`;
     }).join("\n");
     await refreshEverything();
   } catch (error) {
@@ -783,7 +783,7 @@ async function ensureConsoleConnection(instanceStatus) {
     closeSocket();
     els.consoleState.textContent = "Offline";
     els.consoleState.className = "state-label offline";
-    // Always clear — prevents stale logs from another instance leaking through
+    // Always clear - prevents stale logs from another instance leaking through
     if (historyLoadedForInstance !== selectedInstanceId) {
       els.consoleOutput.innerHTML = "";
       els.consoleOutput.textContent = "Server is offline.";

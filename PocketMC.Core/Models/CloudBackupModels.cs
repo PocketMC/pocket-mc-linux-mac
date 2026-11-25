@@ -61,6 +61,7 @@ namespace PocketMC.Core.Models
         public string? RemoteFolderId { get; set; }
         public bool UploadLatestOnly { get; set; }
         public int? RetentionCount { get; set; } = 3;
+        public bool AutomaticPruningEnabled { get; set; } = true;
         public DateTimeOffset? LastUploadUtc { get; set; }
         public string? LastUploadFileName { get; set; }
         public long? LastUploadSizeBytes { get; set; }

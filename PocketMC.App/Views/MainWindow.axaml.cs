@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PocketMC.App.Services;
 using PocketMC.App.ViewModels;
+using PocketMC.Core.Services;
 
 namespace PocketMC.App.Views;
 
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
             o => o.TitleBarContentMargin);
 
     private Thickness _titleBarContentMargin;
+    private MainWindowViewModel? _subscribedVm;
 
     public Thickness TitleBarContentMargin
     {
@@ -57,24 +59,93 @@ public partial class MainWindow : Window
         return new Thickness(0, 0, 140, 0);
     }
 
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (_subscribedVm != null)
+        {
+            _subscribedVm.BackdropRefreshRequested -= ApplyBackdropFromSettings;
+            _subscribedVm = null;
+        }
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            _subscribedVm = vm;
+            _subscribedVm.BackdropRefreshRequested += ApplyBackdropFromSettings;
+        }
+    }
+
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
 
         try
         {
-            if (App.Services != null)
-            {
-                var accentService = App.Services.GetService<AccentColorService>();
-                accentService?.ApplyCurrentAccent();
-
-                var wallpaperService = App.Services.GetService<WallpaperBackdropService>();
-                wallpaperService?.Apply(WallpaperBlurLayer, WallpaperTintOverlay);
-            }
+            App.Services?.GetService<AccentColorService>()?.ApplyCurrentAccent();
+            ApplyBackdropFromSettings();
         }
         catch
         {
             // Non-critical visual fallback
+        }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (_subscribedVm != null)
+        {
+            _subscribedVm.BackdropRefreshRequested -= ApplyBackdropFromSettings;
+            _subscribedVm.Dispose();
+            _subscribedVm = null;
+        }
+
+        base.OnClosed(e);
+    }
+
+    public void ApplyBackdropFromSettings()
+    {
+        try
+        {
+            var wallpaperService = App.Services?.GetService<WallpaperBackdropService>();
+            var settings = App.Services?.GetService<ISettingsService>()?.Settings;
+            var vm = DataContext as MainWindowViewModel;
+
+            if (wallpaperService == null)
+            {
+                if (vm != null)
+                {
+                    vm.IsWallpaperActive = false;
+                }
+                return;
+            }
+
+            if (settings != null && string.Equals(settings.WindowBackdrop, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                wallpaperService.Detach(WallpaperBlurLayer, WallpaperTintOverlay);
+                if (vm != null)
+                {
+                    vm.IsWallpaperActive = false;
+                }
+                return;
+            }
+
+            double blur = settings?.WallpaperBlurRadius ?? 80.0;
+            double tint = settings?.WallpaperTintOpacity ?? 0.72;
+            string? customPath = settings?.CustomBackgroundImagePath;
+
+            wallpaperService.Apply(WallpaperBlurLayer, WallpaperTintOverlay, blur, tint, customPath);
+            if (vm != null)
+            {
+                vm.IsWallpaperActive = WallpaperBlurLayer.IsVisible;
+            }
+        }
+        catch
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.IsWallpaperActive = false;
+            }
         }
     }
 
@@ -117,6 +188,13 @@ public partial class MainWindow : Window
                 return;
             }
         }
+        // Ctrl+B: Toggle navigation rail
+        else if (e.Key == Key.B && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            vm?.TogglePaneCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
         // Ctrl+1: Dashboard
         else if (e.Key == Key.D1 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
@@ -135,6 +213,27 @@ public partial class MainWindow : Window
         else if (e.Key == Key.D3 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
             vm?.NavigateRemoteControlCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+4: Runtimes
+        else if (e.Key == Key.D4 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            vm?.NavigateRuntimesCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+5 or Ctrl+,: Settings
+        else if ((e.Key == Key.D5 || e.Key == Key.OemComma) && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            vm?.NavigateSettingsCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+6: About
+        else if (e.Key == Key.D6 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            vm?.NavigateAboutCommand.Execute(null);
             e.Handled = true;
             return;
         }

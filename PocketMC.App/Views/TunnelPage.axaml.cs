@@ -1,5 +1,6 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using Avalonia.Interactivity;
+using PocketMC.App.ViewModels;
 
 namespace PocketMC.App.Views;
 
@@ -10,8 +11,12 @@ public partial class TunnelPage : UserControl
         InitializeComponent();
     }
 
-    private void InitializeComponent()
+    protected override async void OnLoaded(RoutedEventArgs e)
     {
-        AvaloniaXamlLoader.Load(this);
+        base.OnLoaded(e);
+        if (DataContext is TunnelViewModel vm && !vm.IsLoading)
+        {
+            await vm.RefreshAllAsync();
+        }
     }
 }

@@ -7,7 +7,7 @@
         MinWidth="420" MaxWidth="540"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="#1E1E22">
+        Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -28,7 +28,7 @@
             <TextBlock x:Name="TxtTitle"
                        Text="Port Conflict Detected"
                        FontSize="18" FontWeight="SemiBold"
-                       Foreground="#FFFFFF"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                        VerticalAlignment="Center"
                        TextWrapping="Wrap"/>
         </StackPanel>
@@ -39,7 +39,7 @@
                       VerticalScrollBarVisibility="Auto"
                       Margin="0,0,0,16">
             <TextBlock x:Name="TxtMessage"
-                       Foreground="#A1A1AA"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        FontSize="13"
                        TextWrapping="Wrap"
                        LineHeight="20"/>
@@ -48,8 +48,8 @@
         <!-- Suggested Port Action Card -->
         <Border x:Name="BorderSuggestedPort"
                 Grid.Row="2"
-                Background="#27272A"
-                BorderBrush="#3F3F46"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="12,10"
@@ -60,19 +60,19 @@
                     <TextBlock Text="RECOMMENDED REPLACEMENT"
                                FontSize="10"
                                FontWeight="SemiBold"
-                               Foreground="#A1A1AA"/>
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     <TextBlock x:Name="TxtSuggestedPortDescription"
                                Text="Port 25566 is verified available"
                                FontSize="13"
                                FontWeight="Bold"
-                               Foreground="#FFFFFF"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                Margin="0,2,0,0"/>
                 </StackPanel>
                 <Button x:Name="BtnApplySuggested"
                         Grid.Column="1"
                         Content="Use Port"
-                        Background="#3B82F6"
-                        Foreground="#FFFFFF"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                         CornerRadius="6"
                         Padding="14,6"
                         Cursor="Hand"
@@ -85,7 +85,7 @@
             <TextBlock Text="Enter or modify port:"
                        FontSize="13"
                        FontWeight="SemiBold"
-                       Foreground="#FFFFFF"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                        Margin="0,0,0,8"/>
 
             <TextBox x:Name="TxtPortInput"
@@ -93,9 +93,6 @@
                      FontSize="14"
                      MaxLength="5"
                      CornerRadius="6"
-                     Background="#27272A"
-                     BorderBrush="#3F3F46"
-                     Foreground="#FFFFFF"
                      Padding="10,8"/>
 
             <!-- Validation message -->
@@ -119,9 +116,9 @@
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="BtnCancel"
                     Content="Cancel"
-                    Background="#27272A"
-                    BorderBrush="#3F3F46"
-                    Foreground="#FFFFFF"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                     CornerRadius="6"
                     Padding="16,8"
                     MinWidth="80"
@@ -129,8 +126,8 @@
                     Cursor="Hand"/>
             <Button x:Name="BtnConfirm"
                     Content="Change Port &amp; Start"
-                    Background="#3B82F6"
-                    Foreground="#FFFFFF"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                     CornerRadius="6"
                     Padding="16,8"
                     MinWidth="140"

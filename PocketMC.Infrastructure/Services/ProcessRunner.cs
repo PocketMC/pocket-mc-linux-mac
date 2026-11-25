@@ -97,6 +97,12 @@ namespace PocketMC.Infrastructure.Services
                     execPath = Path.Combine(instance.Path, "bedrock_server");
                     arguments = "";
                 }
+                else if (instance.EngineType == EngineType.Pumpkin)
+                {
+                    PumpkinConfiguration.PrepareForLaunch(instance.Path);
+                    execPath = Path.Combine(instance.Path, PumpkinProvider.GetExecutableFileName());
+                    arguments = "";
+                }
                 else if (instance.EngineType == EngineType.Forge || instance.EngineType == EngineType.NeoForge)
                 {
                     string javaVersion = MapMinecraftVersionToJavaVersion(instance.EngineVersion);

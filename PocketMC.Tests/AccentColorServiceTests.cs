@@ -1,5 +1,7 @@
 using System;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Styling;
 using PocketMC.App.Services;
 using PocketMC.Core.Models;
 using Xunit;
@@ -61,5 +63,34 @@ public class AccentColorServiceTests
         Assert.True(AccentColorService.IsCustomMode("custom"));
         Assert.False(AccentColorService.IsCustomMode("Automatic"));
         Assert.False(AccentColorService.IsCustomMode(null));
+    }
+
+    [Fact]
+    public void ApplyAccentToResources_UpdatesThemeDictionariesAndContrastingTextBrush()
+    {
+        var darkDict = new ResourceDictionary();
+        var lightDict = new ResourceDictionary();
+        var rootDict = new ResourceDictionary();
+        rootDict.ThemeDictionaries[ThemeVariant.Dark] = darkDict;
+        rootDict.ThemeDictionaries[ThemeVariant.Light] = lightDict;
+
+        Color brightGold = Color.FromRgb(255, 215, 0);
+        AccentColorService.ApplyAccentToResources(rootDict, brightGold);
+
+        var darkFill = Assert.IsType<SolidColorBrush>(darkDict["AccentFillColorDefaultBrush"]);
+        var lightFill = Assert.IsType<SolidColorBrush>(lightDict["AccentFillColorDefaultBrush"]);
+        var rootContrast = Assert.IsType<SolidColorBrush>(rootDict["TextOnAccentFillColorPrimaryBrush"]);
+        var darkContrast = Assert.IsType<SolidColorBrush>(darkDict["TextOnAccentFillColorPrimaryBrush"]);
+
+        Assert.Equal(brightGold, darkFill.Color);
+        Assert.Equal(brightGold, lightFill.Color);
+        Assert.Equal(Colors.Black, rootContrast.Color);
+        Assert.Equal(Colors.Black, darkContrast.Color);
+
+        Color deepBlue = Color.FromRgb(0, 102, 214);
+        AccentColorService.ApplyAccentToResources(rootDict, deepBlue);
+
+        var whiteContrast = Assert.IsType<SolidColorBrush>(darkDict["TextOnAccentFillColorPrimaryBrush"]);
+        Assert.Equal(Colors.White, whiteContrast.Color);
     }
 }

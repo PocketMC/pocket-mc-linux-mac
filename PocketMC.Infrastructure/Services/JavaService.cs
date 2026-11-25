@@ -363,6 +363,20 @@ namespace PocketMC.Infrastructure.Services
             return false;
         }
 
+        public string? GetJavaRuntimeDirectory(string version)
+        {
+            var runtimes = _settingsService.Settings.DownloadedRuntimes;
+            if (runtimes.TryGetValue("java", out var javaVersions) &&
+                javaVersions.TryGetValue(version, out var configured) &&
+                !string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
+            string managedDir = Path.Combine(_settingsService.GetSettingsDirectory(), "Runtimes", $"java-{version}");
+            return Directory.Exists(managedDir) ? managedDir : null;
+        }
+
         public Task DeleteJavaRuntimeAsync(string version)
         {
             var runtimes = _settingsService.Settings.DownloadedRuntimes;

@@ -161,20 +161,65 @@ public sealed class AccentColorService
             return;
         }
 
-        var app = Application.Current;
-        app.Resources["SystemAccentColor"] = color;
-        app.Resources["SystemAccentColorLight1"] = Lighten(color, 0.15f);
-        app.Resources["SystemAccentColorLight2"] = Lighten(color, 0.30f);
-        app.Resources["SystemAccentColorLight3"] = Lighten(color, 0.45f);
-        app.Resources["SystemAccentColorDark1"] = Darken(color, 0.15f);
-        app.Resources["SystemAccentColorDark2"] = Darken(color, 0.30f);
-        app.Resources["SystemAccentColorDark3"] = Darken(color, 0.45f);
+        ApplyAccentToResources(Application.Current.Resources, color);
+    }
 
-        app.Resources["AccentBrush"] = new SolidColorBrush(color);
-        app.Resources["AccentColorBrush"] = new SolidColorBrush(color);
-        app.Resources["AccentPrimaryBrush"] = new SolidColorBrush(color);
-        app.Resources["AccentFillColorDefaultBrush"] = new SolidColorBrush(color);
-        app.Resources["AccentTextFillColorPrimaryBrush"] = new SolidColorBrush(Lighten(color, 0.25f));
+    public static void ApplyAccentToResources(Avalonia.Controls.IResourceDictionary resources, Color color)
+    {
+        if (resources == null)
+        {
+            return;
+        }
+
+        ApplyAccentEntries(resources, color, isDarkTheme: true);
+
+        foreach (var entry in resources.ThemeDictionaries)
+        {
+            if (entry.Value is Avalonia.Controls.IResourceDictionary themeDict)
+            {
+                bool isDark = entry.Key == Avalonia.Styling.ThemeVariant.Dark ||
+                              string.Equals(entry.Key?.ToString(), "Dark", StringComparison.OrdinalIgnoreCase);
+                ApplyAccentEntries(themeDict, color, isDark);
+            }
+        }
+    }
+
+    private static void ApplyAccentEntries(Avalonia.Controls.IResourceDictionary target, Color color, bool isDarkTheme)
+    {
+        var light1 = Lighten(color, 0.15f);
+        var light2 = Lighten(color, 0.30f);
+        var light3 = Lighten(color, 0.45f);
+        var dark1 = Darken(color, 0.15f);
+        var dark2 = Darken(color, 0.30f);
+        var dark3 = Darken(color, 0.45f);
+        var contrastText = GetContrastingForegroundColor(color);
+        var hoverColor = isDarkTheme ? light1 : dark1;
+        var pressedColor = isDarkTheme ? dark1 : dark2;
+        var textColor = isDarkTheme ? Lighten(color, 0.25f) : Darken(color, 0.20f);
+
+        target["SystemAccentColor"] = color;
+        target["SystemAccentColorLight1"] = light1;
+        target["SystemAccentColorLight2"] = light2;
+        target["SystemAccentColorLight3"] = light3;
+        target["SystemAccentColorDark1"] = dark1;
+        target["SystemAccentColorDark2"] = dark2;
+        target["SystemAccentColorDark3"] = dark3;
+
+        target["AccentBrush"] = new SolidColorBrush(color);
+        target["AccentColorBrush"] = new SolidColorBrush(color);
+        target["AccentPrimaryBrush"] = new SolidColorBrush(color);
+        target["AccentFillColorDefaultBrush"] = new SolidColorBrush(color);
+        target["AccentFillColorSecondaryBrush"] = new SolidColorBrush(hoverColor);
+        target["AccentFillColorTertiaryBrush"] = new SolidColorBrush(pressedColor);
+        target["AccentTextFillColorPrimaryBrush"] = new SolidColorBrush(textColor);
+        target["TextOnAccentFillColorPrimaryBrush"] = new SolidColorBrush(contrastText);
+        target["TextOnAccentFillColorSecondaryBrush"] = new SolidColorBrush(Color.FromArgb(0xB3, contrastText.R, contrastText.G, contrastText.B));
+    }
+
+    public static Color GetContrastingForegroundColor(Color background)
+    {
+        double luminance = (0.2126 * background.R + 0.7152 * background.G + 0.0722 * background.B) / 255.0;
+        return luminance > 0.52 ? Colors.Black : Colors.White;
     }
 
     private void NotifyAccentChanged(Color color)

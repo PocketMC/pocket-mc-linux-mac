@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PocketMC.Core.Models;
 
@@ -27,24 +28,12 @@ public class OllamaModelInfo
             if (SizeBytes <= 0) return "Unknown";
             const double gb = 1024.0 * 1024.0 * 1024.0;
             const double mb = 1024.0 * 1024.0;
-            if (SizeBytes >= gb)
-                return $"{SizeBytes / gb:F2} GB";
-            return $"{SizeBytes / mb:F1} MB";
+            return SizeBytes >= gb ? $"{SizeBytes / gb:F2} GB" : $"{SizeBytes / mb:F1} MB";
         }
     }
 
-    public bool SupportsCompletion =>
-        Capabilities.Count == 0 || ContainsCapability("completion");
-
-    private bool ContainsCapability(string capability)
-    {
-        for (int i = 0; i < Capabilities.Count; i++)
-        {
-            if (string.Equals(Capabilities[i], capability, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
-    }
+    public string DetailsSummary =>
+        string.Join(" · ", new[] { ParameterSize, QuantizationLevel, FormattedSize }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
     public override string ToString() => Name;
 }
@@ -58,21 +47,13 @@ public class OllamaPullProgress
     public bool IsComplete { get; init; }
     public string? ErrorMessage { get; init; }
 
-    public double? Percent
-    {
-        get
-        {
-            if (TotalBytes is > 0 && CompletedBytes.HasValue)
-                return (double)CompletedBytes.Value / TotalBytes.Value * 100.0;
-            return null;
-        }
-    }
+    public double Percent =>
+        TotalBytes is > 0 && CompletedBytes.HasValue
+            ? Math.Clamp((double)CompletedBytes.Value / TotalBytes.Value * 100.0, 0.0, 100.0)
+            : 0.0;
 
-    public static OllamaPullProgress Success() =>
-        new() { Status = "success", IsComplete = true };
-
-    public static OllamaPullProgress Error(string message) =>
-        new() { Status = "error", IsComplete = true, ErrorMessage = message };
+    public static OllamaPullProgress Success() => new() { Status = "success", IsComplete = true };
+    public static OllamaPullProgress Error(string message) => new() { Status = "error", IsComplete = true, ErrorMessage = message };
 }
 
 public class OllamaDaemonStatus
@@ -81,9 +62,6 @@ public class OllamaDaemonStatus
     public string? Version { get; init; }
     public string? ErrorMessage { get; init; }
 
-    public static OllamaDaemonStatus Online(string version) =>
-        new() { IsRunning = true, Version = version };
-
-    public static OllamaDaemonStatus Offline(string error) =>
-        new() { IsRunning = false, ErrorMessage = error };
+    public static OllamaDaemonStatus Online(string version) => new() { IsRunning = true, Version = version };
+    public static OllamaDaemonStatus Offline(string error) => new() { IsRunning = false, ErrorMessage = error };
 }

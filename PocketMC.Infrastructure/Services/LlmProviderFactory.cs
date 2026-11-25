@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using PocketMC.Core.Models;
 using PocketMC.Core.Services;
 
 namespace PocketMC.Infrastructure.Services
@@ -54,12 +56,151 @@ namespace PocketMC.Infrastructure.Services
             return list;
         }
 
-        public async Task<DiagnosticResult> SendRequestAsync(
+        public Task<DiagnosticResult> SendRequestAsync(
             LlmProvider provider,
             string systemPrompt,
             string userPrompt,
             string? customApiKey = null,
             string? customModelName = null)
+        {
+            return SendRequestInternalAsync(
+                provider,
+                systemPrompt,
+                userPrompt,
+                customApiKey,
+                customModelName,
+                customEndpoint: null,
+                useCloudBearerAuth: false,
+                CancellationToken.None);
+        }
+
+        public async Task<DiagnosticResult> SendConfiguredRequestAsync(
+            Settings settings,
+            string systemPrompt,
+            string userPrompt,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            string providerName = settings.AiProvider ?? "Gemini";
+            string? key = settings.GetCurrentAiKey();
+            string? model = settings.GetCurrentAiModel();
+            string? endpoint = settings.GetCurrentAiEndpoint();
+
+            if (string.Equals(providerName, "OpenAI-Compatible", StringComparison.OrdinalIgnoreCase))
+            {
+                return await SendOpenAiCompatibleAsync(endpoint, key, model, systemPrompt, userPrompt, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            bool isOllama = string.Equals(providerName, "Ollama", StringComparison.OrdinalIgnoreCase);
+            bool isOllamaCloud = isOllama && string.Equals(settings.OllamaMode, "Cloud", StringComparison.OrdinalIgnoreCase);
+            LlmProvider mapped = ParseProviderName(providerName);
+
+            return await SendRequestInternalAsync(
+                mapped,
+                systemPrompt,
+                userPrompt,
+                key,
+                model,
+                endpoint,
+                isOllamaCloud,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        public static LlmProvider ParseProviderName(string? providerName)
+        {
+            return (providerName ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "openai" => LlmProvider.OpenAi,
+                "anthropic" or "claude" => LlmProvider.Claude,
+                "ollama" => LlmProvider.Ollama,
+                "groq" => LlmProvider.Groq,
+                "openrouter" => LlmProvider.OpenRouter,
+                "mistral" => LlmProvider.Mistral,
+                "grok" => LlmProvider.Grok,
+                _ => LlmProvider.Gemini
+            };
+        }
+
+        private async Task<DiagnosticResult> SendOpenAiCompatibleAsync(
+            string? endpoint,
+            string? apiKey,
+            string? model,
+            string systemPrompt,
+            string userPrompt,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(endpoint))
+            {
+                return new DiagnosticResult
+                {
+                    Success = false,
+                    Content = string.Empty,
+                    ErrorMessage = "OpenAI-Compatible endpoint URL is not configured in App Settings."
+                };
+            }
+
+            try
+            {
+                string trimmed = endpoint.Trim().TrimEnd('/');
+                string requestUrl = trimmed.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase)
+                    ? trimmed
+                    : $"{trimmed}/v1/chat/completions";
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    request.Headers.Add("Authorization", $"Bearer {apiKey}");
+                }
+
+                var payload = new
+                {
+                    model = string.IsNullOrWhiteSpace(model) ? "gpt-4o-mini" : model,
+                    messages = new[]
+                    {
+                        new { role = "system", content = systemPrompt },
+                        new { role = "user", content = userPrompt }
+                    }
+                };
+                request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+                using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new DiagnosticResult
+                    {
+                        Success = false,
+                        Content = string.Empty,
+                        ErrorMessage = $"LLM Provider returned error ({response.StatusCode}): {responseString}"
+                    };
+                }
+
+                using var doc = JsonDocument.Parse(responseString);
+                string text = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
+                return new DiagnosticResult { Success = true, Content = text };
+            }
+            catch (Exception ex)
+            {
+                return new DiagnosticResult
+                {
+                    Success = false,
+                    Content = string.Empty,
+                    ErrorMessage = $"Failed to execute AI request: {ex.Message}"
+                };
+            }
+        }
+
+        private async Task<DiagnosticResult> SendRequestInternalAsync(
+            LlmProvider provider,
+            string systemPrompt,
+            string userPrompt,
+            string? customApiKey,
+            string? customModelName,
+            string? customEndpoint,
+            bool useCloudBearerAuth,
+            CancellationToken cancellationToken)
         {
             // 1. Resolve API key if needed
             string? apiKey = customApiKey;
@@ -157,8 +298,15 @@ namespace PocketMC.Infrastructure.Services
                         }
                     case LlmProvider.Ollama:
                         {
-                            var model = customModelName ?? "llama3";
-                            request.RequestUri = new Uri("http://localhost:11434/api/generate");
+                            var model = string.IsNullOrWhiteSpace(customModelName) ? "llama3" : customModelName;
+                            string baseUrl = string.IsNullOrWhiteSpace(customEndpoint)
+                                ? "http://localhost:11434"
+                                : customEndpoint.Trim().TrimEnd('/');
+                            request.RequestUri = new Uri($"{baseUrl}/api/generate");
+                            if (useCloudBearerAuth && !string.IsNullOrWhiteSpace(apiKey))
+                            {
+                                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+                            }
 
                             var payload = new
                             {
@@ -210,8 +358,8 @@ namespace PocketMC.Infrastructure.Services
 
                 request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-                using var response = await _httpClient.SendAsync(request);
-                var responseString = await response.Content.ReadAsStringAsync();
+                using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                var responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode)
                 {

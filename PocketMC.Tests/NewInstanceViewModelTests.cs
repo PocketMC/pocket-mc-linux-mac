@@ -143,5 +143,33 @@ namespace PocketMC.Tests
                 }
             }
         }
+
+        [Fact]
+        public void NewInstanceViewModel_ExposesPumpkinNetworkPanelLoaderPickerAndRefreshCommand()
+        {
+            var instService = new FakeInstanceService();
+            var javaService = new FakeJavaService();
+            var phpService = new FakePHPService();
+
+            var vm = new NewInstanceViewModel(instService, javaService, phpService);
+
+            vm.ApplyPresetPumpkinCommand.Execute(null);
+            Assert.Equal(EngineType.Pumpkin, vm.SelectedEngine);
+            Assert.True(vm.ShowPumpkinNetworkPanel);
+            Assert.True(vm.ShowPumpkinPlayitCallout);
+            Assert.True(vm.PumpkinJavaEnabled);
+            Assert.True(vm.PumpkinBedrockEnabled);
+            Assert.Equal("19132", vm.PumpkinBedrockPort);
+            Assert.Equal("25565", vm.ServerPort);
+            Assert.False(vm.IsLoaderVersionPanelVisible);
+
+            vm.SelectedEngine = EngineType.Fabric;
+            Assert.False(vm.ShowPumpkinNetworkPanel);
+            Assert.True(vm.IsLoaderVersionPanelVisible);
+
+            Assert.NotNull(vm.RefreshVersionsCommand);
+            vm.ErrorMessage = "Failed to query versions";
+            Assert.True(vm.HasError);
+        }
     }
 }

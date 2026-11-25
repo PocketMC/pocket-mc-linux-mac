@@ -6,7 +6,7 @@
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="#18181B">
+        Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -19,9 +19,9 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Create Tunnel"
                        FontSize="18" FontWeight="Bold"
-                       Foreground="#FFFFFF"/>
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             <TextBlock Text="Configure a new PlayIt.gg tunnel for your Minecraft server."
-                       Foreground="#A1A1AA" FontSize="13"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13"
                        Margin="0,4,0,0"
                        TextWrapping="Wrap"/>
         </StackPanel>
@@ -31,14 +31,11 @@
             <!-- Tunnel Name -->
             <StackPanel Spacing="6">
                 <TextBlock Text="Tunnel Name"
-                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="13"/>
                 <TextBox x:Name="TxtTunnelName"
                          MaxLength="64"
                          CornerRadius="6"
                          Padding="10,8"
-                         Background="#27272A"
-                         BorderBrush="#3F3F46"
-                         Foreground="#FFFFFF"
                          Watermark="e.g. survival-server"/>
                 <TextBlock x:Name="TxtNameError"
                            Foreground="#EF4444" FontSize="11"
@@ -49,13 +46,10 @@
             <!-- Tunnel Type -->
             <StackPanel Spacing="6">
                 <TextBlock Text="Tunnel Type"
-                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="13"/>
                 <ComboBox x:Name="CmbTunnelType"
                           SelectedIndex="0"
                           CornerRadius="6"
-                          Background="#27272A"
-                          BorderBrush="#3F3F46"
-                          Foreground="#FFFFFF"
                           HorizontalAlignment="Stretch">
                     <ComboBoxItem Content="Minecraft Java" Tag="minecraft-java"/>
                     <ComboBoxItem Content="Minecraft Bedrock" Tag="minecraft-bedrock"/>
@@ -66,15 +60,12 @@
             <!-- Local Port -->
             <StackPanel Spacing="6">
                 <TextBlock Text="Local Port"
-                           Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="13"/>
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="13"/>
                 <TextBox x:Name="TxtLocalPort"
                          Text="25565"
                          MaxLength="5"
                          CornerRadius="6"
-                         Padding="10,8"
-                         Background="#27272A"
-                         BorderBrush="#3F3F46"
-                         Foreground="#FFFFFF"/>
+                         Padding="10,8"/>
                 <TextBlock x:Name="TxtPortError"
                            Foreground="#EF4444" FontSize="11"
                            IsVisible="False"
@@ -86,17 +77,17 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0" Spacing="10">
             <Button x:Name="BtnCancel"
                     Content="Cancel"
-                    Background="#27272A"
-                    BorderBrush="#3F3F46"
-                    Foreground="#FFFFFF"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                     CornerRadius="6"
                     Padding="16,8"
                     MinWidth="80"
                     Cursor="Hand"/>
             <Button x:Name="BtnCreate"
                     Content="Create Tunnel"
-                    Background="#3B82F6"
-                    Foreground="#FFFFFF"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                     CornerRadius="6"
                     Padding="16,8"
                     MinWidth="120"

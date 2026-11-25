@@ -26,6 +26,7 @@ namespace PocketMC.App.ViewModels
         private readonly IJavaService _javaService;
         private readonly IPHPService _phpService;
         private readonly GeyserProvisioningService? _geyserProvisioningService;
+        private readonly PumpkinProvider? _pumpkinProvider;
 
         private string _name = string.Empty;
 
@@ -51,6 +52,11 @@ namespace PocketMC.App.ViewModels
                 if (SetProperty(ref _selectedEngine, value))
                 {
                     OnPropertyChanged(nameof(IsJavaEngine));
+                    OnPropertyChanged(nameof(IsPumpkinSelected));
+                    OnPropertyChanged(nameof(ShowPumpkinNetworkPanel));
+                    OnPropertyChanged(nameof(ShowPumpkinPlayitCallout));
+                    OnPropertyChanged(nameof(IsLoaderVersionPanelVisible));
+                    ServerPort = (value == EngineType.Bedrock || value == EngineType.PocketMine) ? "19132" : "25565";
                     _ = LoadVersionsAsync();
                 }
             }
@@ -125,7 +131,84 @@ namespace PocketMC.App.ViewModels
             set => SetProperty(ref _customWorldPath, value);
         }
 
-        public bool IsJavaEngine => SelectedEngine != EngineType.Bedrock && SelectedEngine != EngineType.PocketMine;
+        public bool IsJavaEngine => SelectedEngine != EngineType.Bedrock && SelectedEngine != EngineType.PocketMine && SelectedEngine != EngineType.Pumpkin;
+        public bool IsPumpkinSelected => SelectedEngine == EngineType.Pumpkin;
+        public bool ShowPumpkinNetworkPanel => IsPumpkinSelected;
+        public bool ShowPumpkinPlayitCallout => IsPumpkinSelected;
+        public string PumpkinPlayitCalloutText => "Pumpkin's Java listener works with Playit public tunnels. Bedrock NetherNet players connect via LAN on your selected UDP port.";
+        public bool IsLoaderVersionPanelVisible =>
+            SelectedEngine == EngineType.Fabric ||
+            SelectedEngine == EngineType.Forge ||
+            SelectedEngine == EngineType.NeoForge;
+
+        private string _serverPort = "25565";
+        public string ServerPort
+        {
+            get => _serverPort;
+            set => SetProperty(ref _serverPort, value);
+        }
+
+        private bool _pumpkinJavaEnabled = true;
+        public bool PumpkinJavaEnabled
+        {
+            get => _pumpkinJavaEnabled;
+            set => SetProperty(ref _pumpkinJavaEnabled, value);
+        }
+
+        private bool _pumpkinBedrockEnabled = true;
+        public bool PumpkinBedrockEnabled
+        {
+            get => _pumpkinBedrockEnabled;
+            set => SetProperty(ref _pumpkinBedrockEnabled, value);
+        }
+
+        private string _pumpkinBedrockPort = "19132";
+        public string PumpkinBedrockPort
+        {
+            get => _pumpkinBedrockPort;
+            set => SetProperty(ref _pumpkinBedrockPort, value);
+        }
+
+        public ObservableCollection<string> LoaderVersions { get; } = new();
+
+        private string _selectedLoaderVersion = string.Empty;
+        public string SelectedLoaderVersion
+        {
+            get => _selectedLoaderVersion;
+            set => SetProperty(ref _selectedLoaderVersion, value);
+        }
+
+        private bool _isLoadingLoaderVersions;
+        public bool IsLoadingLoaderVersions
+        {
+            get => _isLoadingLoaderVersions;
+            set => SetProperty(ref _isLoadingLoaderVersions, value);
+        }
+
+        private string _refreshVersionsStatus = string.Empty;
+        public string RefreshVersionsStatus
+        {
+            get => _refreshVersionsStatus;
+            set => SetProperty(ref _refreshVersionsStatus, value);
+        }
+
+        private string? _errorMessage;
+        public string? ErrorMessage
+        {
+            get => _errorMessage;
+            set
+            {
+                if (SetProperty(ref _errorMessage, value))
+                {
+                    OnPropertyChanged(nameof(HasError));
+                }
+            }
+        }
+
+        public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
+
+        [RelayCommand]
+        private void DismissError() => ErrorMessage = null;
 
         public List<string> LevelTypes { get; } = new() { "Default", "Flat", "LargeBiomes", "Amplified" };
         public List<string> Gamemodes { get; } = new() { "Survival", "Creative", "Adventure", "Spectator" };
@@ -154,17 +237,21 @@ namespace PocketMC.App.ViewModels
         public IRelayCommand OpenEulaLinkCommand { get; }
         public IAsyncRelayCommand ImportModpackCommand { get; }
         public IRelayCommand ImportInstanceCommand { get; }
+        public IRelayCommand BrowseModpacksCommand { get; }
+        public IAsyncRelayCommand RefreshVersionsCommand { get; }
 
         public NewInstanceViewModel(
             IInstanceService instanceService,
             IJavaService javaService,
             IPHPService phpService,
-            GeyserProvisioningService? geyserProvisioningService = null)
+            GeyserProvisioningService? geyserProvisioningService = null,
+            PumpkinProvider? pumpkinProvider = null)
         {
             _instanceService = instanceService;
             _javaService = javaService;
             _phpService = phpService;
             _geyserProvisioningService = geyserProvisioningService;
+            _pumpkinProvider = pumpkinProvider ?? (App.Services?.GetService(typeof(PumpkinProvider)) as PumpkinProvider);
 
             CreateInstanceCommand = new AsyncRelayCommand(CreateInstanceAsync, CanCreate);
             CancelCommand = new AsyncRelayCommand(CancelAsync);
@@ -172,6 +259,8 @@ namespace PocketMC.App.ViewModels
             OpenEulaLinkCommand = new RelayCommand(OpenEulaLink);
             ImportModpackCommand = new AsyncRelayCommand(ImportModpackAsync);
             ImportInstanceCommand = new RelayCommand(ImportInstance);
+            BrowseModpacksCommand = new RelayCommand(BrowseModpacks);
+            RefreshVersionsCommand = new AsyncRelayCommand(() => LoadVersionsAsync(forceRefresh: true));
 
             // Initial load
             _ = LoadVersionsAsync();
@@ -200,14 +289,49 @@ namespace PocketMC.App.ViewModels
                     if (files.Count > 0)
                     {
                         var file = files[0];
-                        CustomWorldPath = file.Path.LocalPath;
-                        string baseName = Path.GetFileNameWithoutExtension(file.Path.LocalPath);
-                        if (string.IsNullOrWhiteSpace(Name))
+                        var localPath = file.Path.LocalPath;
+
+                        var parser = App.Services?.GetService(typeof(ModpackParser)) as ModpackParser ?? new ModpackParser();
+                        var downloader = App.Services?.GetService(typeof(DownloaderService)) as DownloaderService ?? new DownloaderService(new HttpClient());
+                        var cf = App.Services?.GetService(typeof(CurseForgeService)) as CurseForgeService;
+                        var dialogVm = new ModpackInstallViewModel(
+                            localPath,
+                            parser,
+                            _instanceService,
+                            _javaService,
+                            downloader,
+                            cf);
+
+                        var dialog = new Views.Marketplace.ModpackInstallDialogWindow(dialogVm);
+                        await dialog.ShowDialog(desktop.MainWindow);
+
+                        if (dialogVm.IsCompleted)
                         {
-                            Name = baseName.Replace(" ", "-");
+                            var navService = App.Services?.GetService(typeof(IAppNavigationService)) as IAppNavigationService;
+                            var dashVm = App.Services?.GetService(typeof(DashboardViewModel)) as DashboardViewModel;
+                            if (dashVm != null)
+                            {
+                                await dashVm.LoadInstancesAsync();
+                            }
+                            navService?.NavigateToDashboard();
                         }
                     }
                 }
+            }
+        }
+
+        private void BrowseModpacks()
+        {
+            var navService = App.Services?.GetService(typeof(IAppNavigationService)) as IAppNavigationService;
+            var marketVm = App.Services?.GetService(typeof(MarketplaceViewModel)) as MarketplaceViewModel;
+            if (navService != null && marketVm != null)
+            {
+                _ = marketVm.InitializeForModpacksAsync();
+                navService.NavigateToDetailPage(
+                    new Views.Marketplace.PluginBrowserPage { DataContext = marketVm },
+                    "Modpack Marketplace",
+                    DetailRouteKind.PluginBrowser,
+                    DetailBackNavigation.Dashboard);
             }
         }
 
@@ -295,6 +419,23 @@ namespace PocketMC.App.ViewModels
             Description = "Native Bedrock Dedicated Server";
             SelectedEngine = EngineType.Bedrock;
             EnableGeyser = false;
+            ServerPort = "19132";
+            SelectedGamemode = "Survival";
+            SelectedDifficulty = "Easy";
+            MaxPlayers = "20";
+        }
+
+        [RelayCommand]
+        private void ApplyPresetPumpkin()
+        {
+            Name = "Pumpkin-Server";
+            Description = "High-performance Pumpkin Rust server";
+            SelectedEngine = EngineType.Pumpkin;
+            EnableGeyser = false;
+            ServerPort = "25565";
+            PumpkinJavaEnabled = true;
+            PumpkinBedrockEnabled = true;
+            PumpkinBedrockPort = "19132";
             SelectedGamemode = "Survival";
             SelectedDifficulty = "Easy";
             MaxPlayers = "20";
@@ -318,8 +459,14 @@ namespace PocketMC.App.ViewModels
             get => _selectedVersion;
             set
             {
-                SetProperty(ref _selectedVersion, value);
-                CreateInstanceCommand.NotifyCanExecuteChanged();
+                if (SetProperty(ref _selectedVersion, value))
+                {
+                    CreateInstanceCommand.NotifyCanExecuteChanged();
+                    if (IsLoaderVersionPanelVisible && !string.IsNullOrWhiteSpace(value))
+                    {
+                        _ = LoadLoaderVersionsAsync();
+                    }
+                }
             }
         }
 
@@ -396,20 +543,45 @@ namespace PocketMC.App.ViewModels
                    System.Text.RegularExpressions.Regex.IsMatch(lower, @"\d{2}w\d{2}[a-z]");
         }
 
-        public async Task LoadVersionsAsync()
+        public Task LoadVersionsAsync() => LoadVersionsAsync(forceRefresh: false);
+
+        public async Task LoadVersionsAsync(bool forceRefresh)
         {
             _loadVersionsCts?.Cancel();
             _loadVersionsCts = new System.Threading.CancellationTokenSource();
             var ct = _loadVersionsCts.Token;
 
             IsLoadingVersions = true;
+            RefreshVersionsStatus = forceRefresh ? "Refreshing version catalog..." : string.Empty;
             var list = new List<string>();
             try
             {
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
 
-                if (SelectedEngine == EngineType.PocketMine)
+                if (SelectedEngine == EngineType.Pumpkin)
+                {
+                    if (_pumpkinProvider != null)
+                    {
+                        var pumpkinVersions = await _pumpkinProvider.GetAvailableVersionsAsync(forceRefresh, ct);
+                        list.AddRange(pumpkinVersions.Select(v => v.Id));
+                    }
+                    else
+                    {
+                        var response = await client.GetStringAsync(PocketMC.Infrastructure.Configuration.AppConfig.ProviderPumpkinReleases, ct);
+                        using var doc = JsonDocument.Parse(response);
+                        foreach (var rel in doc.RootElement.EnumerateArray())
+                        {
+                            bool isPre = rel.TryGetProperty("prerelease", out var pre) && pre.GetBoolean();
+                            var tag = rel.TryGetProperty("tag_name", out var tagProp) ? tagProp.GetString() : null;
+                            if (!isPre && !string.IsNullOrWhiteSpace(tag))
+                            {
+                                list.Add(tag);
+                            }
+                        }
+                    }
+                }
+                else if (SelectedEngine == EngineType.PocketMine)
                 {
                     var response = await client.GetStringAsync("https://api.github.com/repos/pmmp/PocketMine-MP/releases", ct);
                     using var doc = JsonDocument.Parse(response);
@@ -621,6 +793,19 @@ namespace PocketMC.App.ViewModels
                     Versions.Clear();
                     foreach (var v in list) Versions.Add(v);
                     SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
+                    if (forceRefresh)
+                    {
+                        RefreshVersionsStatus = $"Updated {Versions.Count} versions ({DateTime.Now:HH:mm:ss})";
+                    }
+                    if (IsLoaderVersionPanelVisible && !string.IsNullOrWhiteSpace(SelectedVersion))
+                    {
+                        _ = LoadLoaderVersionsAsync();
+                    }
+                    else
+                    {
+                        LoaderVersions.Clear();
+                        SelectedLoaderVersion = string.Empty;
+                    }
                 });
             }
             catch (OperationCanceledException)
@@ -639,6 +824,10 @@ namespace PocketMC.App.ViewModels
                 {
                     list.Add("1.21.0");
                 }
+                else if (SelectedEngine == EngineType.Pumpkin)
+                {
+                    list.Add("0.1.0");
+                }
                 else
                 {
                     list.Add("1.21.4");
@@ -652,6 +841,7 @@ namespace PocketMC.App.ViewModels
                     Versions.Clear();
                     foreach (var v in list) Versions.Add(v);
                     SelectedVersion = Versions.FirstOrDefault() ?? string.Empty;
+                    RefreshVersionsStatus = $"Offline fallback ({ex.Message})";
                     ProgressText = $"Error loading versions (using fallbacks): {ex.Message}";
                 });
             }
@@ -664,12 +854,92 @@ namespace PocketMC.App.ViewModels
             }
         }
 
+        private async Task LoadLoaderVersionsAsync()
+        {
+            if (!IsLoaderVersionPanelVisible || string.IsNullOrWhiteSpace(SelectedVersion))
+            {
+                LoaderVersions.Clear();
+                SelectedLoaderVersion = string.Empty;
+                return;
+            }
+
+            IsLoadingLoaderVersions = true;
+            var loaders = new List<string>();
+            try
+            {
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
+
+                if (SelectedEngine == EngineType.Fabric)
+                {
+                    var json = await client.GetStringAsync("https://meta.fabricmc.net/v2/versions/loader");
+                    using var doc = JsonDocument.Parse(json);
+                    foreach (var item in doc.RootElement.EnumerateArray())
+                    {
+                        var ver = item.TryGetProperty("version", out var vProp) ? vProp.GetString() : null;
+                        if (!string.IsNullOrWhiteSpace(ver))
+                        {
+                            loaders.Add(ver);
+                            if (loaders.Count >= 20) break;
+                        }
+                    }
+                }
+                else if (SelectedEngine == EngineType.Forge)
+                {
+                    var json = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.minecraftforge/index.json");
+                    using var doc = JsonDocument.Parse(json);
+                    foreach (var verNode in doc.RootElement.GetProperty("versions").EnumerateArray())
+                    {
+                        bool matchesMc = verNode.TryGetProperty("requires", out var reqs) &&
+                            reqs.EnumerateArray().Any(r =>
+                                r.TryGetProperty("uid", out var u) && u.GetString() == "net.minecraft" &&
+                                r.TryGetProperty("equals", out var eq) && eq.GetString() == SelectedVersion);
+                        if (matchesMc && verNode.TryGetProperty("version", out var lv) && !string.IsNullOrWhiteSpace(lv.GetString()))
+                        {
+                            loaders.Add(lv.GetString()!);
+                        }
+                    }
+                }
+                else if (SelectedEngine == EngineType.NeoForge)
+                {
+                    var json = await client.GetStringAsync("https://meta.prismlauncher.org/v1/net.neoforged/index.json");
+                    using var doc = JsonDocument.Parse(json);
+                    foreach (var verNode in doc.RootElement.GetProperty("versions").EnumerateArray())
+                    {
+                        bool matchesMc = verNode.TryGetProperty("requires", out var reqs) &&
+                            reqs.EnumerateArray().Any(r =>
+                                r.TryGetProperty("uid", out var u) && u.GetString() == "net.minecraft" &&
+                                r.TryGetProperty("equals", out var eq) && eq.GetString() == SelectedVersion);
+                        if (matchesMc && verNode.TryGetProperty("version", out var lv) && !string.IsNullOrWhiteSpace(lv.GetString()))
+                        {
+                            loaders.Add(lv.GetString()!);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Keep empty / default auto-resolve behavior if offline
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    LoaderVersions.Clear();
+                    foreach (var l in loaders.Distinct()) LoaderVersions.Add(l);
+                    SelectedLoaderVersion = LoaderVersions.FirstOrDefault() ?? "Latest Recommended";
+                    IsLoadingLoaderVersions = false;
+                });
+            }
+        }
+
         private async Task CreateInstanceAsync()
         {
             ValidateAllProperties();
             if (HasErrors || !AcceptEula) return;
 
             IsCreating = true;
+            ErrorMessage = null;
             Progress = 0.0;
             ProgressText = "Preparing instance directory...";
 
@@ -677,6 +947,20 @@ namespace PocketMC.App.ViewModels
             {
                 var instance = await _instanceService.CreateInstanceAsync(Name, SelectedEngine, SelectedVersion);
                 var targetDir = instance.Path;
+
+                if (int.TryParse(ServerPort, out int parsedMainPort) && parsedMainPort > 0 && parsedMainPort <= 65535)
+                {
+                    instance.ServerPort = parsedMainPort;
+                }
+                if (IsPumpkinSelected && int.TryParse(PumpkinBedrockPort, out int parsedBedrockPort) && parsedBedrockPort > 0 && parsedBedrockPort < 65535)
+                {
+                    instance.PumpkinBedrockPort = parsedBedrockPort;
+                }
+                if (IsLoaderVersionPanelVisible && !string.IsNullOrWhiteSpace(SelectedLoaderVersion) && SelectedLoaderVersion != "Latest Recommended")
+                {
+                    instance.LoaderVersion = SelectedLoaderVersion;
+                }
+                await _instanceService.SaveInstanceAsync(instance);
 
                 Progress = 0.1;
                 ProgressText = "Folder initialized. Checking runtimes...";
@@ -846,6 +1130,46 @@ namespace PocketMC.App.ViewModels
                     catch { }
                     Progress = 0.9;
                 }
+                else if (SelectedEngine == EngineType.Pumpkin)
+                {
+                    ProgressText = $"Downloading Pumpkin {SelectedVersion} native server binary...";
+                    Progress = 0.35;
+                    var http = new HttpClient();
+                    var pumpkinProvider = _pumpkinProvider ?? new PumpkinProvider(
+                        http,
+                        new DownloaderService(http),
+                        App.Services?.GetService(typeof(IPosixFilePermissionService)) as IPosixFilePermissionService);
+
+                    string execDest = Path.Combine(targetDir, PumpkinProvider.GetExecutableFileName());
+                    await pumpkinProvider.DownloadSoftwareAsync(
+                        SelectedVersion,
+                        execDest,
+                        new Progress<DownloadProgress>(p =>
+                        {
+                            if (p.TotalBytes > 0)
+                            {
+                                Progress = 0.35 + (p.Percentage / 100.0) * 0.45;
+                            }
+                        }));
+
+                    ProgressText = "Writing pumpkin.toml configuration...";
+                    Progress = 0.85;
+                    var props = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["motd"] = string.IsNullOrWhiteSpace(Description) ? "A Pumpkin Server" : Description,
+                        ["max-players"] = string.IsNullOrWhiteSpace(MaxPlayers) ? "20" : MaxPlayers,
+                        ["gamemode"] = SelectedGamemode.ToLowerInvariant(),
+                        ["difficulty"] = SelectedDifficulty.ToLowerInvariant(),
+                        ["level-seed"] = WorldSeed,
+                        ["server-port"] = string.IsNullOrWhiteSpace(ServerPort) ? "25565" : ServerPort,
+                        ["pumpkin-java-enabled"] = PumpkinJavaEnabled ? "true" : "false",
+                        ["pumpkin-bedrock-enabled"] = PumpkinBedrockEnabled ? "true" : "false",
+                        ["pumpkin-nethernet-enabled"] = PumpkinBedrockEnabled ? "true" : "false",
+                        ["pumpkin-bedrock-port"] = string.IsNullOrWhiteSpace(PumpkinBedrockPort) ? "19132" : PumpkinBedrockPort
+                    };
+                    PumpkinConfiguration.Save(targetDir, props);
+                    Progress = 0.95;
+                }
 
                 if (!string.IsNullOrWhiteSpace(CustomWorldPath) && File.Exists(CustomWorldPath))
                 {
@@ -886,6 +1210,7 @@ namespace PocketMC.App.ViewModels
             }
             catch (Exception ex)
             {
+                ErrorMessage = ex.Message;
                 ProgressText = $"Creation failed: {ex.Message}";
                 try
                 {
@@ -1063,21 +1388,27 @@ namespace PocketMC.App.ViewModels
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("User-Agent", "PocketMC-App");
 
-            string loaderVersion = "0.15.11";
-            try
+            string loaderVersion = !string.IsNullOrWhiteSpace(SelectedLoaderVersion) &&
+                                   SelectedLoaderVersion != "Latest Recommended"
+                ? SelectedLoaderVersion
+                : "0.15.11";
+            if (loaderVersion == "0.15.11")
             {
-                var loadersStr = await client.GetStringAsync("https://meta.fabricmc.net/v2/versions/loader");
-                using var loadersDoc = JsonDocument.Parse(loadersStr);
-                foreach (var item in loadersDoc.RootElement.EnumerateArray())
+                try
                 {
-                    if (item.GetProperty("stable").GetBoolean())
+                    var loadersStr = await client.GetStringAsync("https://meta.fabricmc.net/v2/versions/loader");
+                    using var loadersDoc = JsonDocument.Parse(loadersStr);
+                    foreach (var item in loadersDoc.RootElement.EnumerateArray())
                     {
-                        loaderVersion = item.GetProperty("version").GetString() ?? loaderVersion;
-                        break;
+                        if (item.GetProperty("stable").GetBoolean())
+                        {
+                            loaderVersion = item.GetProperty("version").GetString() ?? loaderVersion;
+                            break;
+                        }
                     }
                 }
+                catch { }
             }
-            catch { }
 
             string installerVersion = "1.0.1";
             try
