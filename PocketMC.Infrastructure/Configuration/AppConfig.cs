@@ -47,7 +47,7 @@ public static class AppConfig
     public static string AppName { get; private set; } = "PocketMC";
     public static string AppTitle { get; private set; } = "PocketMC";
     public static string AppId { get; private set; } = "PocketMC";
-    public static string AppVersion { get; private set; } = "1.0.4.0-beta.1";
+    public static string AppVersion { get; private set; } = "1.0.4.0";
     public static string Channel { get; private set; } = "release";
     public static string LinkDiscord { get; private set; } = "https://discord.gg/mWdMr8Mc2m";
     public static string LinkInstagram { get; private set; } = "https://www.instagram.com/thepocketmc";

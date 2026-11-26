@@ -37,15 +37,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Parse Root Configuration
         id: config
         shell: bash
         run: |
-          raw_version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          raw_version=$(grep '^version:' pocketmc.yml | sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*#.*$//' | tr -d "\"'" | xargs)
           version=$(echo "${raw_version}" | sed 's/^v//')
-          channel=$(grep '^channel:' pocketmc.yml | cut -d':' -f2 | xargs)
+          channel=$(grep '^channel:' pocketmc.yml | sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*#.*$//' | tr -d "\"'" | xargs)
           echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
           echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
 
@@ -134,15 +134,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Parse Version
         id: config
         shell: bash
         run: |
-          raw_version=$(grep '^version:' pocketmc.yml | cut -d':' -f2 | xargs)
+          raw_version=$(grep '^version:' pocketmc.yml | sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*#.*$//' | tr -d "\"'" | xargs)
           version=$(echo "${raw_version}" | sed 's/^v//')
-          channel=$(grep '^channel:' pocketmc.yml | cut -d':' -f2 | xargs)
+          channel=$(grep '^channel:' pocketmc.yml | sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*#.*$//' | tr -d "\"'" | xargs)
           echo "version=${version:-1.0.0}" >> $GITHUB_OUTPUT
           echo "channel=${channel:-none}" >> $GITHUB_OUTPUT
 
@@ -173,13 +173,44 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Generate Release Notes
+        if: steps.check_channel.outputs.skip == 'false'
+        shell: bash
+        run: |
+          version="${{ steps.config.outputs.version }}"
+          {
+            echo "## PocketMC v${version}: Production Release (Linux & macOS)"
+            echo ""
+            if [ -f "PocketMC.App/Assets/WhatsNew.txt" ]; then
+              tr -d '\r' < PocketMC.App/Assets/WhatsNew.txt | awk '
+                /^VERSION=/ { next }
+                /^\[.*\]$/ {
+                  section = substr($0, 2, length($0) - 2)
+                  print "### " section
+                  next
+                }
+                NF > 0 { print "- " $0 }
+                NF == 0 { print "" }
+              '
+              echo ""
+            fi
+            echo "### Download Packages"
+            echo ""
+            echo "| Platform | Architecture | Formats |"
+            echo "| :--- | :--- | :--- |"
+            echo "| **Linux** | x64 (AMD64) | [PocketMC-linux-x64.tar.gz](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-linux-x64.tar.gz), [pocketmc_${version}_amd64.deb](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/pocketmc_${version}_amd64.deb) |"
+            echo "| **Linux** | arm64 (AArch64) | [PocketMC-linux-arm64.tar.gz](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-linux-arm64.tar.gz), [pocketmc_${version}_arm64.deb](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/pocketmc_${version}_arm64.deb) |"
+            echo "| **macOS** | Apple Silicon (M1/M2/M3/M4) | [PocketMC-osx-arm64.dmg](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-osx-arm64.dmg), [PocketMC-osx-arm64.zip](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-osx-arm64.zip) |"
+            echo "| **macOS** | Intel (x64) | [PocketMC-osx-x64.dmg](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-osx-x64.dmg), [PocketMC-osx-x64.zip](https://github.com/PocketMC/pocket-mc-linux-mac/releases/download/v${version}/PocketMC-osx-x64.zip) |"
+          } > release_notes.md
+
       - name: Create GitHub Release
         if: steps.check_channel.outputs.skip == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.config.outputs.version }}
           name: PocketMC v${{ steps.config.outputs.version }}
-          body: "Official cross-platform production release of PocketMC for Linux and macOS."
+          body_path: release_notes.md
           files: |
             artifacts/PocketMC-linux-x64.tar.gz
             artifacts/PocketMC-linux-arm64.tar.gz

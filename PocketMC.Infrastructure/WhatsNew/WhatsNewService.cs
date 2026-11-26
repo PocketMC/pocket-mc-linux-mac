@@ -20,7 +20,11 @@ namespace PocketMC.Infrastructure.WhatsNew
         {
             _settingsService = settingsService;
             _logger = logger ?? NullLogger<WhatsNewService>.Instance;
-            _currentVersion = currentVersion ?? typeof(WhatsNewService).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+            _currentVersion = !string.IsNullOrWhiteSpace(currentVersion)
+                ? currentVersion
+                : (!string.IsNullOrWhiteSpace(Configuration.AppConfig.AppVersion)
+                    ? Configuration.AppConfig.AppVersion
+                    : typeof(WhatsNewService).Assembly.GetName().Version?.ToString(3) ?? "1.0.0");
         }
 
         public string GetCurrentVersion() => _currentVersion;

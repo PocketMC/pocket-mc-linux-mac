@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\pocketmc.yml" LogicalName="PocketMC.Infrastructure.pocketmc.yml" />
+    <EmbeddedResource Include="WhatsNew.txt" LogicalName="PocketMC.Infrastructure.WhatsNew.txt" />
   </ItemGroup>
 
   <PropertyGroup>

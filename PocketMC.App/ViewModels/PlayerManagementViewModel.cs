@@ -31,6 +31,7 @@ namespace PocketMC.App.ViewModels
         private FileSystemWatcher? _watcher;
         private DispatcherTimer? _timer;
         private DateTime? _lastUpdatedUtc;
+        private volatile bool _disposed;
 
         [ObservableProperty]
         private ServerInstance? _selectedInstance;
@@ -185,18 +186,23 @@ namespace PocketMC.App.ViewModels
 
         public async Task LoadListsAsync()
         {
-            if (SelectedInstance == null) return;
+            if (_disposed || SelectedInstance == null) return;
 
             await _loadLock.WaitAsync();
             try
             {
+                if (_disposed || SelectedInstance == null) return;
+
                 var online = await _playerService.GetOnlinePlayersAsync(SelectedInstance);
                 var wl = await _playerService.GetWhitelistAsync(SelectedInstance);
                 var opsList = await _playerService.GetOpsAsync(SelectedInstance);
                 var bannedEntries = await Task.Run(LoadBannedEntries);
 
+                if (_disposed) return;
+
                 PostToUi(() =>
                 {
+                    if (_disposed) return;
                     lock (_collectionLock)
                     {
                         UpdateOnlineStatus();
@@ -322,7 +328,7 @@ namespace PocketMC.App.ViewModels
                 {
                     try
                     {
-                        var content = File.ReadAllText(jsonPath);
+                        var content = ReadAllTextShared(jsonPath);
                         using var doc = JsonDocument.Parse(content);
                         if (doc.RootElement.ValueKind == JsonValueKind.Array)
                         {
@@ -357,7 +363,7 @@ namespace PocketMC.App.ViewModels
 
                     try
                     {
-                        foreach (var line in File.ReadAllLines(txtPath))
+                        foreach (var line in ReadAllLinesShared(txtPath))
                         {
                             var trimmed = line.Trim();
                             if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#", StringComparison.Ordinal))
@@ -448,7 +454,7 @@ namespace PocketMC.App.ViewModels
             try
             {
                 string key = SelectedInstance.EngineType == EngineType.Bedrock ? "allow-list" : "white-list";
-                foreach (string rawLine in File.ReadAllLines(propsPath))
+                foreach (string rawLine in ReadAllLinesShared(propsPath))
                 {
                     string line = rawLine.Trim();
                     if (line.StartsWith("#", StringComparison.Ordinal) || !line.Contains('=')) continue;
@@ -588,14 +594,9 @@ namespace PocketMC.App.ViewModels
 
         private void SetupWatcher()
         {
-            if (_watcher != null)
-            {
-                _watcher.EnableRaisingEvents = false;
-                _watcher.Dispose();
-                _watcher = null;
-            }
+            DetachWatcher();
 
-            if (SelectedInstance == null || !Directory.Exists(SelectedInstance.Path)) return;
+            if (_disposed || SelectedInstance == null || !Directory.Exists(SelectedInstance.Path)) return;
 
             _watcher = new FileSystemWatcher(SelectedInstance.Path)
             {
@@ -609,8 +610,41 @@ namespace PocketMC.App.ViewModels
             _watcher.Deleted += OnFileChanged;
         }
 
+        private void DetachWatcher()
+        {
+            if (_watcher != null)
+            {
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Changed -= OnFileChanged;
+                _watcher.Created -= OnFileChanged;
+                _watcher.Deleted -= OnFileChanged;
+                _watcher.Dispose();
+                _watcher = null;
+            }
+        }
+
+        private static string ReadAllTextShared(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        private static string[] ReadAllLinesShared(string path)
+        {
+            var lines = new List<string>();
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            while (reader.ReadLine() is { } line)
+            {
+                lines.Add(line);
+            }
+            return lines.ToArray();
+        }
+
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
+            if (_disposed) return;
             var name = Path.GetFileName(e.FullPath).ToLowerInvariant();
             if (name.Contains("whitelist") || name.Contains("allowlist") || name.Contains("ops") || name.Contains("banned") || name.Contains("permissions"))
             {
@@ -828,22 +862,24 @@ namespace PocketMC.App.ViewModels
 
         public void Dispose()
         {
+            _disposed = true;
             if (_timer != null)
             {
                 _timer.Stop();
                 _timer = null;
             }
-            if (_watcher != null)
-            {
-                _watcher.EnableRaisingEvents = false;
-                _watcher.Dispose();
-                _watcher = null;
-            }
+            DetachWatcher();
             if (_consoleLogService != null)
             {
                 _consoleLogService.LogReceived -= OnConsoleLogReceived;
             }
             _processRunner.StateChanged -= OnProcessStateChanged;
+
+            if (_loadLock.Wait(TimeSpan.FromSeconds(2)))
+            {
+                _loadLock.Release();
+            }
+
             GC.SuppressFinalize(this);
         }
     }

@@ -9,7 +9,7 @@ public class AppConfigTests
     {
         AppConfig.LoadEmbeddedConfig();
 
-        Assert.Equal("1.0.4.0-beta.1", AppConfig.AppVersion);
+        Assert.Equal("1.0.4.0", AppConfig.AppVersion);
         Assert.Equal("release", AppConfig.Channel);
         Assert.Equal(2, AppConfig.AuthProxies.Count);
         Assert.Contains("https://pocket-mc-proxy-20d5.onrender.com", AppConfig.AuthProxies);

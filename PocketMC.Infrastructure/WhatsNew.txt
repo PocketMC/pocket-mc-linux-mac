@@ -1,19 +1,19 @@
-VERSION=1.0.4-beta.1
+VERSION=1.0.4.0
 
-[NEW FEATURES & LINUX/MACOS PARITY]
-Exact PocketMC Windows UI and UX parity delivered for Linux and macOS.
-TitleBar live System RAM usage telemetry with threshold alert coloring.
-Full Remote Control subsystem with auto-start, Cloudflare/Playit tunnels, and PBKDF2 authentication.
-Cross-platform AppClipboard service supporting Wayland (wl-copy), X11 (xclip/xsel), and macOS (pbcopy).
+[NEW FEATURES & WINDOWS PARITY]
+Complete PocketMC Windows UI/UX parity delivered across Linux and macOS with WPF-UI translucent surfaces and dynamic accents.
+Added Pumpkin server engine support alongside Paper, Purpur, Fabric, Forge, NeoForge, Bedrock Dedicated Server, and PocketMine-MP.
+Added Modpack and World Map browsers, Dependency Confirmation cards, and CurseForge API key management.
+Added collapsible AI Intelligence drawer in Server Console with session summarization and local Ollama model management.
+Added Community News with rich article rendering, startup popup notices, and unread navigation badges.
 
 [IMPROVEMENTS]
-Accurate instance card state synchronization for running servers with emerald status indicators.
-Platform-aware title bar margin adjustment ensuring flush right-edge alignment on Linux and macOS.
-Enforced word wrapping on server console logs eliminating horizontal scrollbars.
-Interactive Ports Map visualizing local ports, RCON, Query, Simple Voice Chat UDP, and Playit public endpoints.
+Live System RAM usage telemetry in the title bar, collapsible navigation rail, and keyboard shortcuts across screens.
+Redesigned 9-tab Server Settings with server icon cropping, interactive MOTD color formatting bar, and multi-world management.
+Unified Managed Runtimes screen for Adoptium Java 8-25 and PocketMine PHP 8.0-8.3 binaries with disk usage tracking.
+Updated Tunnel management, Playit Network Status monitor, Interactive Ports Map, and Remote Control web dashboard.
 
 [FIXES & STABILITY]
-Fixed session.lock DirectoryLock LockException crash caused by duplicate process execution and orphaned child processes.
-Guaranteed entireProcessTree process termination on server shutdown and stop timeouts.
-Configurable server crash auto-restart preventing infinite crash loops on fatal errors.
-Console Copy Logs button with visual confirmation and dynamic checkmark feedback.
+Hardened POSIX process group supervision and session lock checks to prevent orphaned child server processes.
+Added live Bedrock Dedicated Server save hold/query/resume snapshot staging for consistent hot backups.
+Added macOS .tgz and Linux binary Cloudflared quick tunnel extraction with executable permissions and Wayland/X11/macOS clipboard fallbacks.

@@ -11,8 +11,9 @@ app_description: "Local-first Minecraft server manager for Linux and macOS."
 # ==============================================================================
 # 2. RELEASE, PACKAGING & CI/CD PIPELINE
 # ==============================================================================
-version: 1.0.4.0-beta.1                                               # Binary build version (Used by CI/CD)
-channel: release                                                      # Release channel (release | beta)
+# Binary build version and release channel (Used by AppConfig & CI/CD)
+version: 1.0.4.0
+channel: release
 
 # ==============================================================================
 # 3. COMMUNITY, SUPPORT & WEB LINKS

@@ -46,5 +46,18 @@ namespace PocketMC.Tests
             Assert.Equal("HIGHLIGHTS", entry.Sections[0].Name);
             Assert.Equal(2, entry.Sections[0].Items.Count);
         }
+
+        [Fact]
+        public void WhatsNewService_DefaultsToAppConfigVersion_AndLoadsEmbeddedChangelog()
+        {
+            var settingsService = new FakeSettingsService();
+            var service = new WhatsNewService(settingsService);
+
+            Assert.Equal(PocketMC.Infrastructure.Configuration.AppConfig.AppVersion, service.GetCurrentVersion());
+
+            var entry = service.LoadChangelog();
+            Assert.NotNull(entry);
+            Assert.Equal("1.0.4.0", entry.Version);
+        }
     }
 }
